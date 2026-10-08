@@ -1,5 +1,4 @@
 ﻿import Link from "next/link";
-import { notFound } from "next/navigation";
 import { requireOwner } from "@/lib/auth/owner";
 import { saveBusiness, saveSection, addSection, removeSection, publishPage, setPageActive, createBranch } from "../actions";
 import { sectionKinds } from "@/lib/content";
@@ -15,11 +14,13 @@ export default async function EditBusiness({ params, searchParams }: { params: P
   const { id } = await params;
   const query = await searchParams;
   const { supabase } = await requireOwner();
-  const { data: business } = await supabase.from("businesses").select("id,name,category,status").eq("id", id).single();
-  if (!business) notFound();
-  const { data: pages } = await supabase.from("business_pages").select("*").eq("business_id", id).order("page_type");
+  const { data: business, error: businessError } = await supabase.from("businesses").select("id,name,category,status").eq("id", id).maybeSingle();
+  if (businessError) return <section className="editor-panel" role="alert"><span className="panel-kicker">تعذر تحميل البيانات</span><h1>لم نتمكن من فتح النشاط</h1><p className="muted">حدثت مشكلة أثناء تحميل بيانات لوحة التحكم. أعد المحاولة أو ارجع إلى قائمة الأنشطة.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
+  if (!business) return <section className="editor-panel" role="alert"><span className="panel-kicker">النشاط غير موجود</span><h1>لم يتم العثور على هذا النشاط</h1><p className="muted">قد يكون الرابط قديماً، أو لا يملك حسابك صلاحية الوصول إليه.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
+  const { data: pages, error: pagesError } = await supabase.from("business_pages").select("*").eq("business_id", id).order("page_type");
+  if (pagesError) return <section className="editor-panel" role="alert"><span className="panel-kicker">تعذر تحميل البيانات</span><h1>لم نتمكن من تحميل صفحات النشاط</h1><p className="muted">أعد المحاولة أو ارجع إلى قائمة الأنشطة.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
   const page = (pages || []).find((item: any) => item.page_type === "main") || pages?.[0];
-  if (!page) notFound();
+  if (!page) return <section className="editor-panel" role="alert"><span className="panel-kicker">صفحة غير موجودة</span><h1>لا توجد صفحة لهذا النشاط بعد</h1><p className="muted">ارجع إلى قائمة الأنشطة أو أعد تحميل الصفحة.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
   const { data: sections, error: sectionError } = await supabase.from("page_sections").select("*").eq("page_id", page.id).order("position");
   const sectionList = sections || [];
 
