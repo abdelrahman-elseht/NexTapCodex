@@ -1,0 +1,11 @@
+create unique index business_pages_one_main_idx on public.business_pages(business_id) where page_type='main';
+create unique index business_pages_unique_branch_idx on public.business_pages(business_id,branch_name) where page_type='branch';
+create index audit_logs_actor_idx on public.audit_logs(actor_id);
+create index card_history_new_page_idx on public.card_assignment_history(new_page_id);
+create index card_history_old_page_idx on public.card_assignment_history(old_page_id);
+create index card_history_changed_by_idx on public.card_assignment_history(changed_by);
+create index batches_created_by_idx on public.card_batches(created_by);
+create index media_assets_business_idx on public.media_assets(business_id);
+create index page_publications_published_by_idx on public.page_publications(published_by);
+create index pages_parent_idx on public.business_pages(parent_page_id);
+create index pages_snapshot_idx on public.business_pages(published_snapshot_id);

@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env*
+!.env.example
+coverage
+*.zip
+*.tsbuildinfo
+install.log
+.playwright-mcp/
+%SystemDrive%/
