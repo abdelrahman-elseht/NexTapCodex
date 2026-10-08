@@ -1,5 +1,5 @@
 "use server";
-import { randomBytes, randomInt } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
@@ -96,16 +96,18 @@ export async function createBranch(fd:FormData){
  revalidatePath("/admin/businesses/"+businessId);redirect("/admin/businesses/"+businessId+"?branch=created");
 }
 export async function createBatch(fd:FormData){
- const {supabase,userId}=await requireOwner();const name=val(fd,"name",100)||"دفعة بطاقات",quantity=Number(fd.get("quantity"));
- if(!Number.isInteger(quantity)||quantity<1||quantity>10000)redirect("/admin/cards?error=quantity");
- const {data:batch,error}=await supabase.from("card_batches").insert({name,quantity,created_by:userId}).select("id,created_at").single();
- if(error||!batch)redirect("/admin/cards?error=batch");
- const serials=new Set<string>(),rows=[];
- while(rows.length<quantity){const serial="NT-"+new Date(batch.created_at).toISOString().slice(0,10).replaceAll("-","")+"-"+String(randomInt(0,1000000)).padStart(6,"0");if(serials.has(serial))continue;serials.add(serial);rows.push({batch_id:batch.id,serial,token:randomBytes(24).toString("base64url"),status:"unassigned"});}
- const {error:cardsError}=await supabase.from("cards").insert(rows);
- if(cardsError){await supabase.from("card_batches").delete().eq("id",batch.id);redirect("/admin/cards?error=cards");}
- await supabase.from("audit_logs").insert({actor_id:userId,action:"cards.batch_create",entity_type:"card_batch",entity_id:batch.id,details:{quantity}});
- revalidatePath("/admin/cards");redirect("/admin/cards?batch="+batch.id);
+ const {supabase}=await requireOwner();
+ const name=String(fd.get("name")||"").trim();
+ const quantity=Number(fd.get("quantity"));
+ const requestKey=String(fd.get("idempotency_key")||"");
+ if(name.length<1||name.length>100||/[\u0000-\u001f\u007f]/.test(name))redirect("/admin/cards?error=name");
+ if(!Number.isInteger(quantity)||quantity<1||quantity>1000)redirect("/admin/cards?error=quantity");
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestKey))redirect("/admin/cards?error=request");
+ const tokens=Array.from({length:quantity},()=>randomBytes(24).toString("base64url"));
+ const {data:batch,error}=await supabase.rpc("create_card_batch",{batch_name:name,card_quantity:quantity,request_key:requestKey,card_tokens:tokens});
+ if(error||!batch?.id)redirect("/admin/cards?error=batch");
+ revalidatePath("/admin/cards");
+ redirect("/admin/cards/batches/"+batch.id+"?created=1");
 }
 export async function assignCard(fd:FormData){
  const {supabase}=await requireOwner();const cardId=val(fd,"card_id",50),pageId=val(fd,"page_id",50),mode=val(fd,"mode",20),businessId=val(fd,"business_id",50);

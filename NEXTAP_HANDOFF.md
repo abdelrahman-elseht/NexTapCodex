@@ -4,7 +4,7 @@
 
 ## Architecture and Supabase
 
-Next.js App Router + TypeScript, Arabic RTL rendering, Supabase Auth cookie sessions, owner allowlist, PostgreSQL drafts and immutable publication snapshots, narrow public page/card RPCs, RLS and Supabase Storage. Permanent card redirects resolve current state on every request, are uncached, and only target internal pages. Six non-destructive versioned migrations are checked in and applied on 2026-10-08, covering core schema, publication, indexes, immutable snapshots and owner audit inserts. The project has no owner row, so admin access stays denied until an Auth user is added to `public.owner_users`.
+Next.js App Router + TypeScript, Arabic RTL rendering, Supabase Auth cookie sessions, owner allowlist, PostgreSQL drafts and immutable publication snapshots, narrow public page/card RPCs, RLS and Supabase Storage. Permanent card redirects resolve current state on every request, are uncached, and only target internal pages. Six non-destructive versioned migrations are checked in and applied on 2026-10-08, covering core schema, publication, indexes, immutable snapshots and owner audit inserts. The connected project currently has one linked, confirmed owner account; new environments still need an Auth user added to `public.owner_users` before admin access works.
 
 ## Acceptance evidence
 
@@ -60,6 +60,36 @@ Deliverables: `nextap-mvp.zip` was created and the archive entry count was verif
 
 ## Exact next 3 steps
 
-1. Provision the owner Auth account, add its UUID to `owner_users`, set environment variables, and install dependencies where npm registry access is allowed.
+1. For a new environment, provision the owner Auth account, add its UUID to `owner_users`, set environment variables, and install dependencies where npm registry access is allowed.
 2. Resolve build/test issues, add the missing item editor and owner-only image-upload UI, then verify anonymous RLS and the connected publish/card reassignment journey.
 3. Run responsive/E2E checks, inspect the existing SECURITY DEFINER advisor finding, refresh advisors and choose compliant commercial hosting before deployment.
+
+## External printer card manufacturing workflow (beta04)
+
+Implemented inside `/admin/cards`: owner-only batch creation uses a transaction-backed RPC and a request UUID, creates unassigned cards with server-generated 192-bit tokens and immutable serials, and links to batch details. The batch detail page previews one QR and its full permanent QR URL. The on-demand ZIP route reads the stored cards each time, orders by serial, creates one M-correction SVG per card, and includes the required manifest, NFC CSV, and printer instructions. No QR assets are persisted. The resolver treats `via` as non-authoritative and now sends both QR and NFC visits to the same internal business path with `302` and `Cache-Control: no-store`.
+
+The checked-in migration is `supabase/migrations/202610080008_external_printer_batches.sql`. It was not applied to the connected database during this continuation. Existing database state and owner RLS have not been probed here; run the migration through the established Supabase workflow before using batch creation. The working tree has existing unfinished changes that were continued in place.
+
+| ID | Status | Evidence / limitation |
+|---|---|---|
+| MC01 | PARTIAL | RPC validates quantity, creates batch and all cards in one transaction, uses 24 random bytes per token and database-allocated serials. Not run against the connected database; migration is pending. |
+| MC02 | PARTIAL | Owner-scoped unique idempotency key plus transaction advisory lock returns the existing batch on retry. Not concurrency-tested against PostgreSQL. |
+| MC03 | PASS | ZIP code includes exactly three required root files and one SVG per persisted card; archive test confirms 100-card size and QR entry count. |
+| MC04 | PASS | `npm test` rasterizes and decodes every one of 100 generated SVGs, checks exact QR URL against manifest, and checks ordered NFC CSV serial/URL pairs. |
+| MC05 | PARTIAL | Shared token and distinct `via` URLs are covered by source and export tests; resolver ignores all query strings and only targets internal published pages. Live RPC/database behavior not exercised. |
+| MC06 | PARTIAL | Exports derive identifiers from persisted rows and no generation occurs during download. Reassignment/re-download requires a connected owner database test. |
+| MC07 | PARTIAL | UI routes call `requireOwner`; existing batch/card RLS is owner-only and the new RPC revokes anon/public access. Direct anonymous/authenticated probes were unavailable. |
+| MC08 | PARTIAL | UI/server/RPC enforce 1–1,000 and name/token constraints; ZIP rejects invalid sizes and export rejects incomplete batches. Failure/rollback paths were not run against PostgreSQL. |
+| MC09 | PARTIAL | Resolver reads current state through `resolve_card` on every uncached visit and returns 302/no-store. Live activation/reassignment/disable scan checks require the connected owner environment. |
+| MC10 | PARTIAL | Responsive admin sections, batch detail, preview, ZIP/CSV links, and print/NFC QC guidance are implemented. UI E2E was skipped because owner credentials and `E2E_ALLOW_MUTATIONS=true` for an isolated database are absent. |
+| MC11 | PARTIAL | `npm run typecheck`, `npm test` (8 tests), and `npm run build` pass. Selective E2E launches on desktop but reports one skipped test due the owner/mutation guard; create-preview-download ZIP UI flow is not yet verified. |
+
+Manufacturing validation commands and results:
+
+- `npm.cmd run typecheck` — passed.
+- `npm.cmd test` — passed, 8 tests; includes decoding all 100 QR SVG payloads and comparing manifest/NFC/serial alignment.
+- `npm.cmd run build` — passed; manufacturing detail, CSV, and ZIP routes are included in the build.
+- `npx.cmd e2e run tests/card-manufacturing.e2e.ts --config e2e.manufacturing.config.ts --target desktop --reporter list` — one test skipped by its credential/mutation safety guard. A temporary config used port 3138 because the repo's normal E2E port 3137 was already occupied by a NexTap dev server. The temporary config was removed after the run.
+- The first E2E invocation exited before tests with `APP_ALREADY_RUNNING` on port 3137; no process was stopped or changed.
+
+Before production use: apply the checked-in migration, run the E2E test with a dedicated isolated Supabase owner and `E2E_ALLOW_MUTATIONS=true`, probe anonymous/direct RLS access, and rerun MC01–MC11. Ask the printing vendor for variable-data/template requirements, final QR physical size, bleed and safe area before creating any card-layout PDF. Confirm separately whether NFC encoding is contracted; QR correctness does not validate NFC programming.

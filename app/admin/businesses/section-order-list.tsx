@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { reorderSections } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 type Section = { id: string; title: string; children: ReactNode };
 
@@ -38,7 +39,7 @@ export function SectionOrderList({ businessId, pageId, sections }: { businessId:
         <input type="hidden" name="business_id" value={businessId}/>
         <input type="hidden" name="page_id" value={pageId}/>
         {ids.map(id => <input key={id} type="hidden" name="ordered_section_ids" value={id}/>)}
-        <button className="button gold" type="submit">Save order</button>
+        <SubmitButton className="button gold" pendingText="Saving order...">Save order</SubmitButton>
       </form>
     </div>
     <p className="sr-only" role="status" aria-live="polite">{message}</p>

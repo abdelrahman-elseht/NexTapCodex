@@ -1,13 +1,14 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-test("landing page links to the demo and contact channel without horizontal overflow", async ({ app, screen, browser }) => {
+test("landing page links to the demo and uses a sample fallback when no contact number is configured", async ({ app, screen, browser }) => {
   await app.open("/");
 
   await expect(screen.getByRole("heading", "لمسة واحدة تفتح باب عملك.")).toBeVisible();
   await expect(screen.getByRole("link", "شاهد صفحة تجريبية")).toHaveAttribute("href", "/demo");
-  await expect(screen.getByRole("link", "تواصل عبر واتساب")).toHaveAttribute("href", "https://wa.me/201000000000");
-  await expect(screen.getByRole("img", "NexTap")).toHaveCount(2);
+  await expect(screen.getByRole("link", "افتح الصفحة التجريبية").first()).toHaveAttribute("href", "/demo");
+  await expect(screen.getByRole("link", "تواصل عبر واتساب")).toHaveCount(0);
+  await expect(screen.getByRole("img", "NexTap")).toHaveCount(3);
 
   const widths = await browser.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -16,12 +17,15 @@ test("landing page links to the demo and contact channel without horizontal over
   expect(widths.content).toBeLessThanOrEqual(widths.viewport);
 });
 
-test("demo presents its business contact and returns to the landing page", async ({ app, screen, browser }) => {
+test("demo presents its map action and returns to the landing page", async ({ app, screen, browser }) => {
   await app.open("/demo");
 
   await expect(screen.getByRole("heading", "قهوة ومزاج")).toBeVisible();
-  await expect(screen.getByRole("link", "واتساب")).toHaveAttribute("href", "https://wa.me/201000000000");
-  await screen.getByRole("link", "العودة للرئيسية").tap();
+  await expect(screen.getByRole("link", "الموقع").first()).toHaveAttribute("href", "https://maps.google.com/?q=Cairo");
+  await expect(screen.getByRole("link", "اكتب تقييمًا على Google Reviews")).toBeVisible();
+  const returnLink = screen.getByRole("link", "العودة إلى NexTap");
+  await screen.scrollUntilVisible(returnLink, { direction: "down" });
+  await returnLink.tap();
   await expect(browser).toHaveURL("/");
 });
 
@@ -60,14 +64,15 @@ test("demo keeps the business profile within a mobile viewport", async ({ app, b
   expect(dimensions.ratings).toBe(1);
 });
 
-test("owner login form is available and anonymous admin access redirects to login", async ({ app, screen, browser }) => {
+test("team login supports Arabic and English", async ({ app, screen, browser }) => {
   await app.open("/login");
 
-  await expect(screen.getByRole("heading", "دخول المالك")).toBeVisible();
+  await expect(screen.getByRole("heading", "دخول فريق NexTap")).toBeVisible();
   await expect(screen.getByLabel("البريد الإلكتروني")).toBeVisible();
   await expect(screen.getByLabel("كلمة المرور")).toBeVisible();
+  await screen.getByRole("link", "English").tap();
+  await expect(browser).toHaveURL(/\/login\?lang=en/);
+  await expect(screen.getByRole("heading", "Team sign in")).toBeVisible();
+  await expect(screen.getByLabel("Email address")).toBeVisible();
 
-  await app.open("/admin");
-  await expect(browser).toHaveURL(/\/login/);
-  await expect(screen.getByRole("heading", "دخول المالك")).toBeVisible();
 });
