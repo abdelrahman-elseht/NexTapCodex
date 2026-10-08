@@ -62,20 +62,17 @@ export async function removeSection(fd:FormData){
  const {supabase}=await requireOwner();const businessId=val(fd,"business_id",50),pageId=val(fd,"page_id",50),sectionId=val(fd,"section_id",50);
  const {error}=await supabase.from("page_sections").delete().eq("id",sectionId).eq("page_id",pageId);
  if(error)redirect("/admin/businesses/"+businessId+"?error=remove");
- const {data}=await supabase.from("page_sections").select("id,position").eq("page_id",pageId).order("position");
- await normalizePositions(supabase,pageId,data||[]);
  revalidatePath("/admin/businesses/"+businessId);redirect("/admin/businesses/"+businessId+"?section=removed");
 }
-async function normalizePositions(supabase:any,pageId:string,rows:any[]){
- await supabase.from("page_sections").update({position:1000}).eq("page_id",pageId);
- for(let i=0;i<rows.length;i++)await supabase.from("page_sections").update({position:i}).eq("id",rows[i].id);
-}
-export async function moveSection(fd:FormData){
- const {supabase}=await requireOwner();const businessId=val(fd,"business_id",50),pageId=val(fd,"page_id",50),sectionId=val(fd,"section_id",50),direction=val(fd,"direction",8);
- const {data}=await supabase.from("page_sections").select("id,position").eq("page_id",pageId).order("position");
- const rows=data||[],at=rows.findIndex((r:any)=>r.id===sectionId),to=at+(direction==="up"?-1:1);
- if(at>=0&&to>=0&&to<rows.length){const moved=[...rows];[moved[at],moved[to]]=[moved[to],moved[at]];await normalizePositions(supabase,pageId,moved);}
- revalidatePath("/admin/businesses/"+businessId);redirect("/admin/businesses/"+businessId);
+export async function reorderSections(fd:FormData){
+ const {supabase}=await requireOwner();
+ const businessId=val(fd,"business_id",50),pageId=val(fd,"page_id",50);
+ const orderedSectionIds=fd.getAll("ordered_section_ids").map(String);
+ if(!pageId||orderedSectionIds.length===0)redirect("/admin/businesses/"+businessId+"?error=reorder");
+ const {error}=await supabase.rpc("reorder_page_sections",{target_page_id:pageId,ordered_section_ids:orderedSectionIds});
+ if(error)redirect("/admin/businesses/"+businessId+"?error=reorder");
+ revalidatePath("/admin/businesses/"+businessId);revalidatePath("/admin/businesses/"+businessId+"/preview");
+ redirect("/admin/businesses/"+businessId+"?sections=reordered");
 }
 export async function publishPage(fd:FormData){
  const {supabase}=await requireOwner();const businessId=val(fd,"business_id",50),pageId=val(fd,"page_id",50);

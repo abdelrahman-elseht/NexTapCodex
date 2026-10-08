@@ -21,5 +21,14 @@ export function parseSectionContent(raw: string) {
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Invalid section content.");
   return parsed.data;
 }
+export function reorderSectionIds<T extends { id: string }>(sections: T[], movingId: string, targetId: string) {
+  const ids = sections.map(section => section.id);
+  const from = ids.indexOf(movingId);
+  const to = ids.indexOf(targetId);
+  if (from < 0 || to < 0 || from === to) return ids;
+  const [moving] = ids.splice(from, 1);
+  ids.splice(from < to ? to - 1 : to, 0, moving);
+  return ids;
+}
 export const sectionKinds = ["hero","about","hours","contact","social","payments","links","services","gallery","reviews","branch"] as const;
 export const templates = ["cafe","retail","professional"] as const;

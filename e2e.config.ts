@@ -1,6 +1,8 @@
 import type { E2EConfig } from "e2e";
 import { web } from "@e2e-dev/web";
 
+try { process.loadEnvFile(".env.local"); } catch { /* Environment may be injected by CI. */ }
+
 const node = process.execPath;
 const env = {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
@@ -26,4 +28,10 @@ export default {
     { name: "desktop", engine: web({ viewport: { width: 1440, height: 960 } }), app },
     { name: "mobile", engine: web({ viewport: { width: 390, height: 844 } }), app },
   ],
+  credentials: {
+    owner: {
+      username: process.env.E2E_USER_OWNER_USERNAME ?? "",
+      password: () => process.env.E2E_USER_OWNER_PASSWORD ?? "",
+    },
+  },
 } satisfies E2EConfig;
