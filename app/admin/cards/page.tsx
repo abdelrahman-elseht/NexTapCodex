@@ -66,11 +66,19 @@ export default async function Cards({
     : { data: [] };
   const historyByCard = new Map<string, any[]>();
   for (const event of history || []) historyByCard.set(event.card_id, [...(historyByCard.get(event.card_id) || []), event]);
+  const errorMessages: Record<string, string> = {
+    name: "اكتب اسماً صالحاً للدفعة.",
+    quantity: "اختر كمية بين 1 و1,000 بطاقة.",
+    request: "تعذر التحقق من طلب الدفعة. أعد تحميل الصفحة وحاول مرة أخرى.",
+    batch: "تعذر إنشاء دفعة البطاقات. تأكد من تحديث قاعدة البيانات ثم حاول مرة أخرى.",
+    confirmation: "فعّل خانة التأكيد قبل تحديث تعيين البطاقة.",
+    assignment: "تعذر تحديث تعيين البطاقة. راجع الصفحة المنشورة المحددة.",
+  };
 
   return (
     <>
       <div className="admin-title"><h1>البطاقات</h1></div>
-      {query.error && <div className="alert" role="alert">تعذر تنفيذ العملية. راجع التأكيد والصفحة المنشورة المحددة.</div>}
+      {query.error && <div className="alert" role="alert">{errorMessages[query.error] || "تعذر تنفيذ العملية. حاول مرة أخرى."}</div>}
       {query.assigned && <div className="alert success" role="status">تم تحديث تعيين البطاقة.</div>}
 
       <nav className="card-section-tabs" aria-label="أقسام البطاقات">
