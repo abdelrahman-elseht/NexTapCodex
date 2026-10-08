@@ -69,11 +69,12 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
     const row = csv.split(/\r?\n/)[1];
     const cells = row?.match(/"([^"]*)"/g)?.map(cell => cell.slice(1, -1));
     if (!cells || cells.length !== 4) throw new Error("The card CSV row is malformed.");
+    const expectedOrigin = new URL(location.origin).origin;
     return {
       serial: cells[0],
       token: cells[1],
-      qrUrlIsStable: cells[2] === `https://nextab.services/c/${cells[1]}?via=qr`,
-      nfcUrlIsStable: cells[3] === `https://nextab.services/c/${cells[1]}?via=nfc`,
+      qrUrlIsStable: cells[2] === `${expectedOrigin}/c/${cells[1]}?via=qr`,
+      nfcUrlIsStable: cells[3] === `${expectedOrigin}/c/${cells[1]}?via=nfc`,
     };
   });
   expect(card.serial).toMatch(/^NT-\d{8}-\d{6}$/);

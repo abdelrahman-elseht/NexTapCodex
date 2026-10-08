@@ -1,4 +1,6 @@
 import { requireOwner } from "@/lib/auth/owner";
+import { headers } from "next/headers";
+import { cardUrls, getCardOrigin } from "@/lib/card-manufacturing";
 import { CopyNfcUrl } from "@/components/copy-nfc-url";
 import { assignCard, createBatch } from "../businesses/actions";
 import { randomUUID } from "node:crypto";
@@ -17,6 +19,7 @@ export default async function Cards({
 }) {
   const query = await searchParams;
   const { supabase } = await requireOwner();
+  const requestOrigin = getCardOrigin(undefined, await headers());
   const searchText = (query.search || "").trim().slice(0, 64);
   const searchIsSafe = !searchText || /^[A-Za-z0-9_-]+$/.test(searchText);
   const search = searchIsSafe ? searchText : "";
@@ -106,7 +109,7 @@ export default async function Cards({
           </label>
           <div className="batch-output-review">
             <strong>مراجعة ملفات التصنيع</strong>
-            <span>ملف ZIP يتضمن manifest.csv وnfc-encoding.csv وتعليمات الجودة وملف QR بصيغة SVG لكل بطاقة.</span>
+            <span>ملف ZIP يتضمن qr-index.html لمطابقة كل QR مع الرقم التسلسلي، وmanifest.csv وnfc-encoding.csv وملف SVG لكل بطاقة.</span>
             <span>كل بطاقة تبدأ بحالة غير معيّنة، مع رقم تسلسلي ثابت ورابطين دائمين.</span>
           </div>
           <SubmitButton className="button gold" pendingText="جارٍ التنفيذ...">إنشاء دفعة</SubmitButton>
@@ -193,6 +196,7 @@ export default async function Cards({
               <th>الرقم التسلسلي</th>
               <th>الحالة</th>
               <th>الموقع المعيّن</th>
+              <th>رابط QR</th>
               <th>رابط NFC</th>
               <th>التعيين</th>
             </tr>
@@ -229,6 +233,7 @@ export default async function Cards({
                   <td>{assignedPage
                     ? `${assignedBusiness?.name || ""} / ${assignedPage.slug}${(!assignedPage.is_active || !assignedPage.published_snapshot_id || assignedBusiness?.status !== "active") ? " (غير متاح)" : ""}`
                     : "—"}</td>
+                  <td dir="ltr"><a className="encoded-url" href={cardUrls(card.token, requestOrigin).qrUrl} target="_blank" rel="noreferrer">{cardUrls(card.token, requestOrigin).qrUrl}</a></td>
                   <td><CopyNfcUrl token={card.token} /></td>
                   <td>
                     <form id={`assign-card-${card.id}`} action={assignCard} className="inline card-assignment-form">
@@ -260,7 +265,7 @@ export default async function Cards({
               );
             })}
             {cardRows.length === 0 && (
-              <tr><td colSpan={5}>لا توجد بطاقات تطابق عوامل التصفية.</td></tr>
+              <tr><td colSpan={6}>لا توجد بطاقات تطابق عوامل التصفية.</td></tr>
             )}
           </tbody>
         </table>

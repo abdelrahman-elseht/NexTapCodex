@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
 import { notFound } from "next/navigation";
-import { qrSvg, cardUrls } from "@/lib/card-manufacturing";
+import { headers } from "next/headers";
+import { qrSvg, cardUrls, getCardOrigin } from "@/lib/card-manufacturing";
 import { requireOwner } from "@/lib/auth/owner";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export default async function ManufacturingBatchPage({
 }) {
   const { id } = await params;
   const { created } = await searchParams;
+  const requestOrigin = getCardOrigin(undefined, await headers());
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const { supabase } = await requireOwner();
@@ -23,7 +25,7 @@ export default async function ManufacturingBatchPage({
   if (!batch || error || !cards || cards.length !== batch.quantity || cards.length === 0) notFound();
 
   const preview = cards[0];
-  const previewSvg = await qrSvg(cardUrls(preview.token).qrUrl);
+  const previewSvg = await qrSvg(cardUrls(preview.token, requestOrigin).qrUrl);
   const counts = cards.reduce<Record<string, number>>((result, card) => {
     result[card.status] = (result[card.status] || 0) + 1;
     return result;
@@ -56,7 +58,7 @@ export default async function ManufacturingBatchPage({
         <div className="qr-preview" dangerouslySetInnerHTML={{ __html: previewSvg }} />
         <div className="qr-preview-details">
           <p><strong dir="ltr">{preview.serial}</strong></p>
-          <p className="encoded-url" dir="ltr">{cardUrls(preview.token).qrUrl}</p>
+          <p className="encoded-url" dir="ltr">{cardUrls(preview.token, requestOrigin).qrUrl}</p>
           <p className="muted">استخدم ملف SVG الذي يحمل هذا الرقم التسلسلي عند مطابقة عينة الطباعة. الروابط والمعرّفات ثابتة عند إعادة التنزيل.</p>
         </div>
       </section>
@@ -65,6 +67,7 @@ export default async function ManufacturingBatchPage({
         <div className="panel-heading"><div><span className="panel-kicker">مراجعة قبل الإرسال</span><h2 id="printer-notes-title">التجهيز للطباعة والترميز</h2></div></div>
         <div className="printer-notes-grid">
           <div><h3>قبل الطباعة</h3><ul>
+            <li>افتح qr-index.html من ملف ZIP لمطابقة كل QR مع الرقم التسلسلي والرابط.</li>
             <li>اطلب من المطبعة متطلبات ملفات البيانات المتغيرة والمقاس النهائي للرمز والـ bleed والمنطقة الآمنة.</li>
             <li>اطبع ورقة اختبار عالية التباين، مع مساحة QR البيضاء كاملة ومن دون قص أو شعار فوق الرمز.</li>
             <li>افحص خمس عينات على جهاز حقيقي، بينها أول وآخر رقم تسلسلي، وطابق الرابط مع manifest.csv.</li>
