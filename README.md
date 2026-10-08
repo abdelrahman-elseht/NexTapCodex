@@ -9,7 +9,7 @@ NexTap is an Arabic-first owner dashboard for Egyptian businesses using permanen
 3. Apply the checked-in SQL migrations in timestamp order (already applied to the connected NexTabCodex Supabase project on 2026-10-08).
 4. Create/invite the single owner with Supabase Auth. An administrator must insert the owner's Auth UUID into `public.owner_users` from the SQL Editor. There is no public sign-up.
 5. Configure Auth redirect URLs for `/auth/callback`. Enable MFA in Supabase for the owner.
-6. Run `npm run dev`, `npm run typecheck`, `npm test`, and `npm run build`.
+6. Run `npm run dev`, `npm run typecheck`, `npm test`, `npm run test:e2e`, and `npm run build`. E2E launches isolated desktop and mobile browser checks; Chromium is installed with `npx @e2e-dev/web install chromium`.
 
 Never commit `.env.local`. The application only uses a publishable key and does not contain a service-role key.
 

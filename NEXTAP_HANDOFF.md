@@ -10,8 +10,8 @@ Next.js App Router + TypeScript, Arabic RTL rendering, Supabase Auth cookie sess
 
 | ID | Status | Evidence |
 |---|---|---|
-| AC01 | PARTIAL | Landing, demo and contact CTA source exists; responsive browser checks not run. |
-| AC02 | PARTIAL | Server owner guard and RLS policies exist; owner is not provisioned and direct API adversarial tests not run. |
+| AC01 | PASS | E2E verified landing/demo/contact navigation at 1440px and 390px, with no horizontal overflow. |
+| AC02 | PARTIAL | E2E verified anonymous `/admin` redirects to `/login`; authenticated owner access and adversarial direct API checks remain unverified. |
 | AC03 | BLOCKED | Create/edit source exists; connected journey requires an owner account. |
 | AC04 | PARTIAL | Snapshot RPC and owner preview source exist; not exercised through UI. |
 | AC05 | PARTIAL | Section add/remove/hide/reorder/title code exists; no live journey evidence. |
@@ -27,7 +27,7 @@ Next.js App Router + TypeScript, Arabic RTL rendering, Supabase Auth cookie sess
 | AC15 | PARTIAL | Core tables have RLS; security advisor found pre-existing `public.rls_auto_enable()` executable by anon/authenticated. This was not added by these migrations; provenance remains to be inspected. |
 | AC16 | PARTIAL | Snapshot ID/version and no-store card resolver implemented; production CDN behavior unavailable without deployment. |
 | AC17 | PARTIAL | Arabic RTL and responsive CSS source exists; no device/English-direction test. |
-| AC18 | BLOCKED | npm install failed because registry requests returned EACCES and npm cache directory was not writable. Typecheck, tests, build and E2E remain unrun. |
+| AC18 | PARTIAL | `npm run typecheck`, `npm test` (3 tests), `npm run build`, and `npm run test:e2e` (6 desktop/mobile checks) pass. Authenticated create/edit/publish/card/reassignment journey is unverified because no owner test credentials are available. |
 
 Supabase inspection confirmed 11 public tables, all with RLS enabled. The performance advisor reports expected unused-index notices on a newly empty database. The security warning concerns the existing `public.rls_auto_enable()` function and must be reviewed before launch: [Supabase remediation](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
 
@@ -38,7 +38,8 @@ Supabase inspection confirmed 11 public tables, all with RLS enabled. The perfor
 - Six migrations: applied successfully (one migration was retried after a history timestamp collision).
 - ``npm install --no-audit --no-fund`: passed after pinning `@supabase/supabase-js` 2.100.1 to satisfy `@supabase/ssr` and updating Next.js to patched 15.5.27.
 - `npm run typecheck`: passed. `npm test`: 3 tests passed. `npm run build`: passed on Next.js 15.5.27.
-- Local HTTP checks: `/`, `/demo`, `/login` returned 200; anonymous `/admin` returned 307 to `/login`. Browser visual/E2E and authenticated Owner checks remain unrun because no owner is provisioned.
+- `npm run test:e2e -- --reporter list,junit`: passed 3 public/login/security checks against desktop (1440px) and mobile (390px); report: `.e2e/report.json`, JUnit: `.e2e/junit.xml` (ignored generated artifacts).
+- E2E verified `/`, `/demo`, `/login`, primary contact/demo links, image wordmark rendering, mobile horizontal overflow, and anonymous `/admin` redirect to login. Authenticated Owner journeys remain unverified because test credentials are not available to the runner.
 
 ## Source and setup
 
@@ -46,9 +47,9 @@ Key paths: `app/admin/`, `app/b/[slug]/page.tsx`, `app/c/[token]/route.ts`, `com
 
 Required environment names only: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL`.
 
-Gaps: individual list-item editor controls, image upload UI, bilingual direction switch, explicit rate limiting, package lock, full security/unit/E2E tests, and final build verification. The landing WhatsApp number is a placeholder. The database schema contains no sample or test business rows.
+Gaps: individual list-item editor controls, image upload UI, bilingual direction switch, explicit rate limiting, authenticated owner and direct-RLS E2E verification, and review of the existing `rls_auto_enable()` function. The landing WhatsApp number is a placeholder. The database schema contains no sample or test business rows.
 
-Local preview: `http://localhost:3000` (dev server running). The public landing and demo are viewable without a login.
+Local preview: run `npm run dev` and open `http://localhost:3000`. The E2E config starts an isolated development server on port 3127. The public landing and demo are viewable without a login.
 
 ## Deployment and costs
 
