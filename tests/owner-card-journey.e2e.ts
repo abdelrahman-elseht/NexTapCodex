@@ -1,0 +1,160 @@
+import { test } from "@e2e-dev/web";
+import { credentials, expect } from "e2e";
+
+test("an owner creates, publishes, activates, scans, renames, and reassigns a card", async ({ app, screen, browser }) => {
+  test.skip(
+    !process.env.E2E_USER_OWNER_USERNAME ||
+      !process.env.E2E_USER_OWNER_PASSWORD ||
+      process.env.E2E_ALLOW_MUTATIONS !== "true",
+    "Owner workflow tests require credentials and E2E_ALLOW_MUTATIONS=true for a dedicated isolated Supabase test project.",
+  );
+
+  await app.open("/login");
+  await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
+  await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
+  await screen.getByRole("button", "دخول آمن").tap();
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+
+  const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  const originalSlug = `e2e-${suffix}`;
+  const renamedSlug = `e2e-renamed-${suffix}`;
+  const secondSlug = `e2e-target-${suffix}`;
+  const draftDescription = `Draft content ${suffix}`;
+
+  await app.open("/admin/businesses/new");
+  await screen.getByLabel("اسم النشاط").fill(`E2E Business ${suffix}`);
+  await screen.getByLabel("التصنيف").fill("E2E");
+  await screen.getByLabel("رابط الصفحة").fill(originalSlug);
+  await screen.getByRole("button", "إنشاء النشاط والصفحة").tap();
+  await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/);
+
+  const firstBusinessId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
+  const firstEditorPath = `/admin/businesses/${firstBusinessId}`;
+  const firstPageId = await browser.evaluate(() => {
+    const href = document.querySelector<HTMLAnchorElement>('a[href*="/preview?page="]')?.getAttribute("href");
+    return href ? new URL(href, location.origin).searchParams.get("page") || "" : "";
+  });
+  expect(firstBusinessId).toMatch(/^[0-9a-f-]{36}$/i);
+  expect(firstPageId).toMatch(/^[0-9a-f-]{36}$/i);
+
+  const aboutForm = browser.locator(".section-edit-form").nth(1);
+  await aboutForm.getByLabel("المحتوى (JSON)").fill(JSON.stringify({ description: draftDescription }));
+  await aboutForm.getByRole("button", "حفظ القسم").tap();
+  await app.open(`${firstEditorPath}/preview?page=${firstPageId}`);
+  await expect(screen.getByText(draftDescription)).toBeVisible();
+
+  await app.open(`/b/${originalSlug}`);
+  const publicDraft = await browser.evaluate(() => document.body.innerText);
+  expect(publicDraft.includes(draftDescription)).toBe(false);
+
+  await app.open(firstEditorPath);
+  await screen.getByRole("button", "نشر التغييرات").tap();
+  await expect(screen.getByRole("status")).toContainText("تم نشر نسخة جديدة من الصفحة.");
+  await app.open(`/b/${originalSlug}`);
+  await expect(screen.getByText(draftDescription)).toBeVisible();
+
+  const batchName = `E2E batch ${suffix}`;
+  await app.open("/admin/cards");
+  await screen.getByPlaceholder("اسم الدفعة").fill(batchName);
+  await screen.getByRole("spinbutton").fill("1");
+  await screen.getByRole("button", "إنشاء دفعة").tap();
+  await expect(browser).toHaveURL(/\/admin\/cards\?batch=[0-9a-f-]+/);
+
+  const card = await browser.evaluate(async () => {
+    const batchId = new URL(location.href).searchParams.get("batch");
+    if (!batchId) throw new Error("The created batch id is missing from the URL.");
+    const response = await fetch(`/admin/cards/export?batch=${encodeURIComponent(batchId)}`);
+    if (!response.ok) throw new Error("The created card batch could not be exported.");
+    const csv = (await response.text()).replace(/^\uFEFF/, "");
+    const row = csv.split(/\r?\n/)[1];
+    const cells = row?.match(/"([^"]*)"/g)?.map(cell => cell.slice(1, -1));
+    if (!cells || cells.length !== 4) throw new Error("The card CSV row is malformed.");
+    return {
+      serial: cells[0],
+      token: cells[1],
+      qrUrlIsStable: cells[2] === `https://nextab.services/c/${cells[1]}?via=qr`,
+      nfcUrlIsStable: cells[3] === `https://nextab.services/c/${cells[1]}?via=nfc`,
+    };
+  });
+  expect(card.serial).toMatch(/^NT-\d{8}-\d{6}$/);
+  expect(card.token).toMatch(/^[A-Za-z0-9_-]{32,64}$/);
+  expect(card.qrUrlIsStable).toBe(true);
+  expect(card.nfcUrlIsStable).toBe(true);
+
+  const firstCardRow = browser.locator("tr").filter({ hasText: card.serial });
+  const firstPageAssignment = firstCardRow.getByRole("combobox");
+  expect(await firstPageAssignment.count()).toBe(1);
+  const firstPageList = await browser.evaluate(() => {
+    const select = document.querySelector<HTMLSelectElement>('select[name="page_id"]');
+    return select ? {
+      selected: select.value,
+      options: Array.from(select.options).slice(1).map(option => ({ id: option.value, text: option.textContent || "" })),
+    } : { selected: "", options: [] };
+  });
+  expect(firstPageList.options.some(option => option.id === firstPageId)).toBe(true);
+  if (firstPageList.options.length === 1) {
+    expect(firstPageList.selected).toBe(firstPageId);
+  } else {
+    await firstPageAssignment.selectOption({ value: firstPageId });
+  }
+
+  await firstCardRow.getByRole("checkbox").check();
+  await firstCardRow.getByRole("button", "تفعيل / نقل").tap();
+  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/);
+  await expect(screen.getByRole("status")).toContainText("تم تحديث تعيين البطاقة.");
+
+  const baseUrl = app.baseUrl;
+  if (!baseUrl) throw new Error("The E2E app target has no base URL.");
+  const initialRedirect = await fetch(new URL(`/c/${card.token}?via=qr`, baseUrl), { redirect: "manual" });
+  expect(initialRedirect.status).toBe(302);
+  expect(initialRedirect.headers.get("location")).toContain(`/b/${originalSlug}?via=qr`);
+  await app.open(`/c/${card.token}?via=qr`);
+  await expect(browser).toHaveURL(`/b/${originalSlug}?via=qr`);
+
+  await app.open(firstEditorPath);
+  await screen.getByLabel("اسم النشاط").fill(`E2E Renamed ${suffix}`);
+  await screen.getByLabel("رابط الصفحة").fill(renamedSlug);
+  await screen.getByRole("button", "حفظ الإعدادات").tap();
+  await expect(browser).toHaveURL(new RegExp(`/admin/businesses/${firstBusinessId}\\?saved=1$`));
+  await screen.getByRole("button", "نشر التغييرات").tap();
+  await expect(screen.getByRole("status")).toContainText("تم نشر نسخة جديدة من الصفحة.");
+  await app.open(`/b/${originalSlug}`);
+  await expect(screen.getByText(draftDescription)).toBeVisible();
+
+  const renamedRedirect = await fetch(new URL(`/c/${card.token}?via=qr`, baseUrl), { redirect: "manual" });
+  expect(renamedRedirect.status).toBe(302);
+  expect(renamedRedirect.headers.get("location")).toContain(`/b/${renamedSlug}?via=qr`);
+  expect(renamedRedirect.headers.get("cache-control")).toContain("no-store");
+
+  await app.open("/admin/businesses/new");
+  await screen.getByLabel("اسم النشاط").fill(`E2E Target ${suffix}`);
+  await screen.getByLabel("التصنيف").fill("E2E");
+  await screen.getByLabel("رابط الصفحة").fill(secondSlug);
+  await screen.getByRole("button", "إنشاء النشاط والصفحة").tap();
+  await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/);
+  const secondBusinessId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
+  const secondPageId = await browser.evaluate(() => {
+    const href = document.querySelector<HTMLAnchorElement>('a[href*="/preview?page="]')?.getAttribute("href");
+    return href ? new URL(href, location.origin).searchParams.get("page") || "" : "";
+  });
+  expect(secondPageId).toMatch(/^[0-9a-f-]{36}$/i);
+  await screen.getByRole("button", "نشر التغييرات").tap();
+  await expect(screen.getByRole("status")).toContainText("تم نشر نسخة جديدة من الصفحة.");
+
+  await app.open("/admin/cards");
+  const secondCardRow = browser.locator("tr").filter({ hasText: card.serial });
+  await secondCardRow.getByRole("combobox").selectOption({ value: secondPageId });
+  await secondCardRow.getByRole("checkbox").check();
+  await secondCardRow.getByRole("button", "تفعيل / نقل").tap();
+  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/);
+
+  const reassignedRedirect = await fetch(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
+  expect(reassignedRedirect.status).toBe(302);
+  expect(reassignedRedirect.headers.get("location")).toContain(`/b/${secondSlug}?via=nfc`);
+  expect(reassignedRedirect.headers.get("cache-control")).toContain("no-store");
+  await app.open(`/c/${card.token}?via=nfc`);
+  await expect(browser).toHaveURL(`/b/${secondSlug}?via=nfc`);
+
+  await app.open(`/admin/businesses/${secondBusinessId}`);
+  await expect(screen.getByRole("heading", `إدارة E2E Target ${suffix}`)).toBeVisible();
+});

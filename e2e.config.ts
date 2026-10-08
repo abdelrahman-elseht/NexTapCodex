@@ -7,13 +7,13 @@ const node = process.execPath;
 const env = {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_e2e_placeholder",
-  NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3127",
+  NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3137",
 };
 const app = {
-  url: "http://127.0.0.1:3127",
+  url: "http://127.0.0.1:3137",
   command: {
     executable: node,
-    args: ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", "3127"],
+    args: ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", "3137"],
     cwd: process.cwd(),
     env,
     startupTimeout: 120_000,

@@ -1,6 +1,6 @@
 # NexTap MVP handoff
 
-**State:** Core application and schema implementation are present. The database is live in the connected `NexTabCodex` project, but the app has not passed install/typecheck/test/build or an authenticated end-to-end run. It is not launch-ready.
+**State:** Core application and schema implementation are present. Typecheck, unit tests, production build, and public desktop/mobile E2E checks pass. Authenticated owner journeys are implemented as guarded E2E tests but remain unverified because this runner has no owner credentials and mutation tests are disabled. It is not launch-ready.
 
 ## Architecture and Supabase
 
@@ -27,7 +27,7 @@ Next.js App Router + TypeScript, Arabic RTL rendering, Supabase Auth cookie sess
 | AC15 | PARTIAL | Core tables have RLS; security advisor found pre-existing `public.rls_auto_enable()` executable by anon/authenticated. This was not added by these migrations; provenance remains to be inspected. |
 | AC16 | PARTIAL | Snapshot ID/version and no-store card resolver implemented; production CDN behavior unavailable without deployment. |
 | AC17 | PARTIAL | Arabic RTL and responsive CSS source exists; no device/English-direction test. |
-| AC18 | PARTIAL | `npm run typecheck`, `npm test` (3 tests), `npm run build`, and `npm run test:e2e` (6 desktop/mobile checks) pass. Authenticated create/edit/publish/card/reassignment journey is unverified because no owner test credentials are available. |
+| AC18 | PARTIAL | `npm run typecheck`, `npm test` (6 tests), `npm run build`, and public E2E checks (20 desktop/mobile checks) pass. An authenticated create/edit/preview/publish/card/scan/rename/reassignment journey is now covered by a guarded test, but was skipped because owner credentials and `E2E_ALLOW_MUTATIONS=true` are unavailable. |
 
 Supabase inspection confirmed 11 public tables, all with RLS enabled. The performance advisor reports expected unused-index notices on a newly empty database. The security warning concerns the existing `public.rls_auto_enable()` function and must be reviewed before launch: [Supabase remediation](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
 
@@ -37,9 +37,10 @@ Supabase inspection confirmed 11 public tables, all with RLS enabled. The perfor
 - Initial public schema: empty. After migrations: 11 tables, all RLS enabled.
 - Six migrations: applied successfully (one migration was retried after a history timestamp collision).
 - ``npm install --no-audit --no-fund`: passed after pinning `@supabase/supabase-js` 2.100.1 to satisfy `@supabase/ssr` and updating Next.js to patched 15.5.27.
-- `npm run typecheck`: passed. `npm test`: 3 tests passed. `npm run build`: passed on Next.js 15.5.27.
-- `npm run test:e2e -- --reporter list,junit`: passed 3 public/login/security checks against desktop (1440px) and mobile (390px); report: `.e2e/report.json`, JUnit: `.e2e/junit.xml` (ignored generated artifacts).
-- E2E verified `/`, `/demo`, `/login`, primary contact/demo links, image wordmark rendering, mobile horizontal overflow, and anonymous `/admin` redirect to login. Authenticated Owner journeys remain unverified because test credentials are not available to the runner.
+- `npm run typecheck`: passed. `npm test`: 6 tests passed. `npm run build`: passed on Next.js 15.5.27.
+- `node_modules/.bin/e2e.cmd run --reporter list`: 20 public journey/security checks passed across desktop (1440px) and mobile (390px); six owner mutation tests were skipped by the missing credentials/explicit mutation guard. Report: `.e2e/report.json` (ignored generated artifacts).
+- Public E2E checks cover `/`, `/demo`, `/login`, primary contact/demo links, image wordmark rendering, mobile overflow, anonymous admin redirects, invalid card tokens, unknown business slugs, RTL, and keyboard focus. The new owner golden path checks draft privacy, publish, card CSV URLs, activation, scan redirect, slug rename, reassignment, and no-store redirect headers when enabled.
+- Fixed card activation UX: the admin picker now offers only published, active pages for active businesses and auto-selects the sole eligible page, matching the database assignment RPC rules.
 
 ## Source and setup
 
@@ -49,7 +50,7 @@ Required environment names only: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABA
 
 Gaps: individual list-item editor controls, image upload UI, bilingual direction switch, explicit rate limiting, authenticated owner and direct-RLS E2E verification, and review of the existing `rls_auto_enable()` function. The landing WhatsApp number is a placeholder. The database schema contains no sample or test business rows.
 
-Local preview: run `npm run dev` and open `http://localhost:3000`. The E2E config starts an isolated development server on port 3127. The public landing and demo are viewable without a login.
+Local preview: run `npm run dev` and open `http://localhost:3000`. The E2E config starts an isolated development server on port 3137. The public landing and demo are viewable without a login.
 
 ## Deployment and costs
 

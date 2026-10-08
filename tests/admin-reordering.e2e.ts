@@ -3,14 +3,14 @@ import { credentials, expect } from "e2e";
 
 test("an owner can reorder sections, save them, and keep the order on reload", async ({ app, screen, browser }) => {
   test.skip(
-    !process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD,
-    "Set E2E_USER_OWNER_USERNAME and E2E_USER_OWNER_PASSWORD to exercise the protected owner workflow.",
+    !process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD || process.env.E2E_ALLOW_MUTATIONS !== "true",
+    "Owner mutation tests require credentials and E2E_ALLOW_MUTATIONS=true for a dedicated isolated Supabase test project.",
   );
 
   await app.open("/login");
-  await screen.getByLabel("Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ").fill(credentials.user("owner").username);
-  await screen.getByLabel("ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±").fill(credentials.user("owner").password);
-  await screen.getByRole("button", "Ø¯Ø®ÙˆÙ„ Ø¢Ù…Ù†").tap();
+  await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
+  await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
+  await screen.getByRole("button", "دخول آمن").tap();
   await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
 
   const editorPath = await browser.evaluate(() => document.querySelector<HTMLAnchorElement>('a[href^="/admin/businesses/"]')?.getAttribute("href") ?? "");
