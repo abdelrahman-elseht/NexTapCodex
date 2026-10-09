@@ -7,7 +7,7 @@ Status: **deployment preparation only**. Production traffic, nameservers, and Ve
 - Worktree: `F:\projects\NexTabCodex-production-setup`
 - Branch: `chore/production-setup`
 - Base: `90fddfa` (`beta01.6` at the time this worktree was created)
-- The original checkout and `beta01.5` were not modified.
+- The original checkout's application files and `beta01.5` were not modified. The Vercel CLI did add ignored `.vercel` metadata and the matching `.gitignore` rule to the original checkout while linking it; its pre-existing application edits remain untouched.
 - No existing application behavior, repository migrations, RLS policies, staging data, or production credentials were changed. The reviewed repository migrations were applied only to the new empty Production project.
 
 ## Completed in this branch
