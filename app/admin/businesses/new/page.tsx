@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createBusiness } from "../actions";
 import { SubmitButton } from "@/components/submit-button";
+import { templatePresets } from "@/lib/content";
 
 export default async function NewBusiness({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
@@ -35,19 +36,11 @@ export default async function NewBusiness({ searchParams }: { searchParams: Prom
 
         <fieldset className="template-fieldset">
           <legend>اختر نقطة البداية</legend>
-          <div className="template-choice-grid">
-            <label className="template-choice">
-              <input type="radio" name="template" value="cafe" defaultChecked />
-              <span className="template-choice-copy"><strong>مقهى ومطعم</strong><small>قائمة · ساعات · موقع</small></span>
-            </label>
-            <label className="template-choice">
-              <input type="radio" name="template" value="retail" />
-              <span className="template-choice-copy"><strong>متجر وخدمات</strong><small>عروض · خدمات · تواصل</small></span>
-            </label>
-            <label className="template-choice">
-              <input type="radio" name="template" value="professional" />
-              <span className="template-choice-copy"><strong>بسيط واحترافي</strong><small>تعريف · تواصل · روابط</small></span>
-            </label>
+          <div className="template-choice-grid template-choice-grid-four">
+            {templatePresets.map((preset, index) => <label className="template-choice" key={preset.value}>
+              <input type="radio" name="template" value={preset.value} defaultChecked={index === 0} />
+              <span className="template-choice-copy"><strong>{preset.label}</strong><small>{preset.description}</small></span>
+            </label>)}
           </div>
         </fieldset>
 

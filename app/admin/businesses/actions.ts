@@ -3,25 +3,28 @@ import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
-import { parseSectionContent, sectionKinds, templates } from "@/lib/content";
+import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/content";
 import { z } from "zod";
 
 const slugSchema=z.string().trim().toLowerCase().regex(/^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?[a-z0-9]$/,"استخدم أحرفاً صغيرة وأرقاماً وشرطات فقط.");
 function val(fd:FormData,key:string,max=200){return String(fd.get(key)||"").trim().slice(0,max)}
 const defaults:Record<string,unknown>={
- hero:{tagline:"",description:"",coverUrl:"",logoUrl:"",color:"#bb9659",language:"ar"},
+ hero:{tagline:"",description:"",coverUrl:"",logoUrl:"",color:"#7a2028",language:"en",ctaLabel:"",ctaUrl:""},
  about:{description:""},hours:{items:[]},contact:{phone:"",whatsapp:"",email:"",address:"",mapsUrl:""},
  social:{items:[]},payments:{items:[]},links:{items:[]},services:{items:[]},gallery:{items:[]},reviews:{url:""},branch:{items:[]}
 };
 export async function createBusiness(fd:FormData){
  const {supabase}=await requireOwner();
  const name=val(fd,"name",120),category=val(fd,"category",80),slug=val(fd,"slug",60).toLowerCase(),template=val(fd,"template",20);
- if(name.length<1||!slugSchema.safeParse(slug).success||!templates.includes(template as any)) redirect("/admin/businesses/new?error=validation");
+ if(name.length<1||!slugSchema.safeParse(slug).success||!isTemplate(template)) redirect("/admin/businesses/new?error=validation");
  const {data:b,error:be}=await supabase.from("businesses").insert({name,category:category||"business"}).select("id").single();
  if(be||!b) redirect("/admin/businesses/new?error=database");
  const {data:p,error:pe}=await supabase.from("business_pages").insert({business_id:b.id,slug,template}).select("id").single();
  if(pe||!p){await supabase.from("businesses").delete().eq("id",b.id);redirect("/admin/businesses/new?error=slug");}
- const seeds=Object.entries(defaults).map(([kind,content],position)=>({page_id:p.id,section_key:kind,title:kind==="hero"?"الرئيسية":kind==="about"?"عن النشاط":kind==="hours"?"مواعيد العمل":kind==="contact"?"تواصل معنا":kind==="social"?"تابعنا":kind==="payments"?"طرق الدفع":kind==="links"?"روابط مهمة":kind==="services"?"الخدمات":kind==="gallery"?"معرض الصور":kind==="reviews"?"آراء العملاء":"الفروع",position,kind,content,enabled:kind!=="branch"}));
+ const presetOrder = presetSections(template);
+ const orderedKinds = [...presetOrder, ...Object.keys(defaults).filter(kind => !presetOrder.includes(kind))];
+ const enabledKinds = new Set(presetOrder);
+ const seeds=orderedKinds.map((kind,position)=>({page_id:p.id,section_key:kind,title:kind==="hero"?"الرئيسية":kind==="about"?"عن النشاط":kind==="hours"?"مواعيد العمل":kind==="contact"?"تواصل معنا":kind==="social"?"تابعنا":kind==="payments"?"طرق الدفع":kind==="links"?"روابط مهمة":kind==="services"?"الخدمات":kind==="gallery"?"معرض الصور":kind==="reviews"?"آراء العملاء":"الفروع",position,kind,content:defaults[kind],enabled:enabledKinds.has(kind)}));
  await supabase.from("page_sections").insert(seeds);
  await supabase.from("audit_logs").insert({actor_id:(await supabase.auth.getClaims()).data?.claims?.sub,action:"business.create",entity_type:"business",entity_id:b.id});
  revalidatePath("/admin");redirect("/admin/businesses/"+b.id+"?created=1");
@@ -29,11 +32,94 @@ export async function createBusiness(fd:FormData){
 export async function saveBusiness(fd:FormData){
  const {supabase}=await requireOwner();
  const businessId=val(fd,"business_id",50),pageId=val(fd,"page_id",50),name=val(fd,"name",120),category=val(fd,"category",80),slug=val(fd,"slug",60).toLowerCase(),template=val(fd,"template",20);
- if(!name||!slugSchema.safeParse(slug).success||!templates.includes(template as any)) redirect("/admin/businesses/"+businessId+"?error=validation");
+ if(!name||!slugSchema.safeParse(slug).success||!isTemplate(template)) redirect("/admin/businesses/"+businessId+"?error=validation");
  const {error:be}=await supabase.from("businesses").update({name,category,status:fd.get("archive")==="on"?"archived":"active",updated_at:new Date().toISOString()}).eq("id",businessId);
  const {error:pe}=await supabase.from("business_pages").update({slug,template,updated_at:new Date().toISOString()}).eq("id",pageId);
  if(be||pe) redirect("/admin/businesses/"+businessId+"?error=save");
  revalidatePath("/admin");revalidatePath("/b/"+slug);redirect("/admin/businesses/"+businessId+"?saved=1");
+}
+
+type DraftSection = { id?: string; key: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
+function parseDraft(fd: FormData) {
+ const raw = String(fd.get("draft") || "{}");
+ const parsed = JSON.parse(raw) as { businessId?: string; pageId?: string; name?: string; category?: string; slug?: string; template?: string; archived?: boolean; sections?: DraftSection[] };
+ const name = String(parsed.name || "").trim().slice(0, 120);
+ const category = String(parsed.category || "business").trim().slice(0, 80) || "business";
+ const slug = String(parsed.slug || "").trim().toLowerCase();
+ const template = String(parsed.template || "professional");
+ if (!parsed.businessId || !parsed.pageId || !name || !slugSchema.safeParse(slug).success || !isTemplate(template)) throw new Error("Check the business name, slug and template.");
+ const sections = Array.isArray(parsed.sections) ? parsed.sections : [];
+ if (!sections.some(section => section.kind === "hero")) throw new Error("A page needs a hero section.");
+ const cleanSections = sections.map((section, index) => {
+   if (!section || !sectionKinds.includes(section.kind as any)) throw new Error("Unsupported section type.");
+   const key = String(section.key || section.kind).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40) || `section_${index + 1}`;
+   const content = section.content && typeof section.content === "object" ? cleanSectionContent(section.content as Record<string, unknown>) : {};
+   // Run the same URL/item checks used by the legacy section form.
+   parseSectionContent(JSON.stringify(content));
+   return { key, kind: section.kind, title: String(section.title || section.kind).trim().slice(0, 80), position: index, enabled: Boolean(section.enabled), content };
+ });
+ return { businessId: parsed.businessId, pageId: parsed.pageId, name, category, slug, template, archived: Boolean(parsed.archived), sections: cleanSections };
+}
+
+function cleanSectionContent(content: Record<string, unknown>): Record<string, unknown> {
+ const next: Record<string, unknown> = { ...content };
+ for (const [key, value] of Object.entries(next)) {
+  if (!Array.isArray(value)) continue;
+  next[key] = value.filter(raw => {
+   if (!raw || typeof raw !== "object") return false;
+   const item = raw as Record<string, unknown>;
+   // Empty rows are editor placeholders; omit them from the persisted snapshot.
+   return [item.label, item.url, item.value].some(part => typeof part === "string" && part.trim());
+  }).map(raw => {
+   const item = raw as Record<string, unknown>;
+   return { label: String(item.label || "").trim().slice(0, 80), value: String(item.value || "").trim().slice(0, 500), url: String(item.url || "").trim().slice(0, 2048), provider: typeof item.provider === "string" ? item.provider.trim().slice(0, 40) : undefined, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
+  });
+ }
+ return next;
+}
+
+async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["supabase"], draft: ReturnType<typeof parseDraft>) {
+ const { error } = await supabase.rpc("save_page_draft", {
+  target_business_id: draft.businessId,
+  target_page_id: draft.pageId,
+  business_name: draft.name,
+  business_category: draft.category,
+  business_status: draft.archived ? "archived" : "active",
+  page_slug: draft.slug,
+  page_template: draft.template,
+  section_rows: draft.sections.map(section => ({ section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content })),
+ });
+ if (error) throw new Error(error.message || "Could not save draft.");
+}
+
+/** Persist a complete local editor draft without redirecting or publishing it. */
+export async function saveDraftState(fd: FormData): Promise<{ ok: boolean; error?: string }> {
+ try {
+  const { supabase } = await requireOwner();
+  const draft = parseDraft(fd);
+  await persistDraft(supabase, draft);
+  revalidatePath("/admin/businesses/" + draft.businessId);
+  revalidatePath("/admin/businesses/" + draft.businessId + "/preview");
+  return { ok: true };
+ } catch (error) {
+  return { ok: false, error: error instanceof Error ? error.message : "Could not save draft." };
+ }
+}
+
+/** Save the local draft and publish the validated snapshot in one explicit action. */
+export async function publishDraftState(fd: FormData): Promise<{ ok: boolean; error?: string; version?: number }> {
+ try {
+  const { supabase } = await requireOwner();
+  const draft = parseDraft(fd);
+  await persistDraft(supabase, draft);
+  const { data, error } = await supabase.rpc("publish_page", { target_page_id: draft.pageId });
+  if (error) throw new Error("Could not publish this page.");
+  revalidatePath("/b/[slug]", "page");
+  revalidatePath("/admin/businesses/" + draft.businessId);
+  return { ok: true, version: typeof data?.version === "number" ? data.version : undefined };
+ } catch (error) {
+  return { ok: false, error: error instanceof Error ? error.message : "Could not publish this page." };
+ }
 }
 export async function saveSection(fd:FormData){
  const {supabase}=await requireOwner();const businessId=val(fd,"business_id",50),pageId=val(fd,"page_id",50),sectionId=val(fd,"section_id",50);

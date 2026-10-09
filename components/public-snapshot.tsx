@@ -1,164 +1,66 @@
+import React from "react";
 import { safeUrl } from "@/lib/content";
-import { SocialLinks } from "@/components/social-links";
+import { CopyPayment } from "@/components/copy-payment";
 
-type Section = {
-  key?: string;
-  kind: string;
-  title: string;
-  position: number;
-  enabled: boolean;
-  content: Record<string, unknown>;
-};
-type Item = { label?: string; url?: string; value?: string };
-type Snapshot = {
-  business?: { name?: string; category?: string };
-  page?: { branchName?: string };
-  sections?: Section[];
-};
+type Item = { label?: string; url?: string; value?: string; provider?: string; enabled?: boolean; icon?: string };
+type Section = { key?: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
+type Snapshot = { business?: { name?: string; category?: string }; page?: { branchName?: string; template?: string }; sections?: Section[] };
 
-function text(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
+const iconFiles: Record<string, string> = { whatsapp: "whatsapp", facebook: "facebook", instagram: "instagram", tiktok: "tiktok", snapchat: "snapchat", youtube: "youtube", x: "x", twitter: "x", telegram: "telegram", pinterest: "pinterest", messenger: "messenger", google: "google" };
+function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
+function validWebUrl(value: unknown) { const source = text(value); if (!safeUrl(source)) return ""; try { return new URL(source).protocol === "https:" ? source : ""; } catch { return ""; } }
+function imageUrl(value: unknown) { const source = text(value); return source.startsWith("/") && !source.startsWith("//") ? source : validWebUrl(source); }
+function phoneUrl(value: unknown) { const source = text(value); const number = source.replace(/[^\d+]/g, ""); return number.replace(/\D/g, "").length >= 7 ? `tel:${number}` : ""; }
+function labelFor(item: Item, fallback = "Link") { return text(item.label) || fallback; }
+function providerFor(item: Item) { const raw = text(item.provider || item.label).toLowerCase().replace(/[^a-z]/g, ""); if (raw.includes("whatsapp")) return "whatsapp"; if (raw.includes("instagram")) return "instagram"; if (raw.includes("facebook")) return "facebook"; if (raw.includes("tiktok")) return "tiktok"; if (raw.includes("snapchat")) return "snapchat"; if (raw.includes("youtube")) return "youtube"; if (raw === "x" || raw.includes("twitter")) return "x"; if (raw.includes("instapay")) return "instapay"; if (raw.includes("vodafone")) return "vodafone"; if (raw.includes("google")) return "google"; return "custom"; }
+function Icon({ name, size = 22 }: { name: string; size?: number }) {
+  const file = iconFiles[name];
+  if (file) return <img src={`/icons/social/${file}.svg`} alt="" width={size} height={size} loading="lazy" />;
+  const paths: Record<string, React.ReactNode> = {
+    phone: <path d="M6.5 3.8 9.2 3l1.8 4.5-1.9 1.5a13.7 13.7 0 0 0 5.8 5.8l1.5-1.9L21 14.7l-.8 2.7a2.4 2.4 0 0 1-2.7 1.7C10.6 17.9 6.1 13.4 4.9 6.5a2.4 2.4 0 0 1 1.6-2.7Z" />,
+    pin: <><path d="M12 21s6-5.8 6-11a6 6 0 1 0-12 0c0 5.2 6 11 6 11Z" /><circle cx="12" cy="10" r="2" /></>,
+    clock: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.3 2" /></>,
+    menu: <><path d="M5 5.5h14v13H5z" /><path d="M8 9h8M8 12h8M8 15h5" /></>,
+    order: <><path d="M5 4h14v16H5z" /><path d="M8 2v4M16 2v4M5 9h14" /></>,
+    arrow: <><path d="M4 12h15" /><path d="m13 6 6 6-6 6" /></>,
+    link: <><path d="m10.5 13.5 3-3" /><path d="M7.8 16.2 6 18a3 3 0 0 1-4-4l3.1-3.1a3 3 0 0 1 4.2 0" /><path d="m16.2 7.8 1.8-1.8a3 3 0 0 1 4 4l-3.1 3.1a3 3 0 0 1-4.2 0" /></>,
+    globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+  };
+  return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name] || paths.link}</svg>;
 }
-function isWebUrl(value: string) {
-  return safeUrl(value) && /^https?:$/.test(new URL(value).protocol);
-}
-function imageUrl(value: unknown) {
-  const source = text(value);
-  if (source.startsWith("/") && !source.startsWith("//")) return source;
-  return isWebUrl(source) ? source : "";
-}
-function phoneUrl(value: unknown) {
-  const number = text(value).replace(/[^\d+]/g, "");
-  return number.replace(/\D/g, "").length >= 5 ? "tel:" + number : "";
-}
-function whatsappUrl(value: unknown) {
-  const input = text(value);
-  if (isWebUrl(input)) return input;
-  const number = input.replace(/\D/g, "");
-  return number.length >= 5 && number.length <= 15 ? "https://wa.me/" + number : "";
+function ExternalLink({ href, children, className = "", ...props }: { href: string; children: React.ReactNode; className?: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>) { return <a className={className} href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>; }
+
+function SocialSection({ title, items }: { title: string; items: Item[] }) {
+  const links = items.filter(item => item.enabled !== false && validWebUrl(item.url)); if (!links.length) return null;
+  return <section className="business-section social-section"><p className="section-overline">STAY CONNECTED</p><h2>{title || "Social & Community"}</h2><p className="section-intro">Follow us for updates, offers and more.</p><div className="social-icon-list social-tile-grid">{links.map((item, index) => { const provider = providerFor(item); const label = labelFor(item); return <ExternalLink href={validWebUrl(item.url)} className="social-tile" aria-label={label} key={`${item.url}-${index}`}><span className="social-tile-icon">{iconFiles[provider] ? <Icon name={provider} size={35} /> : <Icon name="globe" size={35} />}</span><span>{label}</span></ExternalLink>; })}</div></section>;
 }
 
-function ReviewPrompt({ url }: { url: string }) {
-  if (!isWebUrl(url)) return null;
-  return (
-    <a className="google-review-card" href={url} target="_blank" rel="noopener noreferrer" aria-label="اكتب تقييمًا على Google Reviews">
-      <img src="/icons/social/google.svg" width="26" height="26" alt="Google" loading="lazy" />
-      <span className="google-review-copy"><strong>Google Reviews</strong><span>يسعدنا تقييمك وتجربتك</span></span>
-      <span className="review-stars" aria-hidden="true">★★★★★</span>
-      <span className="review-arrow" aria-hidden="true">↗</span>
-    </a>
-  );
+function PaymentSection({ title, items, backgroundUrl }: { title: string; items: Item[]; backgroundUrl?: unknown }) {
+  const validItems = items.filter(item => item.enabled !== false && (text(item.value) || validWebUrl(item.url))); if (!validItems.length) return null;
+  return <section className="business-section payments-section" style={{ "--payment-photo": `url("${imageUrl(backgroundUrl) || "/payment-nfc.png"}")` } as React.CSSProperties}><p className="section-overline">PAY YOUR WAY</p><h2>{title || "Easy & Secure Payments"}</h2><p className="section-intro">Choose an option provided by the business.</p><p className="payments-disclaimer">Payment details are provided by the business. NexTap does not process or verify payments.</p><div className="payment-grid">{validItems.map((item, index) => { const provider = providerFor(item); const href = validWebUrl(item.url); const value = text(item.value); const label = labelFor(item, provider === "instapay" ? "InstaPay" : provider === "vodafone" ? "Vodafone Cash" : "Payment option"); const card = <><span className={`payment-icon payment-icon-${provider}`}>{provider === "instapay" ? "IPA" : provider === "vodafone" ? "V" : provider === "google" ? <Icon name="google" size={30} /> : <Icon name="link" size={28} />}</span><strong>{label}</strong>{value && <small>{value}</small>}</>; return href ? <ExternalLink href={href} className="payment-tile" key={`${label}-${index}`}>{card}</ExternalLink> : value ? <div className="payment-tile" key={`${label}-${index}`}>{card}<CopyPayment value={value} label="Copy details" /></div> : <div className="payment-tile" key={`${label}-${index}`}>{card}</div>; })}</div></section>;
 }
 
-function SectionContent({ section }: { section: Section }) {
-  const items = Array.isArray(section.content.items) ? section.content.items as Item[] : [];
-  const description = text(section.content.description);
-  const address = text(section.content.address);
-  const reviewsUrl = text(section.content.url);
+function ReviewPrompt({ title, content, language }: { title: string; content: Record<string, unknown>; language: "ar" | "en" }) {
+  const url = validWebUrl(content.url); if (!url) return null; const label = language === "ar" ? "اكتب تقييمًا على Google Reviews" : "Review us on Google";
+  return <section className="business-section reviews-section"><p className="section-overline">GOOGLE REVIEWS</p><div className="review-heading"><div><h2>{title || (language === "ar" ? "رأيك يهمنا" : "Loved by our customers")}</h2><p>{language === "ar" ? "يساعدنا رأيك على تقديم تجربة أفضل." : "Your feedback helps us grow and serve you better."}</p></div><span className="review-badge"><Icon name="google" size={32} /></span></div><ExternalLink href={url} className="google-review-card"><Icon name="google" size={28} /><span className="google-review-copy"><strong>{label}</strong><span>{language === "ar" ? "شاركنا تجربتك على Google" : "Share your experience on Google"}</span></span><Icon name="arrow" size={20} /></ExternalLink></section>;
+}
 
-  if (section.kind === "hero") return null;
-  if (section.kind === "about" && !description) return null;
-  if (section.kind === "contact" && !address) return null;
-  if (section.kind === "social" && !items.length) return null;
-  if (section.kind === "reviews" && !isWebUrl(reviewsUrl)) return null;
-  if (section.kind !== "about" && section.kind !== "contact" && section.kind !== "social" && section.kind !== "reviews" && !items.length) return null;
+function HoursSection({ title, items, language }: { title: string; items: Item[]; language: "ar" | "en" }) {
+  const rows = items.filter(item => text(item.label) || text(item.value)); if (!rows.length) return null;
+  return <section className="business-section hours-section"><p className="section-overline">OPENING HOURS</p><div className="hours-heading"><span className="hours-icon"><Icon name="clock" size={26} /></span><div><h2>{title || (language === "ar" ? "مواعيد العمل" : "Open Daily")}</h2><p>{language === "ar" ? "نرحب بزيارتكم يوميًا." : "Great coffee, every day."}</p></div></div><div className="hours-list">{rows.map((item, index) => <div className="hours-row" key={`${item.label}-${index}`}><span>{labelFor(item)}</span><strong>{text(item.value) || (language === "ar" ? "مغلق" : "Closed")}</strong></div>)}</div></section>;
+}
 
-  return (
-    <section className={"public-section public-section-" + section.kind} key={section.key || section.kind + "-" + section.position}>
-      <h2>{section.title}</h2>
-      {section.kind === "about" && <p>{description}</p>}
-      {section.kind === "contact" && <p>{address}</p>}
-      {section.kind === "social" && <SocialLinks items={items} />}
-      {section.kind === "reviews" && <ReviewPrompt url={reviewsUrl} />}
-      {section.kind !== "social" && section.kind !== "reviews" && section.kind !== "about" && section.kind !== "contact" &&
-        items.map((item, index) => {
-          const label = text(item?.label);
-          const value = text(item?.value);
-          const href = text(item?.url);
-          if (!label && !value) return null;
-          return (
-            <div className="public-item" key={index}>
-              {isWebUrl(href)
-                ? <a href={href} target="_blank" rel="noopener noreferrer">{label || href}</a>
-                : <span>{label}{label && value ? " · " : ""}{value}</span>}
-            </div>
-          );
-        })}
-    </section>
-  );
+function GenericItems({ section, language }: { section: Section; language: "ar" | "en" }) {
+  const items = Array.isArray(section.content.items) ? section.content.items as Item[] : []; const description = text(section.content.description); const address = text(section.content.address);
+  if (section.kind === "about" && !description) return null; if (section.kind === "contact" && !address && !validWebUrl(section.content.mapsUrl)) return null; if (!items.length && section.kind !== "about" && section.kind !== "contact") return null;
+  if (section.kind === "about") return <section className="business-section about-section"><p className="section-overline">ABOUT</p><h2>{section.title}</h2><p className="section-intro about-copy">{description}</p></section>;
+  if (section.kind === "contact") { const mapsUrl = validWebUrl(section.content.mapsUrl); const mapImage = imageUrl(section.content.mapImageUrl); return <section className="business-section find-section"><p className="section-overline">LOCATE US & DIRECTIONS</p><div className="find-heading"><div><h2>{section.title || (language === "ar" ? "اعثر علينا" : "Find Us")}</h2><p>{address}</p></div><div className="map-actions">{mapsUrl && <ExternalLink href={mapsUrl} className="map-link"><Icon name="pin" size={18} />{language === "ar" ? "خرائط Google" : "Google Maps"}</ExternalLink>}</div></div> {mapImage && <div className="map-preview"><img src={mapImage} alt="" /></div>}</section>; }
+  return <section className={`business-section generic-section business-section-${section.kind}`}><p className="section-overline">{section.kind.toUpperCase()}</p><h2>{section.title}</h2><div className="generic-items">{items.filter(item => item.enabled !== false && (text(item.value) || validWebUrl(item.url))).map((item, index) => { const href = validWebUrl(item.url); const row = <><span className="generic-item-label">{labelFor(item)}</span>{text(item.value) && <span className="generic-item-value">{item.value}</span>}</>; return href ? <ExternalLink href={href} className="generic-item" key={`${item.label}-${index}`}>{row}<Icon name="arrow" size={18} /></ExternalLink> : <div className="generic-item" key={`${item.label}-${index}`}>{row}</div>; })}</div></section>;
 }
 
 export function PublicSnapshot({ snapshot }: { snapshot: Snapshot }) {
-  const sections = [...(snapshot.sections || [])].filter(section => section.enabled).sort((a, b) => a.position - b.position);
-  const hero = sections.find(section => section.kind === "hero")?.content || {};
-  const contact = sections.find(section => section.kind === "contact")?.content || {};
-  const name = text(snapshot.business?.name) || text(snapshot.page?.branchName) || "NexTap";
-  const tagline = text(hero.tagline) || text(hero.description);
-  const language = hero.language === "en" || hero.language === "ar"
-    ? hero.language
-    : /[\u0600-\u06ff]/.test(name) ? "ar" : "en";
-  const direction = language === "ar" ? "rtl" : "ltr";  const accent = /^#[0-9a-f]{6}$/i.test(text(hero.color)) ? text(hero.color) : "#bd8b37";
-  const cover = imageUrl(hero.coverUrl);
-  const logo = imageUrl(hero.logoUrl);
-  const actions = [
-    { label: "واتساب", href: whatsappUrl(contact.whatsapp), icon: "/icons/social/whatsapp.svg" },
-    { label: "اتصل بنا", href: phoneUrl(contact.phone) },
-    { label: "الموقع", href: isWebUrl(text(contact.mapsUrl)) ? text(contact.mapsUrl) : "" },
-  ].filter(action => action.href);
-  const primaryAction = actions.find(action => action.label === "واتساب") || actions.find(action => action.label === "اتصل بنا") || actions[0];
-
-  return (
-    <main className="public-page" dir={direction} lang={language}>
-      <article className="public-wrap">
-        <div className="public-cover" style={{ borderTop: "6px solid " + accent }}>
-          {cover && <img src={cover} alt="" />}
-          <span className="public-cover-mark">NexTap</span>
-          <span className="public-cover-caption">Tap or scan to connect</span>
-        </div>
-        <header className="public-profile">
-          <div className="public-avatar" aria-hidden="true">
-            {logo ? <img src={logo} alt="" /> : name.slice(0, 1)}
-          </div>
-          <p className="eyebrow">{language === "ar" ? "صفحة نشاط على NexTap" : "A NexTap business page"}</p>
-          <h1>{name}</h1>
-          {snapshot.business?.category && <p>{snapshot.business.category}</p>}
-          {snapshot.page?.branchName && <p className="muted">{language === "ar" ? "فرع " : "Branch "}{snapshot.page.branchName}</p>}
-          {tagline && <p className="profile-description">{tagline}</p>}
-          {actions.length > 0 && (
-            <div className="public-actions" aria-label={language === "ar" ? "طرق التواصل السريعة" : "Quick actions"}>
-              {actions.map(action => (
-                <a className="action-link" href={action.href} key={action.label} target={action.href.startsWith("https:") ? "_blank" : undefined} rel={action.href.startsWith("https:") ? "noopener noreferrer" : undefined}>
-                  {action.icon && <img src={action.icon} alt="" width="19" height="19" />}
-                  {language === "en" && action.label === "واتساب" ? "WhatsApp" : language === "en" && action.label === "اتصل بنا" ? "Call" : language === "en" && action.label === "الموقع" ? "Directions" : action.label}
-                </a>
-              ))}
-            </div>
-          )}
-        </header>
-        {sections.map(section => {
-          const englishTitles: Record<string, Record<string, string>> = {
-            about: { "عن النشاط": "About" }, hours: { "مواعيد العمل": "Opening hours" },
-            contact: { "تواصل معنا": "Contact" }, social: { "تابعنا": "Find us online" },
-            payments: { "طرق الدفع": "Payment options" }, links: { "روابط مهمة": "Useful links" },
-            services: { "الخدمات": "Services" }, gallery: { "معرض الصور": "Gallery" },
-            reviews: { "آراء العملاء": "Reviews" }, branch: { "الفروع": "Branches" },
-          };
-          const localized = language === "en"
-            ? { ...section, title: englishTitles[section.kind]?.[section.title] || section.title }
-            : section;
-          return <SectionContent key={section.key || section.kind + "-" + section.position} section={localized} />;
-        })}
-        <footer className="public-brand"><span className="dot" />{language === "ar" ? "صفحة أعمال بواسطة NexTap" : "Business page by NexTap"}</footer>
-      </article>
-      {primaryAction && (
-        <nav className="public-bottom-actions" aria-label={language === "ar" ? "الإجراء السريع" : "Quick action"}>
-          {actions.slice(0, 2).map((action, index) => (
-            <a className={"action-link" + (index === 0 ? " primary" : "")} href={action.href} key={action.label} target={action.href.startsWith("https:") ? "_blank" : undefined} rel={action.href.startsWith("https:") ? "noopener noreferrer" : undefined}>
-              {language === "en" && action.label === "واتساب" ? "WhatsApp" : language === "en" && action.label === "اتصل بنا" ? "Call" : language === "en" && action.label === "الموقع" ? "Directions" : action.label}
-            </a>
-          ))}
-        </nav>
-      )}
-    </main>
-  );
+  const sections = [...(snapshot.sections || [])].filter(section => section.enabled).sort((a, b) => a.position - b.position); const heroSection = sections.find(section => section.kind === "hero"); const hero = heroSection?.content || {}; const contactSection = sections.find(section => section.kind === "contact"); const contact = contactSection?.content || {}; const name = text(snapshot.business?.name) || text(snapshot.page?.branchName) || "Business";
+  const language: "ar" | "en" = hero.language === "ar" || hero.language === "en" ? hero.language : /[\u0600-\u06ff]/.test(name) ? "ar" : "en"; const direction = language === "ar" ? "rtl" : "ltr"; const cover = imageUrl(hero.coverUrl); const logo = imageUrl(hero.logoUrl); const hours = sections.find(section => section.kind === "hours"); const hoursItems = Array.isArray(hours?.content.items) ? hours?.content.items as Item[] : []; const location = text(hero.location) || text(contact.address); const opening = text(hero.openingSummary) || text(hoursItems[0]?.value); const rating = Number(hero.rating); const ratingVerified = hero.ratingVerified === true && Number.isFinite(rating) && rating > 0; const ctaUrl = validWebUrl(hero.ctaUrl);
+  const actions = [{ key: "call", label: language === "ar" ? "اتصل" : "Call", href: phoneUrl(contact.phone), icon: "phone" }, { key: "menu", label: language === "ar" ? "القائمة" : "Menu", href: validWebUrl(contact.menuUrl) || validWebUrl(hero.menuUrl), icon: "menu" }, { key: "order", label: language === "ar" ? "اطلب الآن" : "Order", href: validWebUrl(contact.orderUrl), icon: "order" }, { key: "location", label: language === "ar" ? "الموقع" : "Directions", href: validWebUrl(contact.mapsUrl), icon: "pin" }].filter(action => action.href);
+  return <main className="public-page premium-public" dir={direction} lang={language}><article className="business-wrap"><section className="business-hero" style={cover ? ({ "--hero-photo": `url("${cover}")` } as React.CSSProperties) : undefined}><div className="hero-overlay" /><div className="hero-content"><div className="business-logo">{logo ? <img src={logo} alt={`${name} logo`} /> : <span>{name.slice(0, 1).toUpperCase()}</span>}</div><h1>{name}</h1>{text(hero.tagline || hero.description) && <p className="hero-tagline">{text(hero.tagline || hero.description)}</p>}<div className="hero-meta">{ratingVerified && Boolean(hero.ratingSource) && <span><span className="meta-star">★</span>{rating.toFixed(1)}</span>}{location && <span><Icon name="pin" size={17} />{location}</span>}{opening && <span><Icon name="clock" size={17} />{opening}</span>}</div>{ctaUrl && text(hero.ctaLabel) && <ExternalLink href={ctaUrl} className="hero-cta">{text(hero.ctaLabel)}<Icon name="arrow" size={19} /></ExternalLink>}</div></section>{actions.length > 0 && <section className={`quick-actions quick-actions-${actions.length}`} aria-label={language === "ar" ? "إجراءات سريعة" : "Quick actions"}>{actions.map(action => <ExternalLink href={String(action.href)} className="quick-action" key={action.key}><Icon name={String(action.icon)} size={28} /><span>{String(action.label)}</span></ExternalLink>)}</section>}{sections.map(section => { if (section.kind === "hero") return null; if (section.kind === "social") return <SocialSection title={section.title} items={Array.isArray(section.content.items) ? section.content.items as Item[] : []} key={section.key || section.kind} />; if (section.kind === "payments") return <PaymentSection title={section.title} backgroundUrl={section.content.backgroundUrl} items={Array.isArray(section.content.items) ? section.content.items as Item[] : []} key={section.key || section.kind} />; if (section.kind === "reviews") return <ReviewPrompt title={section.title} content={section.content} language={language} key={section.key || section.kind} />; if (section.kind === "hours") return <HoursSection title={section.title} items={hoursItems} language={language} key={section.key || section.kind} />; return <GenericItems section={section} language={language} key={section.key || section.kind} />; })}<footer className="powered-footer"><span />Powered by <strong>NexTap</strong></footer></article></main>;
 }
