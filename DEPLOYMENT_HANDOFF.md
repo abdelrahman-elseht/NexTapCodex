@@ -20,6 +20,8 @@ Status: **deployment preparation only**. Production traffic, nameservers, and Ve
 - Created the clean Supabase `NexTapProduction` project and applied all 11 reviewed migrations without copying staging data.
 - Created the Vercel `nextap` project and configured separate Preview/Production public environment variables.
 - Created the pending Cloudflare `nextab.services` zone and three DNS-only records; nameservers were not changed.
+- Created a dedicated `staging` branch from this setup branch and attached `staging.nextab.services` to it; `beta01.5` was not modified.
+- Enabled branch protection on `staging` only: required `quality` check, strict status checks, one approving review, last-push approval, conversation resolution, and no force pushes/deletions.
 
 ## Verification
 
@@ -31,6 +33,7 @@ Local commands run in the isolated worktree after `npm ci` and the lint dependen
 | `npm run typecheck` | Pass |
 | `npm test` | Pass: 2 files, 11 tests |
 | `npm run build` | Pass; Next.js reports existing `<img>` and unused-variable warnings |
+| GitHub Actions `quality` | Pass on `chore/production-setup` run `37957252645` and `staging` run `37957256972` |
 
 The first attempt before installing dependencies could not run because this new worktree had no `node_modules`. `npm ci` then completed. `npm audit` reported dependency advisories; no automated audit fix was applied because it could change versions outside this setup task.
 
@@ -76,7 +79,7 @@ Preview uses only `flkakuysakgwfoemgbwn` because the owner confirmed development
 
 ## GitHub protection
 
-The remote repository is public and currently reports `beta01` as its default branch. The requested `main` branch does not exist; `beta01.5` exists and is unprotected. No protection write was attempted because changing `beta01.5` would interfere with the existing branch. After an administrator establishes the intended production branch and confirms the account plan supports protection, require the `quality` check, one approving review, and disable force pushes/deletions on that production branch.
+The remote repository is public and reports `beta01` as its default branch. The requested `main` branch does not exist. `beta01.5` exists and is unchanged/unprotected. The new `staging` branch is protected with `quality` required, one approving review, strict status checks, last-push approval, conversation resolution, and force pushes/deletions disabled. Production-branch protection remains pending because there is no production branch yet. GitHub accepted this configuration on the public repository.
 
 ## Cloudflare DNS
 
@@ -108,8 +111,8 @@ Confirm existing records and Vercel verification values before any write. Do not
 
 ## Pending manual actions and exact activation gate
 
-1. Confirm GitHub repository access and establish the intended production branch. The remote repository currently has no `main`; `beta01.5` exists and remains unprotected. Add protection only to the newly designated production branch with required `quality` status checks, one approving review, and no force pushes/deletions.
-2. Link `abdelrahman-elseht/NexTapCodex` to Vercel project `nextap` and confirm Preview/Production variables remain isolated. Run a non-production preview deployment first.
+1. Establish the intended production branch. The remote repository currently has no `main`; `beta01.5` exists and remains unprotected. Add protection to the future production branch with required `quality` status checks, one approving review, and no force pushes/deletions.
+2. Link `abdelrahman-elseht/NexTapCodex` to Vercel project `nextap`. Connect the new `staging` branch to Preview and verify environment target selection remains isolated; no Vercel deployment was made yet.
 3. The owner confirmed `NexTabCodex` contains only development/test data; it is mapped to Preview/Staging.
 4. Configure Supabase Auth redirect allowlists and the Production owner account separately. Enable leaked-password protection and review the Production advisory before activation.
 5. Confirm Cloudflare account/registrar ownership. Add the Cloudflare nameservers only with explicit approval; until then, the pending zone and records remain non-authoritative.
