@@ -10,3 +10,4 @@ install.log
 .playwright-mcp/
 .e2e/
 %SystemDrive%/
+.vercel

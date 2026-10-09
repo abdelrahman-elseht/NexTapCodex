@@ -22,6 +22,7 @@ Status: **deployment preparation only**. Production traffic, nameservers, and Ve
 - Created the pending Cloudflare `nextab.services` zone and three DNS-only records; nameservers were not changed.
 - Created a dedicated `staging` branch from this setup branch and attached `staging.nextab.services` to it; `beta01.5` was not modified.
 - Enabled branch protection on `staging` only: required `quality` check, strict status checks, one approving review, last-push approval, conversation resolution, and no force pushes/deletions.
+- Linked this isolated worktree to Vercel project `nextap`; `.vercel` metadata is ignored and no deployment was created.
 
 ## Verification
 
@@ -74,7 +75,7 @@ The project creation cost confirmation returned `$0/month` for organization `ywf
 - Framework/build settings: Next.js, Node `22.x`, install `npm ci`, build `npm run build`.
 - No deployment exists and `live` is false. The project is not yet linked to the GitHub repository; this was left manual because linking enables future automatic deployments.
 - Preview and Production variables are isolated and verified by Vercel metadata. Preview points to `flkakuysakgwfoemgbwn` (staging); Production points to `jezpobjlfvihikplxrta` (clean production). Sensitive publishable keys are not readable through metadata.
-- Domains attached to the project and verified by Vercel: `nextab.services`, `admin.nextab.services`, and `staging.nextab.services`. The staging domain has no branch binding; it does not target `beta01.5`.
+- Domains attached to the project and verified by Vercel: `nextab.services`, `admin.nextab.services`, and `staging.nextab.services`. `staging.nextab.services` is explicitly bound to branch `staging`; it does not target `beta01.5`. Vercel still reports the apex DNS configuration as invalid because the registrar nameservers have not been changed.
 - Keep Vercel Hobby limitations in mind; the existing project handoff states that Hobby is not suitable for commercial launch terms.
 
 Preview uses only `flkakuysakgwfoemgbwn` because the owner confirmed development/test data only. Production uses the newly created Production ref. Use separate Supabase Auth Site URL/redirect allowlists for `staging.nextab.services` and `nextab.services`.
@@ -101,7 +102,7 @@ Confirm existing records and Vercel verification values before any write. Do not
 - Configure Supabase Auth redirect allowlists separately per environment and enable leaked-password protection before production.
 - Keep service-role/database credentials server-side only; rotate publishable keys through the provider consoles if exposed.
 - Monitor Vercel deployment/build/runtime errors, Supabase Auth/database logs and security/performance advisors, Cloudflare DNS/zone audit events, and application audit logs.
-- Enable scheduled Supabase backups and perform a restore drill before production. Retain migration files and a dated schema/migration inventory with every release.
+- Production is currently on Supabase Free, so establish an off-site logical backup with `supabase db dump` before activation and rehearse restore into a disposable project. Scheduled daily backups and PITR require a paid plan and explicit approval; Storage objects need a separate backup procedure. Retain migration files and a dated schema/migration inventory with every release.
 
 ## Rollback
 
@@ -114,9 +115,11 @@ Confirm existing records and Vercel verification values before any write. Do not
 ## Pending manual actions and exact activation gate
 
 1. Establish the intended production branch. The remote repository currently has no `main`; `beta01.5` exists and remains unprotected. Add protection to the future production branch with required `quality` status checks, one approving review, and no force pushes/deletions.
-2. Link `abdelrahman-elseht/NexTapCodex` to Vercel project `nextap` only after reviewing automatic-deployment behavior. With Vercel CLI authenticated, use `npx vercel@latest link --yes --team team_j1AHLbF49M6Ob2sm2QBz7sA5 --project prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ`, then `npx vercel@latest git connect https://github.com/abdelrahman-elseht/NexTapCodex --scope team_j1AHLbF49M6Ob2sm2QBz7sA5`. Connect the new `staging` branch to Preview and verify environment target selection remains isolated; no Vercel deployment was made.
+2. The isolated worktree is linked locally. The Vercel project is still not connected to GitHub automatic deployments. After reviewing automatic-deployment behavior, run `npx vercel@latest git connect https://github.com/abdelrahman-elseht/NexTapCodex --scope team_j1AHLbF49M6Ob2sm2QBz7sA5`, then verify the `staging` branch remains the Preview branch and environment target selection remains isolated. No Vercel deployment was made.
 3. The owner confirmed `NexTabCodex` contains only development/test data; it is mapped to Preview/Staging.
 4. Configure Supabase Auth redirect allowlists and the Production owner account separately. Enable leaked-password protection and review the Production advisory before activation.
 5. Confirm Cloudflare account/registrar ownership. Add the Cloudflare nameservers only with explicit approval; until then, the pending zone and records remain non-authoritative.
 6. Verify Preview against staging data, verify Production against the clean project, and capture CI, auth, database, DNS, backup, and rollback evidence.
 7. For final activation only: obtain explicit approval, change registrar nameservers to `carl.ns.cloudflare.com` and `stella.ns.cloudflare.com`, verify DNS propagation, deploy the approved commit, smoke-test the production URLs, and then promote the alias. Do not merge to `main` or publish customer-facing traffic before that approval.
+
+The Vercel MCP session currently authenticates to a different account scope and returns `403`; the authenticated Vercel CLI was used for the project, environment, domain, plan, and deployment checks above. Re-authenticate the MCP session to team `team_j1AHLbF49M6Ob2sm2QBz7sA5` before making further Vercel changes through MCP.
