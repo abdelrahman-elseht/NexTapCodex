@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - beta01.5
+      - staging
       - chore/production-setup
 
 permissions:
