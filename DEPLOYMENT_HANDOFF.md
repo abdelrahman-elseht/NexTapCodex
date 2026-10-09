@@ -8,7 +8,7 @@ Status: **deployment preparation only**. Production traffic, nameservers, and Ve
 - Branch: `chore/production-setup`
 - Base: `90fddfa` (`beta01.6` at the time this worktree was created)
 - The original checkout and `beta01.5` were not modified.
-- No application behavior, migrations, RLS policies, Supabase data, or production credentials were changed.
+- No existing application behavior, repository migrations, RLS policies, staging data, or production credentials were changed. The reviewed repository migrations were applied only to the new empty Production project.
 
 ## Completed in this branch
 
@@ -62,7 +62,9 @@ The authenticated Supabase MCP account exposes one organization (`abdelrahman-el
 - Production publishable key was retrieved through MCP and stored only in Vercel's sensitive Production variable; it is not printed or committed here.
 - Production advisors currently report one warning for the existing `public.create_card_batch(...)` SECURITY DEFINER RPC being callable by `authenticated`. No remediation was applied; review it before production activation.
 
-Advisories observed (not changed): `public.rls_auto_enable()` is callable as a SECURITY DEFINER function by `anon` and `authenticated`; `public.create_card_batch(...)` is callable by `authenticated`; leaked-password protection is disabled; several indexes are currently unused. Review and remediate in the appropriate staging change process before production activation. Do not patch the existing project as part of this handoff.
+Staging advisories observed (not changed): `public.rls_auto_enable()` is callable as a SECURITY DEFINER function by `anon` and `authenticated`; `public.create_card_batch(...)` is callable by `authenticated`; leaked-password protection is disabled; several indexes are currently unused. Review and remediate in the appropriate staging change process before production activation. Do not patch the existing staging project as part of this handoff.
+
+Production advisors after migration apply report one warning for `public.create_card_batch(...)` being callable by `authenticated`. No remediation was applied in either project.
 
 The project creation cost confirmation returned `$0/month` for organization `ywfepswoxgojuplkyrsn`. Auth users, owner allowlist rows, customer data, and storage objects were not copied. Configure the Production Auth redirect allowlist and owner account only after the final activation approval.
 
@@ -70,7 +72,7 @@ The project creation cost confirmation returned `$0/month` for organization `ywf
 
 - Project: `nextap`, ID `prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ`, account/team ID `team_j1AHLbF49M6Ob2sm2QBz7sA5`.
 - Framework/build settings: Next.js, Node `22.x`, install `npm ci`, build `npm run build`.
-- No deployment exists and `live` is false. The project is not yet linked to the GitHub repository; connect the repository in Vercel before expecting push-triggered deployments.
+- No deployment exists and `live` is false. The project is not yet linked to the GitHub repository; this was left manual because linking enables future automatic deployments.
 - Preview and Production variables are isolated and verified by Vercel metadata. Preview points to `flkakuysakgwfoemgbwn` (staging); Production points to `jezpobjlfvihikplxrta` (clean production). Sensitive publishable keys are not readable through metadata.
 - Domains attached to the project and verified by Vercel: `nextab.services`, `admin.nextab.services`, and `staging.nextab.services`. The staging domain has no branch binding; it does not target `beta01.5`.
 - Keep Vercel Hobby limitations in mind; the existing project handoff states that Hobby is not suitable for commercial launch terms.
@@ -112,7 +114,7 @@ Confirm existing records and Vercel verification values before any write. Do not
 ## Pending manual actions and exact activation gate
 
 1. Establish the intended production branch. The remote repository currently has no `main`; `beta01.5` exists and remains unprotected. Add protection to the future production branch with required `quality` status checks, one approving review, and no force pushes/deletions.
-2. Link `abdelrahman-elseht/NexTapCodex` to Vercel project `nextap`. Connect the new `staging` branch to Preview and verify environment target selection remains isolated; no Vercel deployment was made yet.
+2. Link `abdelrahman-elseht/NexTapCodex` to Vercel project `nextap` only after reviewing automatic-deployment behavior. With Vercel CLI authenticated, use `npx vercel@latest link --yes --team team_j1AHLbF49M6Ob2sm2QBz7sA5 --project prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ`, then `npx vercel@latest git connect https://github.com/abdelrahman-elseht/NexTapCodex --scope team_j1AHLbF49M6Ob2sm2QBz7sA5`. Connect the new `staging` branch to Preview and verify environment target selection remains isolated; no Vercel deployment was made.
 3. The owner confirmed `NexTabCodex` contains only development/test data; it is mapped to Preview/Staging.
 4. Configure Supabase Auth redirect allowlists and the Production owner account separately. Enable leaked-password protection and review the Production advisory before activation.
 5. Confirm Cloudflare account/registrar ownership. Add the Cloudflare nameservers only with explicit approval; until then, the pending zone and records remain non-authoritative.
