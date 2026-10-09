@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test:e2e": "e2e run",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -30,6 +31,8 @@
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "e2e": "0.18.0",
+    "eslint": "^9.35.0",
+    "eslint-config-next": "^15.5.27",
     "jsqr": "^1.4.0",
     "playwright-core": "1.63.0",
     "typescript": "5.9.2",
