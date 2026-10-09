@@ -7,6 +7,7 @@ const brands = [
   { id: "tiktok", hosts: ["tiktok.com"], label: "TikTok" },
   { id: "youtube", hosts: ["youtube.com", "youtu.be"], label: "YouTube" },
   { id: "x", hosts: ["x.com", "twitter.com"], label: "X" },
+  { id: "linkedin", hosts: ["linkedin.com"], label: "LinkedIn" },
   { id: "telegram", hosts: ["t.me", "telegram.me"], label: "Telegram" },
   { id: "snapchat", hosts: ["snapchat.com"], label: "Snapchat" },
   { id: "pinterest", hosts: ["pinterest.com"], label: "Pinterest" },

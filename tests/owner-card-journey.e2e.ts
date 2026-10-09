@@ -37,10 +37,24 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   expect(firstBusinessId).toMatch(/^[0-9a-f-]{36}$/i);
   expect(firstPageId).toMatch(/^[0-9a-f-]{36}$/i);
 
-  const aboutForm = browser.locator(".section-edit-form").nth(1);
-  await aboutForm.getByLabel("المحتوى (JSON)").fill(JSON.stringify({ description: draftDescription }));
-  await aboutForm.getByRole("button", "حفظ القسم").tap();
+  // Templates place sections in different orders; target the semantic About
+  // section instead of relying on a positional index.
+  await screen.getByRole("button", /About/).tap();
+  // The default cafe template keeps About hidden until the owner chooses it.
+  // Enable it before editing so the draft preview and published page exercise
+  // the section value end to end.
+  const aboutVisible = await browser.evaluate(() => {
+    const heading = [...document.querySelectorAll("h3")].find(node => /About/i.test(node.textContent || ""));
+    const pane = heading?.closest(".editor-form-pane");
+    return Boolean(pane?.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked);
+  });
+  if (!aboutVisible) await screen.getByRole("checkbox").check();
+  await screen.getByLabel("About copy").fill(draftDescription);
+  expect(await browser.evaluate((description) => document.querySelector<HTMLTextAreaElement>('textarea[aria-label="About copy"], textarea')?.value === description, draftDescription)).toBe(true);
+  await screen.getByRole("button", "Save draft").tap();
+  await expect(screen.getByRole("status")).toContainText("Draft saved");
   await app.open(`${firstEditorPath}/preview?page=${firstPageId}`);
+  await expect(screen.getByRole("heading", new RegExp(`E2E Business ${suffix}`))).toBeVisible({ timeout: 20_000 });
   await expect(screen.getByText(draftDescription)).toBeVisible();
 
   await app.open(`/b/${originalSlug}`);
@@ -48,17 +62,20 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   expect(publicDraft.includes(draftDescription)).toBe(false);
 
   await app.open(firstEditorPath);
-  await screen.getByRole("button", "نشر التغييرات").tap();
-  await expect(screen.getByRole("status")).toContainText("تم نشر نسخة جديدة من الصفحة.");
+  await screen.getByRole("button", "Publish").tap();
+  await expect(screen.getByRole("status")).toContainText("Published");
   await app.open(`/b/${originalSlug}`);
   await expect(screen.getByText(draftDescription)).toBeVisible();
 
   const batchName = `E2E batch ${suffix}`;
   await app.open("/admin/cards");
-  await screen.getByPlaceholder("اسم الدفعة").fill(batchName);
+  await browser.locator('input[name="name"]').fill(batchName);
   await screen.getByRole("spinbutton").fill("1");
   await screen.getByRole("button", "إنشاء دفعة").tap();
-  await expect(browser).toHaveURL(/\/admin\/cards\?batch=[0-9a-f-]+/);
+  await expect(browser).toHaveURL(/\/admin\/cards\/batches\/[0-9a-f-]+\?created=1/);
+  const createdBatchId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
+  expect(createdBatchId).toMatch(/^[0-9a-f-]{36}$/i);
+  await app.open(`/admin/cards?batch=${createdBatchId}`);
 
   const card = await browser.evaluate(async () => {
     const batchId = new URL(location.href).searchParams.get("batch");
@@ -99,9 +116,10 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
     await firstPageAssignment.selectOption({ value: firstPageId });
   }
 
-  await firstCardRow.getByRole("checkbox").check();
+  // Assignment is confirmed in the dialog; this form has no row checkbox.
   await firstCardRow.getByRole("button", "تفعيل / نقل").tap();
-  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/);
+  await screen.getByRole("button", "تأكيد التعيين").tap();
+  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/, { timeout: 20_000 });
   await expect(screen.getByRole("status")).toContainText("تم تحديث تعيين البطاقة.");
 
   const baseUrl = app.baseUrl;
@@ -113,12 +131,12 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await expect(browser).toHaveURL(`/b/${originalSlug}?via=qr`);
 
   await app.open(firstEditorPath);
-  await screen.getByLabel("اسم النشاط").fill(`E2E Renamed ${suffix}`);
-  await screen.getByLabel("رابط الصفحة").fill(renamedSlug);
-  await screen.getByRole("button", "حفظ الإعدادات").tap();
-  await expect(browser).toHaveURL(new RegExp(`/admin/businesses/${firstBusinessId}\\?saved=1$`));
-  await screen.getByRole("button", "نشر التغييرات").tap();
-  await expect(screen.getByRole("status")).toContainText("تم نشر نسخة جديدة من الصفحة.");
+  await screen.getByLabel("Business name").fill(`E2E Renamed ${suffix}`);
+  await screen.getByLabel("Public slug").fill(renamedSlug);
+  await screen.getByRole("button", "Save draft").tap();
+  await expect(screen.getByRole("status")).toContainText("Draft saved");
+  await screen.getByRole("button", "Publish").tap();
+  await expect(screen.getByRole("status")).toContainText("Published");
   await app.open(`/b/${originalSlug}`);
   await expect(screen.getByText(draftDescription)).toBeVisible();
 
@@ -139,15 +157,16 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
     return href ? new URL(href, location.origin).searchParams.get("page") || "" : "";
   });
   expect(secondPageId).toMatch(/^[0-9a-f-]{36}$/i);
-  await screen.getByRole("button", "نشر التغييرات").tap();
-  await expect(screen.getByRole("status")).toContainText("تم نشر نسخة جديدة من الصفحة.");
+  await screen.getByRole("button", "Publish").tap();
+  await expect(screen.getByRole("status")).toContainText("Published");
 
   await app.open("/admin/cards");
   const secondCardRow = browser.locator("tr").filter({ hasText: card.serial });
   await secondCardRow.getByRole("combobox").selectOption({ value: secondPageId });
-  await secondCardRow.getByRole("checkbox").check();
+  // Assignment is confirmed in the dialog; this form has no row checkbox.
   await secondCardRow.getByRole("button", "تفعيل / نقل").tap();
-  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/);
+  await screen.getByRole("button", "تأكيد التعيين").tap();
+  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/, { timeout: 20_000 });
 
   const reassignedRedirect = await fetch(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
   expect(reassignedRedirect.status).toBe(302);

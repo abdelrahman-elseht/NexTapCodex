@@ -47,6 +47,7 @@ export default async function EditBusiness({
           <p>المسودة والحالة وروابط الصفحة في مكان واحد.</p>
         </div>
         <div className="editor-header-actions">
+          <Link className="button secondary" href={"/admin/businesses/" + id + "/preview?page=" + page.id}>معاينة المسودة</Link>
           <Link className="button secondary" href={"/b/" + page.slug} target="_blank" rel="noreferrer">فتح الصفحة العامة ↗</Link>
           <Link className="button secondary" href={"/admin/cards?business=" + id}>بطاقات النشاط</Link>
         </div>
@@ -66,7 +67,7 @@ export default async function EditBusiness({
       <BusinessEditor
         business={{ id: business.id, name: business.name, category: business.category || "", status: business.status }}
         page={{ id: page.id, slug: page.slug, template: page.template, is_active: page.is_active }}
-        sections={sectionList.map((section: any) => ({ id: section.id, section_key: section.section_key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content as Record<string, unknown> }))}
+  sections={sectionList.map((section: any) => ({ id: section.id, section_key: section.section_key, kind: section.content?._editorKind === "quick_actions" && section.kind === "social" ? "quick_actions" : section.kind, title: section.content?._editorKind === "quick_actions" && section.kind === "social" ? "الإجراءات السريعة" : section.title, position: section.position, enabled: section.enabled, content: section.content as Record<string, unknown> }))}
       />
 
       <section className="editor-panel compact-panel">

@@ -21,6 +21,10 @@ test("demo presents its map action and returns to the landing page", async ({ ap
   await app.open("/demo");
 
   await expect(screen.getByRole("heading", "Coffee & Mood")).toBeVisible();
+  const iconHref = await browser.evaluate(() => document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.getAttribute("href") || "");
+  expect(iconHref).toMatch(/^\/icon\.svg/);
+  const iconResponse = await fetch(new URL(iconHref, app.baseUrl));
+  expect(iconResponse.status).toBe(200);
   await expect(screen.getByRole("link", "Google Maps").first()).toHaveAttribute("href", "https://maps.google.com/?q=Cairo");
   await expect(screen.getByText("Review us on Google")).toBeVisible();
   const returnLink = screen.getByRole("link", "Back to NexTap");

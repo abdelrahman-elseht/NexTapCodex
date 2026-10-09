@@ -48,7 +48,7 @@ export function reorderSectionIds<T extends { id: string }>(sections: T[], movin
   ids.splice(from < to ? to - 1 : to, 0, moving);
   return ids;
 }
-export const sectionKinds = ["hero","about","hours","contact","social","payments","links","services","gallery","reviews","branch"] as const;
+export const sectionKinds = ["hero","about","hours","contact","quick_actions","social","payments","links","services","gallery","reviews","branch"] as const;
 
 // Keep the original three-value export for backwards compatibility with existing
 // integrations, while the editor exposes four business presets through the
@@ -57,10 +57,10 @@ export const templates = ["cafe","retail","professional"] as const;
 export const templateValues = ["cafe", "restaurant", "salon", "professional", "retail"] as const;
 export type TemplateValue = typeof templateValues[number];
 export const templatePresets: Array<{ value: TemplateValue; label: string; description: string; sections: string[] }> = [
-  { value: "cafe", label: "Premium Coffee Shop", description: "Hero, social, payments, reviews, directions and hours", sections: ["hero", "social", "payments", "reviews", "contact", "hours"] },
-  { value: "restaurant", label: "Restaurant", description: "Menu-first layout with ordering and location", sections: ["hero", "contact", "hours", "services", "social", "reviews"] },
-  { value: "salon", label: "Salon / Beauty", description: "Services, booking links and social proof", sections: ["hero", "contact", "hours", "services", "social", "reviews"] },
-  { value: "professional", label: "Universal / Professional", description: "Clear identity, contact and useful links", sections: ["hero", "about", "contact", "links", "social", "reviews"] },
+  { value: "cafe", label: "Premium Coffee Shop", description: "Hero, actions, social, payments, directions and hours", sections: ["hero", "quick_actions", "social", "payments", "contact", "hours"] },
+  { value: "restaurant", label: "Restaurant", description: "Menu-first layout with ordering and location", sections: ["hero", "quick_actions", "contact", "hours", "services", "social"] },
+  { value: "salon", label: "Salon / Beauty", description: "Services, booking links and social proof", sections: ["hero", "quick_actions", "contact", "hours", "services", "social"] },
+  { value: "professional", label: "Universal / Professional", description: "Clear identity, actions and useful links", sections: ["hero", "quick_actions", "about", "contact", "links", "social"] },
 ];
 export function isTemplate(value: string): value is TemplateValue {
   return (templateValues as readonly string[]).includes(value);

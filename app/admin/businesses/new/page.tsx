@@ -29,7 +29,7 @@ export default async function NewBusiness({ searchParams }: { searchParams: Prom
             <input name="category" maxLength={80} placeholder="مقهى، متجر، خدمات..." />
           </label>
           <label className="field">رابط الصفحة
-            <input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,58}[a-z0-9]" dir="ltr" autoCapitalize="none" spellCheck={false} placeholder="coffee-and-mood" />
+            <input name="slug" aria-label="رابط الصفحة" required pattern="[a-z0-9][a-z0-9-]{1,58}[a-z0-9]" dir="ltr" autoCapitalize="none" spellCheck={false} placeholder="coffee-and-mood" />
             <small>سيكون الرابط /b/coffee-and-mood. استخدم أحرفاً إنجليزية صغيرة وأرقاماً وشرطة.</small>
           </label>
         </div>

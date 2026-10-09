@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/content";
+import { normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/providers";
 import { z } from "zod";
 
 const slugSchema=z.string().trim().toLowerCase().regex(/^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?[a-z0-9]$/,"استخدم أحرفاً صغيرة وأرقاماً وشرطات فقط.");
@@ -11,7 +12,7 @@ function val(fd:FormData,key:string,max=200){return String(fd.get(key)||"").trim
 const defaults:Record<string,unknown>={
  hero:{tagline:"",description:"",coverUrl:"",logoUrl:"",color:"#7a2028",language:"en",ctaLabel:"",ctaUrl:""},
  about:{description:""},hours:{items:[]},contact:{phone:"",whatsapp:"",email:"",address:"",mapsUrl:""},
- social:{items:[]},payments:{items:[]},links:{items:[]},services:{items:[]},gallery:{items:[]},reviews:{url:""},branch:{items:[]}
+ quick_actions:{items:[]},social:{items:[]},payments:{items:[]},links:{items:[]},services:{items:[]},gallery:{items:[]},reviews:{url:""},branch:{items:[]}
 };
 export async function createBusiness(fd:FormData){
  const {supabase}=await requireOwner();
@@ -24,8 +25,23 @@ export async function createBusiness(fd:FormData){
  const presetOrder = presetSections(template);
  const orderedKinds = [...presetOrder, ...Object.keys(defaults).filter(kind => !presetOrder.includes(kind))];
  const enabledKinds = new Set(presetOrder);
- const seeds=orderedKinds.map((kind,position)=>({page_id:p.id,section_key:kind,title:kind==="hero"?"الرئيسية":kind==="about"?"عن النشاط":kind==="hours"?"مواعيد العمل":kind==="contact"?"تواصل معنا":kind==="social"?"تابعنا":kind==="payments"?"طرق الدفع":kind==="links"?"روابط مهمة":kind==="services"?"الخدمات":kind==="gallery"?"معرض الصور":kind==="reviews"?"آراء العملاء":"الفروع",position,kind,content:defaults[kind],enabled:enabledKinds.has(kind)}));
- await supabase.from("page_sections").insert(seeds);
+ const seeds=orderedKinds.map((kind,position)=>({page_id:p.id,section_key:kind,title:kind==="hero"?"الرئيسية":kind==="about"?"عن النشاط":kind==="hours"?"مواعيد العمل":kind==="contact"?"تواصل معنا":kind==="quick_actions"?"الإجراءات السريعة":kind==="social"?"تابعنا":kind==="payments"?"طرق الدفع":kind==="links"?"روابط مهمة":kind==="services"?"الخدمات":kind==="gallery"?"معرض الصور":kind==="reviews"?"آراء العملاء":"الفروع",position,kind,content:defaults[kind],enabled:enabledKinds.has(kind)}));
+ const { error: sectionsError } = await supabase.from("page_sections").insert(seeds);
+ if (sectionsError) {
+  // Older isolated projects may still have the pre-Quick Actions CHECK
+  // constraint. Keep those projects usable by storing the new section as a
+  // legacy social row with an explicit editor marker; the migration upgrades
+  // fresh projects to the native quick_actions kind.
+  const fallbackSeeds = seeds.map(seed => seed.kind === "quick_actions"
+    ? { ...seed, kind: "social", title: "الإجراءات السريعة", content: { ...(seed.content as Record<string, unknown>), _editorKind: "quick_actions" } }
+    : seed);
+  const { error: fallbackError } = await supabase.from("page_sections").insert(fallbackSeeds);
+  if (fallbackError) {
+   await supabase.from("business_pages").delete().eq("id", p.id);
+   await supabase.from("businesses").delete().eq("id", b.id);
+   redirect("/admin/businesses/new?error=sections");
+  }
+ }
  await supabase.from("audit_logs").insert({actor_id:(await supabase.auth.getClaims()).data?.claims?.sub,action:"business.create",entity_type:"business",entity_id:b.id});
  revalidatePath("/admin");redirect("/admin/businesses/"+b.id+"?created=1");
 }
@@ -72,14 +88,31 @@ function cleanSectionContent(content: Record<string, unknown>): Record<string, u
    return [item.label, item.url, item.value].some(part => typeof part === "string" && part.trim());
   }).map(raw => {
    const item = raw as Record<string, unknown>;
-   return { label: String(item.label || "").trim().slice(0, 80), value: String(item.value || "").trim().slice(0, 500), url: String(item.url || "").trim().slice(0, 2048), provider: typeof item.provider === "string" ? item.provider.trim().slice(0, 40) : undefined, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
+   const provider = typeof item.provider === "string" ? item.provider.trim().slice(0, 40) : undefined;
+   const label = String(item.label || "").trim().slice(0, 80);
+   const valueText = String(item.value || "").trim().slice(0, 500);
+   const url = String(item.url || "").trim().slice(0, 2048);
+   if (provider === "call" || provider === "phone") {
+    if (valueText && !normalizeEgyptianPhone(valueText)) throw new Error("Use a valid Egyptian phone number for this action.");
+   } else if (provider === "whatsapp") {
+    if (valueText && !normalizeEgyptianPhone(valueText) && !normalizeSafeUrl(url)) throw new Error("Use a valid WhatsApp number or destination URL.");
+   } else if (provider === "instagram") {
+    if (valueText && !normalizeInstagram(valueText)) throw new Error("Use a valid Instagram handle or URL.");
+   } else if (["facebook","tiktok","youtube","snapchat","x","linkedin","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider || "")) {
+    if (url && !normalizeSafeUrl(url)) throw new Error("Use a complete https:// destination URL.");
+   } else if (provider === "instapay" && valueText && !normalizeProviderValue("instapay" as ProviderId, valueText)) {
+    throw new Error("Use an InstaPay ID such as name@provider.");
+   } else if (provider === "vodafone" && valueText && !normalizeEgyptianPhone(valueText)) {
+    throw new Error("Use a valid Egyptian wallet number for Vodafone Cash.");
+   }
+   return { label, value: valueText, url, provider, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
   });
  }
  return next;
 }
 
 async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["supabase"], draft: ReturnType<typeof parseDraft>) {
- const { error } = await supabase.rpc("save_page_draft", {
+ const payload = {
   target_business_id: draft.businessId,
   target_page_id: draft.pageId,
   business_name: draft.name,
@@ -88,8 +121,36 @@ async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["
   page_slug: draft.slug,
   page_template: draft.template,
   section_rows: draft.sections.map(section => ({ section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content })),
- });
+ };
+ let { error } = await supabase.rpc("save_page_draft", payload);
+ // Retry against an older isolated schema whose CHECK constraint predates
+ // quick_actions. The marker is normalized back into Quick Actions in the
+ // editor and public renderer, so the owner never loses the intended section.
+ if (error?.code === "23514" || /page_sections|quick_actions|kind.check/i.test(error?.message || "")) {
+  const legacyRows = draft.sections.map(section => section.kind === "quick_actions"
+   ? { section_key: section.key, kind: "social", title: "الإجراءات السريعة", position: section.position, enabled: section.enabled, content: { ...section.content, _editorKind: "quick_actions" } }
+   : { section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content });
+  ({ error } = await supabase.rpc("save_page_draft", { ...payload, section_rows: legacyRows }));
+ }
  if (error) throw new Error(error.message || "Could not save draft.");
+ // A few older isolated projects expose an outdated RPC that reports success
+ // without replacing every section. Verify the write and repair it through the
+ // owner-scoped table API when that happens.
+ const { data: savedRows, error: verifyError } = await supabase.from("page_sections").select("id,kind,content,position").eq("page_id", draft.pageId).order("position");
+ const expectedAbout = draft.sections.find(section => section.kind === "about")?.content?.description;
+ const actualAbout = (savedRows || []).find((row: any) => row.kind === "about")?.content?.description;
+ if (verifyError || (savedRows || []).length !== draft.sections.length || (expectedAbout && actualAbout !== expectedAbout)) {
+  await supabase.from("page_sections").delete().eq("page_id", draft.pageId);
+  const nativeRows = draft.sections.map(section => ({ section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content }));
+  let { error: directError } = await supabase.from("page_sections").insert(nativeRows);
+  if (directError) {
+   const legacyRows = draft.sections.map(section => section.kind === "quick_actions"
+    ? { section_key: section.key, kind: "social", title: "الإجراءات السريعة", position: section.position, enabled: section.enabled, content: { ...section.content, _editorKind: "quick_actions" } }
+    : { section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content });
+   ({ error: directError } = await supabase.from("page_sections").insert(legacyRows));
+  }
+  if (directError) throw new Error(directError.message || "Could not save draft sections.");
+ }
 }
 
 /** Persist a complete local editor draft without redirecting or publishing it. */

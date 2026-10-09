@@ -4,13 +4,13 @@ import { useState } from "react";
 import { sectionKinds } from "@/lib/content";
 
 type Content = Record<string, unknown>;
-type Item = { label: string; value: string; url: string };
+type Item = { label: string; value: string; url: string; provider?: string; enabled?: boolean; icon?: string };
 const labels: Record<string, string> = {
-  hero: "الرئيسية", about: "عن النشاط", hours: "مواعيد العمل", contact: "التواصل والموقع",
+  hero: "الرئيسية", about: "عن النشاط", hours: "مواعيد العمل", contact: "التواصل والموقع", quick_actions: "الإجراءات السريعة",
   social: "الشبكات الاجتماعية", payments: "طرق الدفع", links: "روابط إضافية", services: "الخدمات",
   gallery: "معرض الصور", reviews: "التقييمات", branch: "الفروع",
 };
-const itemKinds = ["hours", "social", "payments", "links", "services", "gallery", "branch"];
+const itemKinds = ["hours", "quick_actions", "social", "payments", "links", "services", "gallery", "branch"];
 const defaults: Record<string, Content> = {
   hero: { tagline: "", description: "", coverUrl: "", logoUrl: "", color: "#bb9659", language: "ar" },
   about: { description: "" }, hours: { items: [] },
@@ -28,6 +28,9 @@ function normalizeItems(value: unknown): Item[] {
       label: typeof record.label === "string" ? record.label : "",
       value: typeof record.value === "string" ? record.value : "",
       url: typeof record.url === "string" ? record.url : "",
+      provider: typeof record.provider === "string" ? record.provider : undefined,
+      enabled: record.enabled !== false,
+      icon: typeof record.icon === "string" ? record.icon : undefined,
     }];
   }).slice(0, 100);
 }
@@ -42,11 +45,11 @@ export function SectionContentEditor({ initialContent, kind: initialKind }: { in
   const [raw, setRaw] = useState(() => JSON.stringify(initialContent, null, 2));
   const [parseError, setParseError] = useState("");
 
-  function updateItem(index: number, key: keyof Item, value: string) {
+  function updateItem(index: number, key: keyof Item, value: string | boolean) {
     setItems(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item));
   }
   function addItem() {
-    setItems(current => current.length >= 100 ? current : [...current, { label: "", value: "", url: "" }]);
+    setItems(current => current.length >= 100 ? current : [...current, { label: "", value: "", url: "", enabled: true }]);
   }
   function removeItem(index: number) {
     setItems(current => current.filter((_, itemIndex) => itemIndex !== index));
@@ -100,7 +103,7 @@ export function SectionContentEditor({ initialContent, kind: initialKind }: { in
     <div className="section-content-editor">
       <label className="field section-kind-field">نوع القسم
         <select name="kind" value={kind} onChange={event => changeKind(event.target.value)}>
-          {sectionKinds.map(sectionKind => <option value={sectionKind} key={sectionKind}>{labels[sectionKind] || sectionKind}</option>)}
+          {sectionKinds.filter(sectionKind => sectionKind !== "reviews").map(sectionKind => <option value={sectionKind} key={sectionKind}>{labels[sectionKind] || sectionKind}</option>)}
         </select>
       </label>
       <div className="content-mode-switch" role="group" aria-label="طريقة تحرير المحتوى">

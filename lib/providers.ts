@@ -1,6 +1,6 @@
 import { safeUrl } from "./content";
 
-export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"website"|"maps"|"reviews"|"instapay"|"vodafone"|"phone"|"email"|"menu"|"custom"|"bank";
+export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"linkedin"|"telegram"|"website"|"maps"|"reviews"|"booking"|"order"|"location"|"call"|"instapay"|"vodafone"|"phone"|"email"|"menu"|"custom"|"bank";
 
 export function normalizeEgyptianPhone(value: string) {
   const raw = value.trim().replace(/[\s().-]/g, "");
@@ -22,7 +22,7 @@ export function normalizeProviderValue(provider: ProviderId, value: string) {
   if (provider === "instagram") return normalizeInstagram(value);
   if (provider === "instapay") return /^[a-z0-9._-]{2,64}@[a-z0-9._-]{2,64}$/i.test(value.trim()) ? value.trim() : "";
   if (provider === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) ? value.trim() : "";
-  if (["facebook","tiktok","youtube","snapchat","x","website","maps","reviews","menu","custom"].includes(provider)) return normalizeSafeUrl(value);
+  if (["facebook","tiktok","youtube","snapchat","x","linkedin","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider)) return normalizeSafeUrl(value);
   return value.trim().slice(0, 500);
 }
-export const providerLabels: Record<ProviderId,string> = { whatsapp:"WhatsApp", facebook:"Facebook", instagram:"Instagram", tiktok:"TikTok", youtube:"YouTube", snapchat:"Snapchat", x:"X", website:"Website", maps:"Google Maps", reviews:"Google Reviews", instapay:"InstaPay", vodafone:"Vodafone Cash", phone:"Phone", email:"Email", menu:"Menu", custom:"Custom URL", bank:"Bank instructions" };
+export const providerLabels: Record<ProviderId,string> = { whatsapp:"WhatsApp", facebook:"Facebook", instagram:"Instagram", tiktok:"TikTok", youtube:"YouTube", snapchat:"Snapchat", x:"X", linkedin:"LinkedIn", telegram:"Telegram", website:"Website", maps:"Google Maps", reviews:"Google Reviews", booking:"Booking", order:"Order", location:"Location", call:"Call", instapay:"InstaPay", vodafone:"Vodafone Cash", phone:"Phone", email:"Email", menu:"Menu", custom:"Custom URL", bank:"Bank instructions" };
