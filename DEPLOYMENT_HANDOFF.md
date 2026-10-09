@@ -1,6 +1,6 @@
 # NexTap Deployment Handoff
 
-Status: **deployment preparation only**. Production traffic, nameservers, Supabase production creation, Vercel deployment, and DNS writes remain unactivated pending explicit approval and provider access.
+Status: **deployment preparation only**. Production traffic, nameservers, and Vercel deployment remain unactivated. Provider resources and DNS-only records are prepared; final activation still requires the approval gate below.
 
 ## Repository and branch
 
@@ -17,6 +17,9 @@ Status: **deployment preparation only**. Production traffic, nameservers, Supaba
 - Added ESLint 9 and `eslint-config-next` as development dependencies, `eslint.config.mjs`, and the `npm run lint` script.
 - Audited the local migration history: 11 ordered migrations under `supabase/migrations/`, matching the remote staging history listed below.
 - Added this handoff with environment isolation, provider findings, monitoring, backup, and rollback procedures.
+- Created the clean Supabase `NexTapProduction` project and applied all 11 reviewed migrations without copying staging data.
+- Created the Vercel `nextap` project and configured separate Preview/Production public environment variables.
+- Created the pending Cloudflare `nextab.services` zone and three DNS-only records; nameservers were not changed.
 
 ## Verification
 
@@ -36,12 +39,12 @@ The first attempt before installing dependencies could not run because this new 
 | Surface | Supabase URL | `NEXT_PUBLIC_SITE_URL` | Vercel target | Data policy |
 | --- | --- | --- | --- | --- |
 | Local development | local or developer-selected project | `http://localhost:3000` | Development | Never production data |
-| Preview/staging | `NexTabCodex` (`flkakuysakgwfoemgbwn`) only after confirming it contains no customer data | `https://staging.nextab.services` | Preview | Isolated from Production |
+| Preview/staging | `NexTabCodex` (`flkakuysakgwfoemgbwn`); owner confirmed development/test data only | `https://staging.nextab.services` | Preview | Isolated from Production |
 | Production | New clean Supabase project, separate ref and credentials | `https://nextab.services` | Production | No staging credentials or data |
 
 Required Vercel variables in each target are `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL`, and optional `NEXT_PUBLIC_CONTACT_WHATSAPP`. Store values as encrypted/sensitive variables. Do not add service-role keys to Vercel or browser-exposed variables.
 
-## Supabase inspection
+## Supabase inspection and Production project
 
 The authenticated Supabase MCP account exposes one organization (`abdelrahman-elseht`) and an active healthy project named `NexTabCodex`:
 
@@ -51,17 +54,25 @@ The authenticated Supabase MCP account exposes one organization (`abdelrahman-el
 - Current table row counts include 56 businesses, 56 pages, 562 sections, 28 publications, 308 cards, 11 batches, and 120 audit rows.
 - `owner_users` contains 1 row. This is evidence that the project is not empty; treat it as staging only after the owner confirms that no real customer data is present.
 - Remote migration history: `initial_schema`, `publish_and_slugs`, `publish_page`, `constraints_indexes`, `immutable_publications`, `owner_audit_insert`, `atomic_section_reordering`, `external_printer_batches`, `template_presets`, `atomic_draft_save`, `quick_actions`.
-- No migration or SQL write was executed.
+- Production project: `NexTapProduction`, ref `jezpobjlfvihikplxrta`, region `eu-west-1`, status `ACTIVE_HEALTHY`, URL `https://jezpobjlfvihikplxrta.supabase.co`.
+- Production started with zero tables/data. All 11 repository migrations are now recorded and applied in order. The resulting public tables all report zero rows and RLS enabled.
+- Production publishable key was retrieved through MCP and stored only in Vercel's sensitive Production variable; it is not printed or committed here.
+- Production advisors currently report one warning for the existing `public.create_card_batch(...)` SECURITY DEFINER RPC being callable by `authenticated`. No remediation was applied; review it before production activation.
 
 Advisories observed (not changed): `public.rls_auto_enable()` is callable as a SECURITY DEFINER function by `anon` and `authenticated`; `public.create_card_batch(...)` is callable by `authenticated`; leaked-password protection is disabled; several indexes are currently unused. Review and remediate in the appropriate staging change process before production activation. Do not patch the existing project as part of this handoff.
 
-Production creation is pending because it is a billable, externally visible resource operation. When approved, create a new project in organization `ywfepswoxgojuplkyrsn`, apply the reviewed migration set in order, verify migration history/tables/RLS/advisors, create separate Auth redirect URLs and publishable keys, and record the new ref here. Never clone staging data into Production.
+The project creation cost confirmation returned `$0/month` for organization `ywfepswoxgojuplkyrsn`. Auth users, owner allowlist rows, customer data, and storage objects were not copied. Configure the Production Auth redirect allowlist and owner account only after the final activation approval.
 
 ## Vercel
 
-Vercel MCP returned no teams or projects for the authenticated account, so no project, environment variable, domain, deployment, or traffic setting was changed. Connect the GitHub repository to a Vercel project manually or with an authorized Vercel account, then configure Preview and Production targets independently. Keep Vercel Hobby limitations in mind; the existing project handoff states that Hobby is not suitable for commercial launch terms.
+- Project: `nextap`, ID `prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ`, account/team ID `team_j1AHLbF49M6Ob2sm2QBz7sA5`.
+- Framework/build settings: Next.js, Node `22.x`, install `npm ci`, build `npm run build`.
+- No deployment exists and `live` is false. The project is not yet linked to the GitHub repository; connect the repository in Vercel before expecting push-triggered deployments.
+- Preview and Production variables are isolated and verified by Vercel metadata. Preview points to `flkakuysakgwfoemgbwn` (staging); Production points to `jezpobjlfvihikplxrta` (clean production). Sensitive publishable keys are not readable through metadata.
+- Domains attached to the project and verified by Vercel: `nextab.services`, `admin.nextab.services`, and `staging.nextab.services`. The staging domain has no branch binding; it does not target `beta01.5`.
+- Keep Vercel Hobby limitations in mind; the existing project handoff states that Hobby is not suitable for commercial launch terms.
 
-Preview should use only `flkakuysakgwfoemgbwn` after the no-customer-data decision. Production must use the newly created Production ref. Use separate Supabase Auth Site URL/redirect allowlists for `staging.nextab.services` and `nextab.services`.
+Preview uses only `flkakuysakgwfoemgbwn` because the owner confirmed development/test data only. Production uses the newly created Production ref. Use separate Supabase Auth Site URL/redirect allowlists for `staging.nextab.services` and `nextab.services`.
 
 ## GitHub protection
 
@@ -69,13 +80,13 @@ The remote repository is public and currently reports `beta01` as its default br
 
 ## Cloudflare DNS
 
-Cloudflare MCP authenticated as `elsehtabdelrahman@gmail.com`, but `GET /zones?name=nextab.services` returned no zone. No DNS record, nameserver, proxy, or traffic change was made. After the account/zone is available, prepare (DNS-only) records:
+Cloudflare MCP authenticated as `elsehtabdelrahman@gmail.com`. Zone `nextab.services` was created in account `a401ce0eabf88b4042e48ba94180234b`, ID `e6df0803efd4b1bdaac8e20a07dc360a`, Free Website plan, status `pending`. Nameservers were not changed and the zone is not authoritative. DNS-only records were prepared with `proxied=false`:
 
 | Name | Type | Target | Proxy |
 | --- | --- | --- | --- |
-| `nextab.services` | CNAME/ALIAS per Cloudflare/Vercel guidance | Vercel production target | DNS only |
-| `admin.nextab.services` | CNAME | Vercel production target | DNS only |
-| `staging.nextab.services` | CNAME | Vercel preview target | DNS only |
+| `nextab.services` | A | `76.76.21.21` | DNS only |
+| `admin.nextab.services` | CNAME | `cname.vercel-dns.com` | DNS only |
+| `staging.nextab.services` | CNAME | `cname.vercel-dns.com` | DNS only |
 
 Confirm existing records and Vercel verification values before any write. Do not change nameservers, enable production traffic, or proxy these records without approval.
 
@@ -97,10 +108,10 @@ Confirm existing records and Vercel verification values before any write. Do not
 
 ## Pending manual actions and exact activation gate
 
-1. Confirm GitHub repository access and enable branch protection for `main` with required `quality` status checks, one approving review, and no force pushes/deletions. GitHub plan support and repository permissions must be checked by an administrator; no branch-protection write was attempted here.
-2. Connect the repository to Vercel and confirm Preview/Production projects or environments exist with isolated variables. Run a non-production preview deployment first.
-3. Confirm `NexTabCodex` has no real customer data before using it for Preview/Staging.
-4. Obtain approval for the billable new Supabase Production project, create it cleanly, apply and verify the reviewed migrations, and record its URL/ref without copying staging data.
-5. Confirm Cloudflare access to `nextab.services`, inspect current DNS, and prepare DNS-only Vercel records without changing nameservers.
+1. Confirm GitHub repository access and establish the intended production branch. The remote repository currently has no `main`; `beta01.5` exists and remains unprotected. Add protection only to the newly designated production branch with required `quality` status checks, one approving review, and no force pushes/deletions.
+2. Link `abdelrahman-elseht/NexTapCodex` to Vercel project `nextap` and confirm Preview/Production variables remain isolated. Run a non-production preview deployment first.
+3. The owner confirmed `NexTabCodex` contains only development/test data; it is mapped to Preview/Staging.
+4. Configure Supabase Auth redirect allowlists and the Production owner account separately. Enable leaked-password protection and review the Production advisory before activation.
+5. Confirm Cloudflare account/registrar ownership. Add the Cloudflare nameservers only with explicit approval; until then, the pending zone and records remain non-authoritative.
 6. Verify Preview against staging data, verify Production against the clean project, and capture CI, auth, database, DNS, backup, and rollback evidence.
-7. For the final activation only: obtain explicit approval, add/verify the Production domain in Vercel, create/verify the three DNS-only records in Cloudflare, update the Production Auth allowlist and Vercel variables, deploy the approved commit, smoke-test the production URLs, and then promote the alias. Do not merge to `main` or publish customer-facing traffic before that approval.
+7. For final activation only: obtain explicit approval, change registrar nameservers to `carl.ns.cloudflare.com` and `stella.ns.cloudflare.com`, verify DNS propagation, deploy the approved commit, smoke-test the production URLs, and then promote the alias. Do not merge to `main` or publish customer-facing traffic before that approval.
