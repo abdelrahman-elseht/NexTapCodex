@@ -130,13 +130,13 @@ async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["
   section_rows: draft.sections.map(section => ({ section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content })),
   target_provider_profiles: draft.providerProfiles,
  };
- let { error } = await supabase.rpc("save_page_draft", payload);
+ let { data, error } = await supabase.rpc("save_page_draft", payload);
  // Older isolated projects do not yet expose the provider profile argument;
  // section-level resolved values keep those projects fully compatible.
  if (error && /target_provider_profiles|function .*save_page_draft|does not exist/i.test(error.message || "")) {
   const legacyPayload = { ...payload };
   delete (legacyPayload as Record<string, unknown>).target_provider_profiles;
-  ({ error } = await supabase.rpc("save_page_draft", legacyPayload));
+  ({ data, error } = await supabase.rpc("save_page_draft", legacyPayload));
  }
  // Retry against an older isolated schema whose CHECK constraint predates
  // quick_actions. The marker is normalized back into Quick Actions in the
@@ -145,13 +145,15 @@ async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["
   const legacyRows = draft.sections.map(section => section.kind === "quick_actions"
    ? { section_key: section.key, kind: "social", title: "الإجراءات السريعة", position: section.position, enabled: section.enabled, content: { ...section.content, _editorKind: "quick_actions" } }
    : { section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content });
-  ({ error } = await supabase.rpc("save_page_draft", { ...payload, section_rows: legacyRows }));
+  ({ data, error } = await supabase.rpc("save_page_draft", { ...payload, section_rows: legacyRows }));
  }
  if (error) throw new Error(error.message || "Could not save draft.");
- // A verification/network failure must never delete a committed draft.
- const { data: savedRows, error: verifyError } = await supabase.from("page_sections").select("section_key,kind,content,position").eq("page_id", draft.pageId).order("position");
- if (verifyError || !savedRows || savedRows.length !== draft.sections.length || savedRows.some((row, index) => row.section_key !== draft.sections[index].key || row.position !== index)) {
-  throw new Error("Could not verify the saved draft. Your edits are preserved; retry Save draft.");
+ const committedCount = data && typeof data.sectionCount === "number" ? data.sectionCount : undefined;
+ const returnedSectionCount = data && Array.isArray(data.sections) ? data.sections.length : undefined;
+ if (!data || data.ok !== true ||
+   (committedCount !== undefined && committedCount !== draft.sections.length) ||
+   (committedCount === undefined && returnedSectionCount !== undefined && returnedSectionCount !== draft.sections.length)) {
+  throw new Error("The draft was not committed. Your edits are preserved; retry Save draft.");
  }
 }
 

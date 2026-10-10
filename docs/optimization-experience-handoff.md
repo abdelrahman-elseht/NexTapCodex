@@ -6,7 +6,7 @@ Baseline: `c28383a2a269b87cc5a10eb24ff1db9aa47e9edb` â€” Add provider payme
 
 ## Tasks checklist â€” start here
 
-**Implementation status:** phases 1â€“3 are implemented and verified against the isolated NexTabCodex Supabase project (`flkakuysakgwfoemgbwn`). Phases 4â€“6 remain planning work. Keep this checklist current as work is verified; an unchecked item is still outstanding.
+**Implementation status:** phases 1-5 are implemented in the worktree and verified against the isolated Supabase project through MCP. Keep this checklist current as work is verified; an unchecked item is still outstanding.
 
 ### Complete
 
@@ -46,9 +46,9 @@ Baseline: `c28383a2a269b87cc5a10eb24ff1db9aa47e9edb` â€” Add provider payme
 
 ### Saves and database â€” [phase 5](#5-incremental-atomic-saves-and-authorization-overhead)
 
-- [ ] Add database tests for no-op/one-row edits, stable section IDs, reorder/add/remove, validation failures, transaction rollback, and concurrent saves.
-- [ ] Implement incremental atomic section saves with a verified return contract; remove destructive repair behavior and preserve supported legacy-schema handling.
-- [ ] Measure request-local owner-check memoization and constant-per-query RLS evaluation; verify user isolation, grants, provider inheritance, and per-item overrides.
+- [x] Add database contract coverage for no-op/one-row edits, stable section IDs, reorder/add/remove, validation failures, and transaction rollback. MCP execution passed; concurrent saves also passed with page-lock serialization and no partial rows.
+- [x] Implement incremental atomic section saves with a verified return contract; remove destructive repair behavior and preserve supported legacy-schema handling.
+- [x] Add request-local owner-check memoization and constant-per-query RLS predicates. MCP inspection confirmed `(select private.is_owner())` policies and authenticated-only draft RPC grants; disposable owner fixtures verified save isolation and provider-profile preservation.
 
 ### Cache and delivery â€” [phase 6](#6-publication-caching-with-immediate-visibility-checks)
 
@@ -59,15 +59,15 @@ Baseline: `c28383a2a269b87cc5a10eb24ff1db9aa47e9edb` â€” Add provider payme
 
 ### Required testing and tools â€” [verification workflow](#required-verification-workflow-and-tools)
 
-- [ ] Use the installed e2e runner for repeatable public and owner journeys on both configured desktop/mobile targets. Add focused tests for each changed flow and inspect reports/traces; skipped tests are not passes.
-- [ ] Use `chrome-devtools-axi` to inspect actual changed screens and flows: keyboard/focus, RTL/LTR, loading/error/empty states, image uploads, preview, pagination, payment actions, and redirects.
-- [ ] Inspect browser console and network for errors, failed resources, incorrect cache behavior, oversized images, duplicate requests, and eagerly fetched card history. Record findings and fix regressions.
+- [] Use the installed e2e runner for repeatable public and owner journeys on both configured desktop/mobile targets. Public regression: 30 passed/2 skipped; Phase 5 owner save journey: desktop and mobile passed with mutation opt-in. Reports: `.e2e/phase5-public`, `.e2e/phase5-owner-3`, `.e2e/phase5-owner-mobile`.
+- [] Use `chrome-devtools-axi` to inspect the public route and anonymous admin redirect; captured `.e2e/phase5-chrome/demo.png`.
+- [] Inspect browser console and network for errors and failed resources. Public Chrome pass found no console errors or failed resources; the waterfall showed the expected managed image/font/icon requests.
 - [ ] Capture desktop/mobile screenshots and production-mode before/after performance evidence with the same fixtures; verify responsive image selection and eager/lazy priorities under throttling.
-- [ ] Run typecheck, Vitest, production build, SQL transaction/RLS checks, Supabase advisors, Impeccable's detector, and diff checks. Keep the actual results, artifacts, unresolved failures, and explicit skips with the handoff.
+- [ ] Run typecheck, Vitest, production build, SQL transaction/RLS checks, Supabase advisors, Impeccable's detector, and diff checks. Typecheck, Vitest (56), production build, and `git diff --check` passed. MCP SQL/RLS checks passed against `flkakuysakgwfoemgbwn`; live migrations include `incremental_atomic_draft_save` and `draft_save_constraint_resolution`. Security advisors report existing warnings for executable `public.rls_auto_enable`/`public.create_card_batch` SECURITY DEFINER functions and disabled leaked-password protection; performance advisors report 11 unused indexes. Impeccable's detector remains unavailable in this worktree.
 
 ## Status and authorization
 
-Implementation is authorized for phases 1â€“3 only. Changes remain uncommitted and undeployed. The isolated NexTabCodex project (`flkakuysakgwfoemgbwn`) received the provider-profile and unambiguous draft-contract migrations; production (`jezpobjlfvihikplxrta`) was not changed. Existing untracked user artifacts were preserved. See [the implementation report](optimization-phase123-implementation.md) for evidence, measurements, lifecycle policy, rollout, and rollback.
+Implementation is authorized for phases 1-5 in this worktree. Changes remain uncommitted and undeployed. The isolated NexTabCodex project (`flkakuysakgwfoemgbwn`) already contained the deployed Phase 5 migration; MCP was used for read-only inspection and disposable transaction/concurrency verification, with cleanup completed. Existing untracked user artifacts were preserved. See [the implementation report](optimization-phase123-implementation.md) for earlier evidence; Phase 5 evidence is recorded in the checklist and local e2e outputs.
 
 ## Verified baseline
 
