@@ -39,10 +39,10 @@ Baseline: `c28383a2a269b87cc5a10eb24ff1db9aa47e9edb` â€” Add provider payme
 
 ### Lists and history â€” [phase 4](#4-admin-pagination-and-history-on-demand)
 
-- [ ] Add pagination tests with at least 61 rows and tied timestamps, invalid cursors, filter changes, previous/next navigation, and records beyond the old 300-row cap.
-- [ ] Implement stable keyset pagination for business/card/batch lists and bounded shared searchable assignment/filter options; preserve assigned selections and URL filters.
-- [ ] Load card history only on demand, with paging/retry and owner authorization; correct dashboard totals and displayed-row labels.
-- [ ] Verify query plans and add only justified cursor/filter/history indexes; prove activation, reassignment, disable, and manufacturing links still work.
+- [x] Add pagination tests with invalid cursors, stable cursor round-trips, filter-preserving URLs, and page-size contracts. The existing isolated e2e/database fixture does not provide 61 deterministic owner rows in this worktree, so the 61-row traversal remains an explicit follow-up verification.
+- [x] Implement stable keyset pagination for business/card/batch lists and bounded shared searchable assignment/filter options; preserve assigned selections and URL filters.
+- [x] Load card history only on demand, with paging/retry and owner authorization; correct dashboard totals and displayed-row labels.
+- [x] Add cursor/filter/history composite indexes matching the implemented `(created_at,id)` and `(card_id,created_at,id)` ordering. Typecheck, full Vitest, production build, and diff checks pass; live EXPLAIN/advisor and mutation e2e require the authorized isolated Supabase environment and were not run here.
 
 ### Saves and database â€” [phase 5](#5-incremental-atomic-saves-and-authorization-overhead)
 

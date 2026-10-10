@@ -6,6 +6,8 @@ import { assignCard, createBatch } from "../businesses/actions";
 import { randomUUID } from "node:crypto";
 import { SubmitButton } from "@/components/submit-button";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { CardHistory } from "./card-history";
+import { ADMIN_PAGE_SIZE, cursorFilter, cursorForRow, decodePageCursor, encodePageCursor, pageUrl } from "@/lib/admin-pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -28,23 +30,38 @@ export default async function Cards({
     : "";
   const batchId = query.batch && uuidPattern.test(query.batch) ? query.batch : "";
   const pageId = query.page_id && uuidPattern.test(query.page_id) ? query.page_id : "";
+  const pageSearch = (query.page_search || "").trim().slice(0, 80);
+  const batchDirection = query.batch_direction === "previous" ? "previous" : "next";
+  const batchCursor = decodePageCursor(query.batch_cursor);
+  const direction = query.direction === "previous" ? "previous" : "next";
+  const cursor = decodePageCursor(query.cursor);
 
+  let batchQuery = supabase.from("card_batches").select("id,name,quantity,batch_code,created_at")
+    .order("created_at", { ascending: batchDirection === "previous" }).order("id", { ascending: batchDirection === "previous" }).limit(ADMIN_PAGE_SIZE + 1);
+  if (batchCursor) batchQuery = batchQuery.or(cursorFilter(batchCursor, batchDirection));
   const [{ data: batches }, { data: pages }] = await Promise.all([
-    supabase
-      .from("card_batches")
-      .select("id,name,quantity,batch_code,created_at")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("business_pages")
-      .select("id,slug,branch_name,is_active,published_snapshot_id,businesses!inner(name,status)")
-      .order("slug"),
+    batchQuery,
+    supabase.from("business_pages").select("id,slug,branch_name,is_active,published_snapshot_id,businesses!inner(name,status)").ilike("slug", `%${pageSearch.replace(/[%_]/g, "")}%`).order("slug").limit(101),
   ]);
+  let batchRows = batches || [];
+  const batchesHasMore = batchRows.length > ADMIN_PAGE_SIZE;
+  if (batchesHasMore) batchRows = batchRows.slice(0, ADMIN_PAGE_SIZE);
+  if (batchDirection === "previous") batchRows.reverse();
+  if (batchId && !batchRows.some((batch: any) => batch.id === batchId)) {
+    const { data: selectedBatch } = await supabase.from("card_batches").select("id,name,quantity,batch_code,created_at").eq("id", batchId).maybeSingle();
+    if (selectedBatch) batchRows = [selectedBatch, ...batchRows];
+  }
+  const firstBatch = batchRows[0];
+  const lastBatch = batchRows[batchRows.length - 1];
+  const nextBatchesHref = batchesHasMore && lastBatch ? pageUrl("/admin/cards", { search: search || undefined, status: status || undefined, batch: batchId || undefined, page_id: pageId || undefined, batch_cursor: encodePageCursor(cursorForRow(lastBatch)), batch_direction: "next" }) : undefined;
+  const previousBatchesHref = batchCursor && firstBatch ? pageUrl("/admin/cards", { search: search || undefined, status: status || undefined, batch: batchId || undefined, page_id: pageId || undefined, batch_cursor: encodePageCursor(cursorForRow(firstBatch)), batch_direction: "previous" }) : undefined;
 
   let cardQuery = supabase
     .from("cards")
-    .select("id,serial,token,page_id,batch_id,status")
-    .order("created_at", { ascending: false })
-    .limit(300);
+    .select("id,serial,token,page_id,batch_id,status,created_at")
+    .order("created_at", { ascending: direction === "previous" })
+    .order("id", { ascending: direction === "previous" })
+    .limit(ADMIN_PAGE_SIZE + 1);
 
   if (search) {
     // The search alphabet excludes PostgREST filter syntax characters.
@@ -53,22 +70,31 @@ export default async function Cards({
   if (status) cardQuery = cardQuery.eq("status", status);
   if (batchId) cardQuery = cardQuery.eq("batch_id", batchId);
   if (pageId) cardQuery = cardQuery.eq("page_id", pageId);
+  if (cursor) cardQuery = cardQuery.or(cursorFilter(cursor, direction));
 
   const { data: cards } = await cardQuery;
-  const allPages = (pages || []) as any[];
+  let cardRows = cards || [];
+  const cardsHasMore = cardRows.length > ADMIN_PAGE_SIZE;
+  if (cardsHasMore) cardRows = cardRows.slice(0, ADMIN_PAGE_SIZE);
+  if (direction === "previous") cardRows.reverse();
+  let allPages = (pages || []) as any[];
+  const visiblePageIds = new Set(cardRows.map((card: any) => card.page_id).filter(Boolean));
+  const missingPageIds = [...visiblePageIds].filter((id) => !allPages.some((page) => page.id === id));
+  if (missingPageIds.length) {
+    const { data: assignedPages } = await supabase.from("business_pages").select("id,slug,branch_name,is_active,published_snapshot_id,businesses!inner(name,status)").in("id", missingPageIds);
+    allPages = allPages.concat(assignedPages || []);
+  }
+  const pageFilterParams = { search: search || undefined, status: status || undefined, batch: batchId || undefined, page_id: pageId || undefined, page_search: pageSearch || undefined };
   const eligiblePages = allPages.filter((page: any) =>
     page.is_active && page.published_snapshot_id && page.businesses?.status === "active",
   );
   const pageById = new Map(allPages.map((page: any) => [page.id, page]));
-  const cardRows = cards || [];
-  const batchRows = batches || [];
   const filtersActive = Boolean(search || status || batchId || pageId);
-  const { data: history } = cardRows.length
-    ? await supabase.from("card_assignment_history").select("card_id,old_status,new_status,reason,created_at")
-      .in("card_id", cardRows.map((card: any) => card.id)).order("created_at", { ascending: false }).limit(1000)
-    : { data: [] };
-  const historyByCard = new Map<string, any[]>();
-  for (const event of history || []) historyByCard.set(event.card_id, [...(historyByCard.get(event.card_id) || []), event]);
+  const firstCard = cardRows[0];
+  const lastCard = cardRows[cardRows.length - 1];
+  const cardFilters = pageFilterParams;
+  const nextCardsHref = cardsHasMore && lastCard ? pageUrl("/admin/cards", { ...cardFilters, cursor: encodePageCursor(cursorForRow(lastCard)), direction: "next" }) : undefined;
+  const previousCardsHref = cursor && firstCard ? pageUrl("/admin/cards", { ...cardFilters, cursor: encodePageCursor(cursorForRow(firstCard)), direction: "previous" }) : undefined;
   const errorMessages: Record<string, string> = {
     name: "اكتب اسماً صالحاً للدفعة.",
     quantity: "اختر كمية بين 1 و1,000 بطاقة.",
@@ -128,6 +154,7 @@ export default async function Cards({
           </article>
         ))}
         {batchRows.length === 0 && <p className="notice">لا توجد دفعات إنتاج بعد.</p>}
+        {(nextBatchesHref || previousBatchesHref || batchCursor) && <nav className="pagination" aria-label="تنقل دفعات الإنتاج"><a className={previousBatchesHref ? "button secondary" : "button secondary disabled"} aria-disabled={!previousBatchesHref} href={previousBatchesHref || "/admin/cards"}>السابق</a><a className="button secondary" href="/admin/cards">الأولى</a><a className={nextBatchesHref ? "button secondary" : "button secondary disabled"} aria-disabled={!nextBatchesHref} href={nextBatchesHref || "/admin/cards"}>التالي</a></nav>}
       </section>
 
       <section id="inventory" className="form-card" aria-labelledby="card-filters-title">
@@ -165,6 +192,7 @@ export default async function Cards({
           </label>
           <label className="field">
             الموقع المعيّن
+            <input className="control" name="page_search" defaultValue={pageSearch} maxLength={80} placeholder="ابحث في المواقع" dir="auto" />
             <select name="page_id" defaultValue={pageId}>
               <option value="">كل المواقع</option>
               {allPages.map((page: any) => (
@@ -185,7 +213,7 @@ export default async function Cards({
         )}
       </section>
 
-      <h2>المخزون · {filtersActive ? `${cardRows.length} نتيجة مطابقة` : `آخر ${cardRows.length} بطاقة (حتى 300)`}</h2>
+      <h2>المخزون · {filtersActive ? `${cardRows.length} نتيجة معروضة` : `${cardRows.length} بطاقة معروضة`}</h2>
       {eligiblePages.length === 0 && (
         <p className="notice" role="status">لا توجد صفحة منشورة ونشطة. انشر صفحة من لوحة النشاط قبل تفعيل البطاقات.</p>
       )}
@@ -219,15 +247,7 @@ export default async function Cards({
                   <td dir="ltr">
                     <strong>{card.serial}</strong>
                     <div className="muted" dir="ltr">{card.token.slice(0, 8)}…</div>
-                    <details className="card-audit-history">
-                      <summary>سجل التغييرات ({historyByCard.get(card.id)?.length || 0})</summary>
-                      {(historyByCard.get(card.id) || []).map((event: any, index: number) => (
-                        <div key={`${event.created_at}-${index}`} dir="auto">
-                          {event.reason}: {event.old_status} ← {event.new_status}<br />
-                          <time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString("ar-EG")}</time>
-                        </div>
-                      ))}
-                    </details>
+                    <CardHistory cardId={card.id} />
                   </td>
                   <td>{card.status}</td>
                   <td>{assignedPage
@@ -270,6 +290,11 @@ export default async function Cards({
           </tbody>
         </table>
       </div>
+      {(nextCardsHref || previousCardsHref || cursor) && <nav className="pagination" aria-label="تنقل المخزون">
+        <a className={previousCardsHref ? "button secondary" : "button secondary disabled"} aria-disabled={!previousCardsHref} href={previousCardsHref || "/admin/cards"}>السابق</a>
+        <a className="button secondary" href={pageUrl("/admin/cards", cardFilters)}>الأولى</a>
+        <a className={nextCardsHref ? "button secondary" : "button secondary disabled"} aria-disabled={!nextCardsHref} href={nextCardsHref || pageUrl("/admin/cards", cardFilters)}>التالي</a>
+      </nav>}
     </>
   );
 }

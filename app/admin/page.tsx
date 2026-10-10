@@ -5,8 +5,9 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
   const { supabase } = await requireOwner();
-  const [businesses, cards, pages] = await Promise.all([
-    supabase.from("businesses").select("id,name,category,status,created_at").order("created_at", { ascending: false }).limit(6),
+  const [businesses, businessTotal, cards, pages] = await Promise.all([
+    supabase.from("businesses").select("id,name,category,status,created_at").order("created_at", { ascending: false }).order("id", { ascending: false }).limit(6),
+    supabase.from("businesses").select("id", { count: "exact", head: true }),
     supabase.from("cards").select("id", { count: "exact", head: true }),
     supabase.from("business_pages").select("id", { count: "exact", head: true }).eq("is_active", true),
   ]);
@@ -20,7 +21,7 @@ export default async function AdminHome() {
       </header>
 
       <section className="stats" aria-label="ملخص التشغيل">
-        <div className="stat"><span>الأنشطة التجارية</span><strong>{rows.length}</strong></div>
+        <div className="stat"><span>الأنشطة التجارية</span><strong>{businessTotal.count || 0}</strong></div>
         <div className="stat"><span>البطاقات المسجلة</span><strong>{cards.count || 0}</strong></div>
         <div className="stat"><span>الصفحات النشطة</span><strong>{pages.count || 0}</strong></div>
       </section>
@@ -31,7 +32,7 @@ export default async function AdminHome() {
       </section>
 
       <div className="admin-section-title">
-        <div><h2>أحدث الأنشطة</h2><p>انتقل مباشرة إلى إعدادات الصفحة أو افتح القائمة الكاملة.</p></div>
+        <div><h2>أحدث الأنشطة</h2><p>أحدث 6 أنشطة من إجمالي {businessTotal.count || 0}.</p></div>
         <Link className="small-button" href="/admin/businesses">كل الأنشطة</Link>
       </div>
 
