@@ -1,6 +1,6 @@
 import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
-import { assertSupabaseEnvironment } from "./lib/environment.mjs";
+import { assertSupabaseEnvironment } from "./src/lib/config/environment.mjs";
 assertSupabaseEnvironment(process.env);
 const nextConfig: NextConfig = {
   distDir: process.env.NEXTAP_BUILD_DIR || ".next",

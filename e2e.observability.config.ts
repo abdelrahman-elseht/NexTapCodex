@@ -4,7 +4,7 @@ import base from "./e2e.config";
 // Connect to the separately started production build. No mutation suites are selected.
 export default {
   ...base,
-  tests: ["tests/public-journey.e2e.ts", "tests/public-security.e2e.ts", "tests/observability-baseline.e2e.ts"],
+  tests: ["tests/e2e/public-journey.e2e.ts", "tests/e2e/public-security.e2e.ts", "tests/e2e/observability-baseline.e2e.ts"],
   retries: 0,
   targets: base.targets.map(target => ({
     ...target,

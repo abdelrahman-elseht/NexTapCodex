@@ -8,7 +8,7 @@ out
 !.env.example
 coverage
 *.zip
-!app/**/manufacturing.zip/
+!src/app/**/manufacturing.zip/
 *.tsbuildinfo
 install.log
 .playwright-mcp/

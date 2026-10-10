@@ -1,6 +1,6 @@
 import type { E2EConfig } from "e2e";
 import { web } from "@e2e-dev/web";
-import { assertSupabaseEnvironment } from "./lib/environment.mjs";
+import { assertSupabaseEnvironment } from "./src/lib/config/environment.mjs";
 
 try { process.loadEnvFile(".env.local"); } catch { /* Environment may be injected by CI. */ }
 assertSupabaseEnvironment({ ...process.env, NEXTAP_ENV: "test", VERCEL_ENV: undefined });
@@ -35,7 +35,7 @@ const app = {
 };
 
 export default {
-  tests: "tests/**/*.e2e.ts",
+  tests: "tests/e2e/**/*.e2e.ts",
   workers: 1,
   targets: [
     { name: "desktop", engine: web({ viewport: { width: 1440, height: 960 } }), app },

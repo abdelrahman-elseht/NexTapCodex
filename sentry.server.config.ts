@@ -6,7 +6,7 @@ import {
   sentryEnabled,
   sentryEnvironment,
   sentryRelease,
-} from "./lib/sentry";
+} from "./src/lib/observability/sentry";
 
 const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 

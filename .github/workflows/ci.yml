@@ -60,7 +60,7 @@ jobs:
         run: npx e2e-web install chromium --with-deps
 
       - name: Public desktop and mobile smoke tests
-        run: npx e2e run tests/public-journey.e2e.ts tests/quick-actions-layout.e2e.ts --output artifacts/ci-smoke
+        run: npx e2e run tests/e2e/public-journey.e2e.ts tests/e2e/quick-actions-layout.e2e.ts --output artifacts/ci-smoke
         env:
           E2E_SERVER_MODE: production
 

@@ -10,8 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:db": "node scripts/test-database.mjs",
-    "test:e2e:seed": "node scripts/seed-e2e.mjs",
+    "test:db": "node scripts/database/test-database.mjs",
+    "test:e2e:seed": "node scripts/database/seed-e2e.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {
