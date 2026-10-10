@@ -1,9 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/providers";
+import { PaymentLogo } from "@/components/payment-logo";
+import { isPaymentProvider, paymentLinkHref, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/providers";
 
-export type EditorItem = { label: string; value: string; url: string; provider?: string; enabled?: boolean; icon?: string };
+export type EditorItem = { label: string; value: string; url: string; provider?: string; enabled?: boolean; icon?: string; destinationStrategy?: string; profileOverride?: boolean };
 type Section = { id: string; kind: string };
 
 const valueLabels: Partial<Record<ProviderId, string>> = {
@@ -15,6 +16,7 @@ const valueProviders = new Set<ProviderId>(["call", "phone", "whatsapp", "instap
 const brandIcons = new Set(["whatsapp", "facebook", "instagram", "tiktok", "youtube", "snapchat", "x", "linkedin", "telegram", "instapay", "vodafone"]);
 
 function providerIcon(provider: ProviderId): ReactNode {
+  if (provider === "instapay" || provider === "vodafone") return <PaymentLogo provider={provider} />;
   if (brandIcons.has(provider)) return <img src={`/icons/social/${provider}.svg`} alt="" />;
   const paths: Record<string, ReactNode> = {
     call: <path d="M6 3.8 9 3l2 4.5-2.1 1.7a13 13 0 0 0 5.9 5.9l1.7-2.1 4.5 2-.8 3a2.3 2.3 0 0 1-2.6 1.7C10 18.8 5.2 14 4.3 6.4A2.3 2.3 0 0 1 6 3.8Z" />,
@@ -36,12 +38,11 @@ function providerIcon(provider: ProviderId): ReactNode {
 
 function itemValidationError(item: EditorItem) {
   const provider = item.provider as ProviderId | undefined;
-  if (!item.label.trim() && (item.value.trim() || item.url.trim())) return "Add a label.";
   if (["whatsapp", "vodafone", "phone", "call"].includes(provider || "") && item.value.trim() && !normalizeEgyptianPhone(item.value)) return "Use a valid Egyptian mobile number, such as 01012345678.";
   if (provider === "instagram" && item.value.trim() && !normalizeInstagram(item.value)) return "Use an Instagram handle or https://instagram.com/ URL.";
   if (provider === "instapay" && item.value.trim() && !normalizeProviderValue("instapay", item.value)) return "Use an InstaPay IPA such as name@instapay.";
   if (provider === "email" && item.value.trim() && !normalizeProviderValue("email", item.value)) return "Use a valid email address.";
-  if (item.url.trim() && !normalizeSafeUrl(item.url.trim())) return "Use a complete https:// destination URL.";
+  if (item.url.trim() && !(isPaymentProvider(provider) ? paymentLinkHref(item.url) : normalizeSafeUrl(item.url.trim()))) return "Use a complete https:// destination URL.";
   return "";
 }
 
@@ -87,8 +88,9 @@ export function ItemEditor({ section, items, onChange }: { section: Section; ite
             if (provider === "instagram") patch.url = normalizeInstagram(value);
             if (provider === "whatsapp") patch.url = item.url && item.url !== whatsappHref(item.value) ? item.url : whatsappHref(value);
             set(index, patch);
-          }} />{!isHours && <small className="field-hint">{["instapay", "vodafone", "bank"].includes(provider) ? "Visitors can copy these details. NexTap does not create payment links." : `This destination stays tied to ${providerLabels[provider]} if you change the button label.`}</small>}</label>}
-          {needsUrl && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(index, { url: event.target.value })} /><small className="field-hint">{optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
+          }} />{!isHours && <small className="field-hint">{provider === "bank" ? "These instructions stay available to your team. Visitors request transfer details directly from the business." : ["instapay", "vodafone"].includes(provider) ? "Optional fallback details. Add a provider link to open the payment destination directly." : `This destination stays tied to ${providerLabels[provider]} if you change the button label.`}</small>}</label>}
+          {needsUrl && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(index, { url: event.target.value })} /><small className="field-hint">{["instapay", "vodafone", "bank"].includes(provider) ? "Paste the complete HTTPS payment link from your provider. Tapping the card opens that exact link; app opening depends on the provider and the phone. No details are copied when a link is set." : optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
+          {provider !== "custom" && !isHours && <label className="profile-override"><input type="checkbox" checked={item.profileOverride === true} onChange={event => set(index, { profileOverride: event.target.checked })} /> Override shared {providerLabels[provider]} details for this item</label>}
           {(isAction || isPayment) && <label className="field"><span>Button icon</span><select value={item.icon || ""} onChange={event => set(index, { icon: event.target.value || undefined })}><option value="">Provider icon</option><option value="link">Link</option><option value="phone">Phone</option><option value="pin">Location pin</option><option value="menu">Menu</option><option value="calendar">Calendar</option><option value="google">Google</option><option value="globe">Website</option></select></label>}
           {itemValidationError(item) && <small className="field-error" role="alert">{itemValidationError(item)}</small>}
         </div>

@@ -120,7 +120,8 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await firstCardRow.getByRole("button", "تفعيل / نقل").tap();
   await screen.getByRole("button", "تأكيد التعيين").tap();
   await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/, { timeout: 20_000 });
-  await expect(screen.getByRole("status")).toContainText("تم تحديث تعيين البطاقة.");
+  // Read the confirmation directly; the accumulated inventory can make a full accessibility snapshot expensive.
+  await expect(browser.locator('[role="status"].success')).toContainText("تم تحديث تعيين البطاقة.", { timeout: 20_000 });
 
   const baseUrl = app.baseUrl;
   if (!baseUrl) throw new Error("The E2E app target has no base URL.");

@@ -20,8 +20,13 @@ export default async function EditBusiness({
   const { id } = await params;
   const query = await searchParams;
   const { supabase } = await requireOwner();
-  const { data: business, error: businessError } = await supabase.from("businesses")
-    .select("id,name,category,status").eq("id", id).maybeSingle();
+  let { data: business, error: businessError } = await supabase.from("businesses")
+    .select("id,name,category,status,provider_profiles").eq("id", id).maybeSingle();
+  if (businessError && /provider_profiles|column|schema cache/i.test(businessError.message || "")) {
+    const fallback = await supabase.from("businesses").select("id,name,category,status").eq("id", id).maybeSingle();
+    business = fallback.data ? { ...fallback.data, provider_profiles: null } : null;
+    businessError = fallback.error;
+  }
   if (businessError) return <section className="editor-panel error-panel" role="alert"><span className="panel-kicker">تعذر تحميل البيانات</span><h1>لم نتمكن من فتح النشاط</h1><p>حدثت مشكلة أثناء تحميل بيانات لوحة التحكم. أعد المحاولة أو ارجع إلى قائمة الأنشطة.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
   if (!business) notFound();
 
@@ -65,7 +70,7 @@ export default async function EditBusiness({
       {sectionError && <div className="alert" role="alert">تعذر تحميل أقسام الصفحة.</div>}
 
       <BusinessEditor
-        business={{ id: business.id, name: business.name, category: business.category || "", status: business.status }}
+        business={{ id: business.id, name: business.name, category: business.category || "", status: business.status, providerProfiles: (business as any).provider_profiles || {} }}
         page={{ id: page.id, slug: page.slug, template: page.template, is_active: page.is_active }}
   sections={sectionList.map((section: any) => ({ id: section.id, section_key: section.section_key, kind: section.content?._editorKind === "quick_actions" && section.kind === "social" ? "quick_actions" : section.kind, title: section.content?._editorKind === "quick_actions" && section.kind === "social" ? "الإجراءات السريعة" : section.title, position: section.position, enabled: section.enabled, content: section.content as Record<string, unknown> }))}
       />

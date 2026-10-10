@@ -5,6 +5,7 @@ try { process.loadEnvFile(".env.local"); } catch { /* Environment may be injecte
 
 const node = process.execPath;
 const env = {
+  NEXTAP_BUILD_DIR: ".next-e2e",
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_e2e_placeholder",
   NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3137",

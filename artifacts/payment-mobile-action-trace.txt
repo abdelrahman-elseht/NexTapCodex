@@ -1,0 +1,3 @@
+﻿result: "{\"viewport\":390,\"provider\":\"instapay\",\"strategy\":\"copy_identifier\",\"appRedirectSupported\":false,\"modal\":\"Payment instructions\\n\\nRecipient details copied. Paste them into the official payment service.\\n\\nOpen the official InstaPay app and choose Send Money to a Payment Address (IPA). Enter the amount, verify the beneficiary, and complete the transfer in the app.\\n\\nNexTap does not submit or confirm payments.\\n\\nClose\",\"hrefs\":[],\"identifierInRenderedText\":false,\"names\":[\"InstaPay\",\"Vodafone Cash\",\"Bank instructions\"]}"
+help[1]:
+  Run `chrome-devtools-axi snapshot` to see current page state

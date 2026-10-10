@@ -14,10 +14,12 @@ export const safeContentUrl = (value: unknown): value is string => {
 };
 export const providerSchema = z.string().trim().max(40).regex(/^[a-z0-9_-]+$/i).optional();
 export const itemSchema = z.object({
-  label: z.string().trim().min(1).max(80),
+  label: z.string().trim().max(80).optional().or(z.literal("")),
   url: z.string().trim().max(2048).optional().or(z.literal("")),
   value: z.string().trim().max(500).optional().or(z.literal("")),
   provider: providerSchema,
+  destinationStrategy: z.enum(["verified_deep_link", "external_url", "copy_identifier", "instructions"]).optional(),
+  profileOverride: z.boolean().optional(),
   enabled: z.boolean().optional(),
   icon: z.string().trim().max(40).optional(),
 }).strict().superRefine((item, ctx) => {

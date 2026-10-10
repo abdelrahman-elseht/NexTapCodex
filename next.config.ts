@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
+  distDir: process.env.NEXTAP_BUILD_DIR || ".next",
   poweredByHeader: false,
   images: { unoptimized: true },
   async headers() {

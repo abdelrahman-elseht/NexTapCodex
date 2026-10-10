@@ -1,0 +1,16 @@
+﻿page:
+  title: NexTap | بطاقة واحدة، صفحة واحدة
+  refs: 8
+snapshot:
+uid=g124:23_0 RootWebArea "NexTap | بطاقة واحدة، صفحة واحدة" url="http://127.0.0.1:3137/demo"
+  uid=g124:24_0 dialog "Payment instructions" modal
+    uid=g124:24_1 heading "Payment instructions" level="2"
+    uid=g124:24_2 status atomic live="polite" relevant="additions text"
+      uid=g124:24_3 StaticText "Recipient details copied. Paste them into the official payment service."
+    uid=g124:24_4 StaticText "Open the official InstaPay app and choose Send Money to a Payment Address (IPA). Enter the amount, verify the beneficiary, and complete the transfer in the app."
+    uid=g124:24_5 StaticText "NexTap does not submit or confirm payments."
+    uid=g124:24_6 button "Close" focusable focused
+help[3]:
+  Run `chrome-devtools-axi click @g124:24_6` to click the "Close" button
+  Run `chrome-devtools-axi scroll down` to scroll down
+  Use `chrome-devtools-axi eval <expr>` for JS expressions. For multi-statement code, pass a function: `eval "() => { ...; return result }"`

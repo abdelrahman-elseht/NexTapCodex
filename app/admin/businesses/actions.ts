@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/content";
-import { normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/providers";
+import { destinationStrategyFor, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/providers";
 import { z } from "zod";
 
 const slugSchema=z.string().trim().toLowerCase().regex(/^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?[a-z0-9]$/,"استخدم أحرفاً صغيرة وأرقاماً وشرطات فقط.");
@@ -56,9 +56,10 @@ export async function saveBusiness(fd:FormData){
 }
 
 type DraftSection = { id?: string; key: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
+type DraftProviderProfile = { value?: string; url?: string; destinationStrategy?: string };
 function parseDraft(fd: FormData) {
  const raw = String(fd.get("draft") || "{}");
- const parsed = JSON.parse(raw) as { businessId?: string; pageId?: string; name?: string; category?: string; slug?: string; template?: string; archived?: boolean; sections?: DraftSection[] };
+ const parsed = JSON.parse(raw) as { businessId?: string; pageId?: string; name?: string; category?: string; slug?: string; template?: string; archived?: boolean; sections?: DraftSection[]; providerProfiles?: Record<string, DraftProviderProfile> };
  const name = String(parsed.name || "").trim().slice(0, 120);
  const category = String(parsed.category || "business").trim().slice(0, 80) || "business";
  const slug = String(parsed.slug || "").trim().toLowerCase();
@@ -74,7 +75,12 @@ function parseDraft(fd: FormData) {
    parseSectionContent(JSON.stringify(content));
    return { key, kind: section.kind, title: String(section.title || section.kind).trim().slice(0, 80), position: index, enabled: Boolean(section.enabled), content };
  });
- return { businessId: parsed.businessId, pageId: parsed.pageId, name, category, slug, template, archived: Boolean(parsed.archived), sections: cleanSections };
+ const providerProfiles = Object.fromEntries(Object.entries(parsed.providerProfiles || {}).slice(0, 40).map(([provider, profile]) => [provider.slice(0, 40), {
+   value: String(profile?.value || "").trim().slice(0, 500) || undefined,
+   url: String(profile?.url || "").trim().slice(0, 2048) || undefined,
+   destinationStrategy: destinationStrategyFor(provider, profile?.destinationStrategy, profile?.url),
+ }]));
+ return { businessId: parsed.businessId, pageId: parsed.pageId, name, category, slug, template, archived: Boolean(parsed.archived), sections: cleanSections, providerProfiles };
 }
 
 function cleanSectionContent(content: Record<string, unknown>): Record<string, unknown> {
@@ -85,7 +91,7 @@ function cleanSectionContent(content: Record<string, unknown>): Record<string, u
    if (!raw || typeof raw !== "object") return false;
    const item = raw as Record<string, unknown>;
    // Empty rows are editor placeholders; omit them from the persisted snapshot.
-   return [item.label, item.url, item.value].some(part => typeof part === "string" && part.trim());
+    return [item.label, item.url, item.value, item.provider, item.icon].some(part => typeof part === "string" && part.trim());
   }).map(raw => {
    const item = raw as Record<string, unknown>;
    const provider = typeof item.provider === "string" ? item.provider.trim().slice(0, 40) : undefined;
@@ -105,7 +111,8 @@ function cleanSectionContent(content: Record<string, unknown>): Record<string, u
    } else if (provider === "vodafone" && valueText && !normalizeEgyptianPhone(valueText)) {
     throw new Error("Use a valid Egyptian wallet number for Vodafone Cash.");
    }
-   return { label, value: valueText, url, provider, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
+    const destinationStrategy = destinationStrategyFor(provider, typeof item.destinationStrategy === "string" ? item.destinationStrategy : undefined, url);
+    return { label, value: valueText, url, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
   });
  }
  return next;
@@ -121,8 +128,16 @@ async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["
   page_slug: draft.slug,
   page_template: draft.template,
   section_rows: draft.sections.map(section => ({ section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content })),
+  target_provider_profiles: draft.providerProfiles,
  };
  let { error } = await supabase.rpc("save_page_draft", payload);
+ // Older isolated projects do not yet expose the provider profile argument;
+ // section-level resolved values keep those projects fully compatible.
+ if (error && /target_provider_profiles|function .*save_page_draft|does not exist/i.test(error.message || "")) {
+  const legacyPayload = { ...payload };
+  delete (legacyPayload as Record<string, unknown>).target_provider_profiles;
+  ({ error } = await supabase.rpc("save_page_draft", legacyPayload));
+ }
  // Retry against an older isolated schema whose CHECK constraint predates
  // quick_actions. The marker is normalized back into Quick Actions in the
  // editor and public renderer, so the owner never loses the intended section.
