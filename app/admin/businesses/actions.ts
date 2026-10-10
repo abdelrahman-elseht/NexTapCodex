@@ -55,7 +55,7 @@ export async function saveBusiness(fd:FormData){
  revalidatePath("/admin");revalidatePath("/b/"+slug);redirect("/admin/businesses/"+businessId+"?saved=1");
 }
 
-type DraftSection = { id?: string; key: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
+type DraftSection = { id?: string; section_key?: string; key: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
 type DraftProviderProfile = { value?: string; url?: string; destinationStrategy?: string };
 function parseDraft(fd: FormData) {
  const raw = String(fd.get("draft") || "{}");
@@ -69,7 +69,7 @@ function parseDraft(fd: FormData) {
  if (!sections.some(section => section.kind === "hero")) throw new Error("A page needs a hero section.");
  const cleanSections = sections.map((section, index) => {
    if (!section || !sectionKinds.includes(section.kind as any)) throw new Error("Unsupported section type.");
-   const key = String(section.key || section.kind).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40) || `section_${index + 1}`;
+   const key = String(section.section_key || section.key || section.kind).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40) || `section_${index + 1}`;
    const content = section.content && typeof section.content === "object" ? cleanSectionContent(section.content as Record<string, unknown>) : {};
    // Run the same URL/item checks used by the legacy section form.
    parseSectionContent(JSON.stringify(content));
@@ -105,14 +105,14 @@ function cleanSectionContent(content: Record<string, unknown>): Record<string, u
    } else if (provider === "instagram") {
     if (valueText && !normalizeInstagram(valueText)) throw new Error("Use a valid Instagram handle or URL.");
    } else if (["facebook","tiktok","youtube","snapchat","x","linkedin","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider || "")) {
-    if (url && !normalizeSafeUrl(url)) throw new Error("Use a complete https:// destination URL.");
+    if (url && !normalizeSafeUrl(url) && !(provider === "custom" && url.startsWith("/") && !url.startsWith("//") && !url.includes(".."))) throw new Error("Use a complete https:// destination URL.");
    } else if (provider === "instapay" && valueText && !normalizeProviderValue("instapay" as ProviderId, valueText)) {
     throw new Error("Use an InstaPay ID such as name@provider.");
    } else if (provider === "vodafone" && valueText && !normalizeEgyptianPhone(valueText)) {
     throw new Error("Use a valid Egyptian wallet number for Vodafone Cash.");
    }
     const destinationStrategy = destinationStrategyFor(provider, typeof item.destinationStrategy === "string" ? item.destinationStrategy : undefined, url);
-    return { label, value: valueText, url, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
+    return { label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
   });
  }
  return next;
@@ -148,23 +148,10 @@ async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["
   ({ error } = await supabase.rpc("save_page_draft", { ...payload, section_rows: legacyRows }));
  }
  if (error) throw new Error(error.message || "Could not save draft.");
- // A few older isolated projects expose an outdated RPC that reports success
- // without replacing every section. Verify the write and repair it through the
- // owner-scoped table API when that happens.
- const { data: savedRows, error: verifyError } = await supabase.from("page_sections").select("id,kind,content,position").eq("page_id", draft.pageId).order("position");
- const expectedAbout = draft.sections.find(section => section.kind === "about")?.content?.description;
- const actualAbout = (savedRows || []).find((row: any) => row.kind === "about")?.content?.description;
- if (verifyError || (savedRows || []).length !== draft.sections.length || (expectedAbout && actualAbout !== expectedAbout)) {
-  await supabase.from("page_sections").delete().eq("page_id", draft.pageId);
-  const nativeRows = draft.sections.map(section => ({ section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content }));
-  let { error: directError } = await supabase.from("page_sections").insert(nativeRows);
-  if (directError) {
-   const legacyRows = draft.sections.map(section => section.kind === "quick_actions"
-    ? { section_key: section.key, kind: "social", title: "الإجراءات السريعة", position: section.position, enabled: section.enabled, content: { ...section.content, _editorKind: "quick_actions" } }
-    : { section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content });
-   ({ error: directError } = await supabase.from("page_sections").insert(legacyRows));
-  }
-  if (directError) throw new Error(directError.message || "Could not save draft sections.");
+ // A verification/network failure must never delete a committed draft.
+ const { data: savedRows, error: verifyError } = await supabase.from("page_sections").select("section_key,kind,content,position").eq("page_id", draft.pageId).order("position");
+ if (verifyError || !savedRows || savedRows.length !== draft.sections.length || savedRows.some((row, index) => row.section_key !== draft.sections[index].key || row.position !== index)) {
+  throw new Error("Could not verify the saved draft. Your edits are preserved; retry Save draft.");
  }
 }
 

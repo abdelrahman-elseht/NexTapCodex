@@ -10,7 +10,7 @@ export async function createClient() {
       getAll() { return cookieStore.getAll(); },
       setAll(cookiesToSet) {
         try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); }
-        catch { /* Server Components cannot write cookies; proxy refreshes sessions. */ }
+        catch { /* Server Components cannot write cookies; middleware refreshes sessions. */ }
       }
     } }
   );

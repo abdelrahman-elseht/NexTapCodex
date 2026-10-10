@@ -22,8 +22,9 @@ export const itemSchema = z.object({
   profileOverride: z.boolean().optional(),
   enabled: z.boolean().optional(),
   icon: z.string().trim().max(40).optional(),
+  alt: z.string().trim().max(200).optional(),
 }).strict().superRefine((item, ctx) => {
-  if (item.url && !safeUrl(item.url)) ctx.addIssue({ code: "custom", path: ["url"], message: "Use a safe http(s), mailto, or tel URL." });
+  if (item.url && !safeContentUrl(item.url)) ctx.addIssue({ code: "custom", path: ["url"], message: "Use a safe local path or complete URL." });
 });
 export const sectionContentSchema = z.record(z.string(), z.unknown()).superRefine((content, ctx) => {
   for (const [key, value] of Object.entries(content)) {
@@ -32,7 +33,7 @@ export const sectionContentSchema = z.record(z.string(), z.unknown()).superRefin
     if (Array.isArray(value)) for (const raw of value) {
       const parsed = itemSchema.safeParse(raw);
       if (!parsed.success) ctx.addIssue({ code: "custom", message: "Items need a short label and a safe URL or text value." });
-      else if (parsed.data.url && !safeUrl(parsed.data.url)) ctx.addIssue({ code: "custom", message: "Item URL is not safe." });
+      else if (parsed.data.url && !safeContentUrl(parsed.data.url)) ctx.addIssue({ code: "custom", message: "Item URL is not safe." });
     }
   }
 });

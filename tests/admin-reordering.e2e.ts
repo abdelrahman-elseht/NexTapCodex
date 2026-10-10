@@ -13,19 +13,25 @@ test("an owner can reorder sections, save them, and keep the order on reload", a
   await screen.getByRole("button", "دخول آمن").tap();
   await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
 
-  const editorPath = await browser.evaluate(() => document.querySelector<HTMLAnchorElement>('a[href^="/admin/businesses/"]')?.getAttribute("href") ?? "");
-  expect(editorPath).toBeTruthy();
-  await app.open(editorPath!);
-
-  const before = await browser.evaluate(() => Array.from(document.querySelectorAll(".section-order-list > li"), row => row.querySelector("summary strong")?.textContent?.trim() || "")) as string[];
+  // Keep this mutation independent from customer records and other test suites.
+  const suffix = Date.now().toString(36);
+  await app.open("/admin/businesses/new");
+  await screen.getByLabel("اسم النشاط").fill(`Reorder QA ${suffix}`);
+  await screen.getByLabel("التصنيف").fill("QA");
+  await screen.getByLabel("رابط الصفحة").fill(`reorder-qa-${suffix}`);
+  await screen.getByRole("button", "إنشاء النشاط والصفحة").tap();
+  await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/);
+  await expect(browser.locator(".visual-section-list")).toBeVisible();
+  const editorPath = await browser.evaluate(() => location.pathname);
+  const readOrder = () => browser.evaluate(() => Array.from(document.querySelectorAll(".visual-section-list > li"), row => row.querySelector(".navigator-item strong")?.textContent?.trim() || ""));
+  const before = await readOrder();
   expect(before.length).toBeGreaterThan(1);
-  const firstSectionTitle = await browser.evaluate(() => document.querySelector(".section-order-list > li .editor-section strong")?.textContent?.split(" · ")[0] || "");
-  await screen.getByRole("button", `Move ${firstSectionTitle} down`).tap();
-  await screen.getByRole("button", "Save order").tap();
-  await expect(screen.getByText("تم حفظ ترتيب الأقسام.")).toBeVisible();
-
-  await app.open(editorPath!);
-  const after = await browser.evaluate(() => Array.from(document.querySelectorAll(".section-order-list > li"), row => row.querySelector("summary strong")?.textContent?.trim() || "")) as string[];
+  await browser.locator(".visual-section-list > li").first().getByRole("button").nth(2).tap();
+  await screen.getByRole("button", "Save draft").tap();
+  await expect(browser.locator(".editor-save-status")).toHaveText("Draft saved");
+  await app.open(editorPath);
+  await expect(browser.locator(".visual-section-list")).toBeVisible();
+  const after = await readOrder();
   expect(after[0]).toBe(before[1]);
   expect(after[1]).toBe(before[0]);
   expect(after.slice(2)).toEqual(before.slice(2));

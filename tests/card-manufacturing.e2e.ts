@@ -20,7 +20,12 @@ test("owner creates a manufacturing batch, previews its QR, and downloads its ar
   await screen.getByRole("button", "إنشاء دفعة").tap();
   await expect(browser).toHaveURL(/\/admin\/cards\/batches\/[0-9a-f-]+\?created=1/);
   await expect(screen.getByRole("heading", "عينة رمز QR")).toBeVisible();
-  await expect(screen.getByText(/https:\/\/nextab\.services\/c\/.+\?via=qr/)).toBeVisible();
+  await expect(browser.locator(".encoded-url")).toBeVisible();
+  const encodedUrl = await browser.evaluate(() => document.querySelector('.encoded-url')?.textContent?.trim() || "");
+  const destination = new URL(encodedUrl);
+  expect(destination.origin).toBe(new URL(app.baseUrl || "http://invalid.test").origin);
+  expect(destination.pathname).toMatch(/^\/c\/[A-Za-z0-9_-]{32,64}$/);
+  expect(destination.search).toBe("?via=qr");
 
   const download = await browser.waitForDownload(() =>
     screen.getByRole("link", "تنزيل حزمة التصنيع").tap(),

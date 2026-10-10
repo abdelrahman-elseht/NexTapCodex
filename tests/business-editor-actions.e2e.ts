@@ -102,7 +102,7 @@ test("owners can configure provider-aware actions, social links, and payment lin
     return {
       count: grid?.children.length || 0,
       columns: grid ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
-      background: section ? getComputedStyle(section).getPropertyValue("--payment-photo") : "",
+      background: section ? section.querySelector("img.section-background-photo")?.getAttribute("src") || "" : "",
       copyCount: grid?.querySelectorAll(".copy-payment").length || 0,
       actionCount: grid?.querySelectorAll("button.payment-tile").length || 0,
     };
@@ -167,7 +167,7 @@ test("owners can configure provider-aware actions, social links, and payment lin
       paymentColumns: columns(grid),
       actionColumns: columns(document.querySelector<HTMLElement>(".quick-actions-configured")),
       paymentCount: grid?.children.length || 0,
-      paymentBackground: section ? getComputedStyle(section).getPropertyValue("--payment-photo") : "",
+      paymentBackground: section ? section.querySelector("img.section-background-photo")?.getAttribute("src") || "" : "",
       paymentActions: Array.from(grid?.querySelectorAll("button.payment-tile") || []).map(button => ({
         label: button.getAttribute("aria-label") || "",
         text: button.textContent?.trim() || "",

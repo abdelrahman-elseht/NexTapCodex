@@ -97,6 +97,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
 
   return (
     <main dir={english ? "ltr" : "rtl"} lang={english ? "en" : "ar"}>
+      <link rel="preload" href={english ? "/fonts/dm-sans-400.v1.woff2" : "/fonts/alexandria-400.v1.woff2"} as="font" type="font/woff2" crossOrigin="anonymous" />
       <header className="site-header">
         <div className="container header-row">
           <BrandLogo />

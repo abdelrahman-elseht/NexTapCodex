@@ -30,6 +30,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
 
   const firstBusinessId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
   const firstEditorPath = `/admin/businesses/${firstBusinessId}`;
+  await expect(browser.locator('a[href*="/preview?page="]')).toBeVisible();
   const firstPageId = await browser.evaluate(() => {
     const href = document.querySelector<HTMLAnchorElement>('a[href*="/preview?page="]')?.getAttribute("href");
     return href ? new URL(href, location.origin).searchParams.get("page") || "" : "";
@@ -153,6 +154,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await screen.getByRole("button", "إنشاء النشاط والصفحة").tap();
   await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/);
   const secondBusinessId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
+  await expect(browser.locator('a[href*="/preview?page="]')).toBeVisible();
   const secondPageId = await browser.evaluate(() => {
     const href = document.querySelector<HTMLAnchorElement>('a[href*="/preview?page="]')?.getAttribute("href");
     return href ? new URL(href, location.origin).searchParams.get("page") || "" : "";

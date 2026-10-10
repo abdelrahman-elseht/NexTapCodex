@@ -1,10 +1,11 @@
 "use client";
 
+import { ImageField, type UploadTracker } from "./image-field";
 import type { ReactNode } from "react";
 import { PaymentLogo } from "@/components/payment-logo";
 import { isPaymentProvider, paymentLinkHref, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/providers";
 
-export type EditorItem = { label: string; value: string; url: string; provider?: string; enabled?: boolean; icon?: string; destinationStrategy?: string; profileOverride?: boolean };
+export type EditorItem = { label: string; value: string; url: string; alt?: string; provider?: string; enabled?: boolean; icon?: string; destinationStrategy?: string; profileOverride?: boolean };
 type Section = { id: string; kind: string };
 
 const valueLabels: Partial<Record<ProviderId, string>> = {
@@ -46,7 +47,7 @@ function itemValidationError(item: EditorItem) {
   return "";
 }
 
-export function ItemEditor({ section, items, onChange }: { section: Section; items: EditorItem[]; onChange: (items: EditorItem[]) => void }) {
+export function ItemEditor({ section, items, onChange, businessId, track, mutationLocked = false }: { section: Section; items: EditorItem[]; onChange: (items: EditorItem[]) => void; businessId?: string; track?: UploadTracker; mutationLocked?: boolean }) {
   const set = (index: number, patch: Partial<EditorItem>) => onChange(items.map((item, current) => current === index ? { ...item, ...patch } : item));
   const move = (index: number, offset: number) => {
     const target = index + offset;
@@ -89,14 +90,15 @@ export function ItemEditor({ section, items, onChange }: { section: Section; ite
             if (provider === "whatsapp") patch.url = item.url && item.url !== whatsappHref(item.value) ? item.url : whatsappHref(value);
             set(index, patch);
           }} />{!isHours && <small className="field-hint">{provider === "bank" ? "These instructions stay available to your team. Visitors request transfer details directly from the business." : ["instapay", "vodafone"].includes(provider) ? "Optional fallback details. Add a provider link to open the payment destination directly." : `This destination stays tied to ${providerLabels[provider]} if you change the button label.`}</small>}</label>}
-          {needsUrl && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(index, { url: event.target.value })} /><small className="field-hint">{["instapay", "vodafone", "bank"].includes(provider) ? "Paste the complete HTTPS payment link from your provider. Tapping the card opens that exact link; app opening depends on the provider and the phone. No details are copied when a link is set." : optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
+          {section.kind === "gallery" && businessId && track && <ImageField businessId={businessId} label={`Gallery image ${index + 1}`} value={item.url} alt={item.alt || ""} onChange={url => set(index, { url })} onAltChange={alt => set(index, { alt })} track={track} />}
+          {needsUrl && section.kind !== "gallery" && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(index, { url: event.target.value })} /><small className="field-hint">{["instapay", "vodafone", "bank"].includes(provider) ? "Paste the complete HTTPS payment link from your provider. Tapping the card opens that exact link; app opening depends on the provider and the phone. No details are copied when a link is set." : optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
           {provider !== "custom" && !isHours && <label className="profile-override"><input type="checkbox" checked={item.profileOverride === true} onChange={event => set(index, { profileOverride: event.target.checked })} /> Override shared {providerLabels[provider]} details for this item</label>}
           {(isAction || isPayment) && <label className="field"><span>Button icon</span><select value={item.icon || ""} onChange={event => set(index, { icon: event.target.value || undefined })}><option value="">Provider icon</option><option value="link">Link</option><option value="phone">Phone</option><option value="pin">Location pin</option><option value="menu">Menu</option><option value="calendar">Calendar</option><option value="google">Google</option><option value="globe">Website</option></select></label>}
           {itemValidationError(item) && <small className="field-error" role="alert">{itemValidationError(item)}</small>}
         </div>
         <label className="item-enabled"><input type="checkbox" checked={item.enabled !== false} onChange={event => set(index, { enabled: event.target.checked })} /> on</label>
-        <div className="item-reorder"><button type="button" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`Move item ${index + 1} up`}>↑</button><button type="button" onClick={() => move(index, 1)} disabled={index === items.length - 1} aria-label={`Move item ${index + 1} down`}>↓</button></div>
-        <button type="button" className="small-button danger" onClick={() => onChange(items.filter((_, current) => current !== index))} aria-label={`Remove item ${index + 1}`}>×</button>
+        <div className="item-reorder"><button type="button" onClick={() => move(index, -1)} disabled={index === 0 || mutationLocked} aria-label={`Move item ${index + 1} up`}>↑</button><button type="button" onClick={() => move(index, 1)} disabled={index === items.length - 1 || mutationLocked} aria-label={`Move item ${index + 1} down`}>↓</button></div>
+        <button type="button" className="small-button danger" disabled={mutationLocked} onClick={() => onChange(items.filter((_, current) => current !== index))} aria-label={`Remove item ${index + 1}`}>×</button>
       </div>;
     })}
   </div>;

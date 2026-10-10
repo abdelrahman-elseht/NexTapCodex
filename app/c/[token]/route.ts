@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +23,7 @@ export async function GET(
     return redirectToPath("/card/unavailable?state=invalid");
   }
 
-  const { data, error } = await (await createClient()).rpc("resolve_card", {
+  const { data, error } = await createPublicClient().rpc("resolve_card", {
     card_token: token,
   });
 
