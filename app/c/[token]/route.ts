@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { captureOperationError } from "@/lib/observability";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export async function GET(
   const { data, error } = await createPublicClient().rpc("resolve_card", {
     card_token: token,
   });
+  if (error) captureOperationError(error, "public.card_redirect.resolve");
 
   if (
     !error &&

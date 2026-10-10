@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireOwner } from "@/lib/auth/owner";
+import { captureOperationError } from "@/lib/observability";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const limit = 25;
@@ -12,7 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   let query = supabase.from("card_assignment_history").select("id,old_status,new_status,reason,created_at").eq("card_id", id).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(limit + 1);
   if (cursor && /^\d+$/.test(cursor)) query = query.lt("id", cursor);
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: "تعذر تحميل سجل البطاقة." }, { status: 503 });
+  if (error) { captureOperationError(error, "admin.card_history.read"); return NextResponse.json({ error: "تعذر تحميل سجل البطاقة." }, { status: 503 }); }
   const events = data || [];
   const hasMore = events.length > limit;
   if (hasMore) events.pop();

@@ -4,6 +4,7 @@ import { requireOwner } from "@/lib/auth/owner";
 import { optimizeImage } from "@/lib/media/optimize";
 import { storeManagedImage } from "@/lib/media/store";
 import { MAX_TRANSPORT_BYTES } from "@/lib/media/limits";
+import { captureOperationError } from "@/lib/observability";
 export const runtime = "nodejs";
 const response = (body: object, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
 
@@ -41,5 +42,5 @@ export async function POST(request: Request) {
     let image;
     try { image = await optimizeImage(Buffer.from(await file.arrayBuffer()), role === "logo" ? "logo" : "photo"); } catch (error) { return response({ error: error instanceof Error ? error.message : "Invalid image." }, 422); }
     return response(await storeManagedImage(owner.supabase, owner.userId, businessId, image, String(form.get("alt") || "")));
-  } catch { return response({ error: "Image upload failed. Retry or choose another image." }, 500); }
+  } catch (error) { captureOperationError(error, "admin.media.upload"); return response({ error: "Image upload failed. Retry or choose another image." }, 500); }
 }

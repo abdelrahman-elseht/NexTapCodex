@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import type { Snapshot } from "@/components/public-snapshot";
+import { captureOperationError } from "@/lib/observability";
 
 type Pointer = { publicationId?: string; version?: number; slug?: string; isAlias?: boolean };
 
@@ -29,6 +30,7 @@ async function resolvePublicPublication(slug: string): Promise<Snapshot | null> 
 
   // Compatibility fallback during rollout, and a useful recovery path for a cold-cache failure.
   const fallback = await client.rpc("get_published_page", { page_slug: slug });
+  if (pointerResult.error && fallback.error) captureOperationError(new Error("Public publication lookup failed"), "public.publication.read");
   return fallback.error || !fallback.data ? null : fallback.data as Snapshot;
 }
 

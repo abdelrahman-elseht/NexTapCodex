@@ -1,8 +1,13 @@
 ﻿"use client";
 
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
 
-export default function AdminError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function AdminError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    Sentry.captureException(error, { tags: { surface: "admin.error" } });
+  }, [error]);
   return (
     <section className="editor-panel error-panel" role="alert">
       <div className="error-mark" aria-hidden="true">!</div>

@@ -6,6 +6,7 @@ import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/content";
 import { destinationStrategyFor, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/providers";
 import { z } from "zod";
+import { captureOperationError } from "@/lib/observability";
 
 const slugSchema=z.string().trim().toLowerCase().regex(/^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?[a-z0-9]$/,"استخدم أحرفاً صغيرة وأرقاماً وشرطات فقط.");
 function val(fd:FormData,key:string,max=200){return String(fd.get(key)||"").trim().slice(0,max)}
@@ -167,6 +168,7 @@ export async function saveDraftState(fd: FormData): Promise<{ ok: boolean; error
   revalidatePath("/admin/businesses/" + draft.businessId + "/preview");
   return { ok: true };
  } catch (error) {
+  captureOperationError(error, "admin.draft.save");
   return { ok: false, error: error instanceof Error ? error.message : "Could not save draft." };
  }
 }
@@ -183,6 +185,7 @@ export async function publishDraftState(fd: FormData): Promise<{ ok: boolean; er
   revalidatePath("/admin/businesses/" + draft.businessId);
   return { ok: true, version: typeof data?.version === "number" ? data.version : undefined };
  } catch (error) {
+  captureOperationError(error, "admin.page.publish");
   return { ok: false, error: error instanceof Error ? error.message : "Could not publish this page." };
  }
 }
@@ -194,7 +197,7 @@ export async function saveSection(fd:FormData){
   const title=val(fd,"title",80);
   const {error}=await supabase.from("page_sections").update({title,kind,content,enabled:fd.get("enabled")==="on",updated_at:new Date().toISOString()}).eq("id",sectionId).eq("page_id",pageId);
   if(error)throw new Error("تعذر حفظ القسم.");
- }catch(e){redirect("/admin/businesses/"+businessId+"?error="+encodeURIComponent(e instanceof Error?e.message:"بيانات غير صالحة"));}
+ }catch(e){captureOperationError(e, "admin.section.save");redirect("/admin/businesses/"+businessId+"?error="+encodeURIComponent(e instanceof Error?e.message:"بيانات غير صالحة"));}
  revalidatePath("/admin/businesses/"+businessId);redirect("/admin/businesses/"+businessId+"?section=saved");
 }
 export async function addSection(fd:FormData){

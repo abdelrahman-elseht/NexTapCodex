@@ -16,3 +16,6 @@ install.log
 %SystemDrive%/
 artifacts/
 supabase/.temp/
+
+# Sentry build authentication is local/CI-only.
+.env.sentry-build-plugin

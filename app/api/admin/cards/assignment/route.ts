@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { captureOperationError } from "@/lib/observability";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     next_status: mode === "disable" ? "disabled" : "active",
     change_reason: mode === "disable" ? "deactivation" : "reassignment",
   });
-  if (assignmentError) return redirect("error=assignment");
+  if (assignmentError) { captureOperationError(assignmentError, "admin.card_assignment"); return redirect("error=assignment"); }
   // Cards and permanent redirect routes read live state; the native navigation
   // reloads the inventory instead of retaining a stale client router entry.
   return redirect("assigned=1");

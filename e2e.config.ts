@@ -7,11 +7,20 @@ assertSupabaseEnvironment({ ...process.env, NEXTAP_ENV: "test", VERCEL_ENV: unde
 
 const node = process.execPath;
 const productionServer = process.env.E2E_SERVER_MODE === "production";
+const sentryDiagnostics = process.env.SENTRY_TEST_ERRORS_ENABLED === "1";
 const env = {
   NEXTAP_BUILD_DIR: productionServer ? ".next" : ".next-e2e",
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_e2e_placeholder",
   NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3137",
+  NEXTAP_ENV: sentryDiagnostics ? "staging" : "test",
+  SENTRY_DSN: process.env.SENTRY_DSN ?? "",
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? process.env.SENTRY_DSN ?? "",
+  SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT ?? (sentryDiagnostics ? "staging" : "test"),
+  NEXT_PUBLIC_SENTRY_ENVIRONMENT: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? (sentryDiagnostics ? "staging" : "test"),
+  SENTRY_RELEASE: process.env.SENTRY_RELEASE ?? "nextap@e2e",
+  NEXT_PUBLIC_SENTRY_RELEASE: process.env.NEXT_PUBLIC_SENTRY_RELEASE ?? "nextap@e2e",
+  SENTRY_TEST_ERRORS_ENABLED: sentryDiagnostics ? "1" : "0",
 };
 const app = {
   url: "http://127.0.0.1:3137",

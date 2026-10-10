@@ -1,9 +1,14 @@
 ﻿"use client";
 
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    Sentry.captureException(error, { tags: { surface: "public.error" } });
+  }, [error]);
   return (
     <main className="status-screen">
       <section className="status-card error-panel" aria-labelledby="error-title" role="alert">
