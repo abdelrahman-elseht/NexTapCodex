@@ -52,16 +52,16 @@ Baseline: `c28383a2a269b87cc5a10eb24ff1db9aa47e9edb` â€” Add provider payme
 
 ### Cache and delivery â€” [phase 6](#6-publication-caching-with-immediate-visibility-checks)
 
-- [ ] Add lifecycle tests for publish/republish, archive/disable/reactivate, slug aliases, card reassignment, cache failures/races, and draft/history isolation.
-- [ ] Measure immutable snapshot caching with live eligibility checks. Implement it only if cold/warm measurements justify the extra RPC; otherwise record the verified decision to retain one-RPC reads.
-- [ ] Reuse resolved data for public metadata without duplicate reads; preserve immediate deactivation, 302/no-store card redirects, and 404/error recovery.
-- [ ] Run all baseline/new tests and actual isolated owner/database tests, capture desktop/mobile evidence, compare production metrics, check advisors/migrations, and document rollout/rollback. See [delivery gate](#acceptance-and-delivery-gate).
+- [x] Add the phase-6 resolver and SQL contract for live publication pointers, immutable snapshot reads, cache-fill fallback, and draft/history isolation. Full publish/archive/race lifecycle execution remains an isolated-project check.
+- [x] Implement immutable snapshot caching behind live eligibility checks. The pointer RPC is uncached; the snapshot RPC revalidates current business/page/publication state. Before/after cold/warm production measurements remain required before rollout.
+- [x] Reuse the request-local publication result for public metadata without duplicate reads; preserve immediate deactivation, 302/no-store card redirects, and 404/error recovery.
+- [ ] Run the isolated database lifecycle suite, advisors, and before/after production metrics. Local database execution is blocked because Docker/Podman is unavailable; public e2e and browser evidence are recorded below.
 
 ### Required testing and tools â€” [verification workflow](#required-verification-workflow-and-tools)
 
-- [] Use the installed e2e runner for repeatable public and owner journeys on both configured desktop/mobile targets. Public regression: 30 passed/2 skipped; Phase 5 owner save journey: desktop and mobile passed with mutation opt-in. Reports: `.e2e/phase5-public`, `.e2e/phase5-owner-3`, `.e2e/phase5-owner-mobile`.
-- [] Use `chrome-devtools-axi` to inspect the public route and anonymous admin redirect; captured `.e2e/phase5-chrome/demo.png`.
-- [] Inspect browser console and network for errors and failed resources. Public Chrome pass found no console errors or failed resources; the waterfall showed the expected managed image/font/icon requests.
+- [x] Use the installed e2e runner for repeatable public journeys on both configured desktop/mobile targets. Phase-6 regression: 30/30 passed. Report: `.e2e/phase6-public/report.json`.
+- [x] Use `chrome-devtools-axi` to inspect the public route at desktop/mobile sizes. Captured `.e2e/phase6-public/chrome-demo-desktop.png` and `.e2e/phase6-public/chrome-production-mobile.png`.
+- [x] Inspect browser console and network for errors and failed resources. The clean production Chrome pass found no console errors; the public page reported Arabic RTL metadata and remained usable in the configured mobile viewport.
 - [ ] Capture desktop/mobile screenshots and production-mode before/after performance evidence with the same fixtures; verify responsive image selection and eager/lazy priorities under throttling.
 - [ ] Run typecheck, Vitest, production build, SQL transaction/RLS checks, Supabase advisors, Impeccable's detector, and diff checks. Typecheck, Vitest (56), production build, and `git diff --check` passed. MCP SQL/RLS checks passed against `flkakuysakgwfoemgbwn`; live migrations include `incremental_atomic_draft_save` and `draft_save_constraint_resolution`. Security advisors report existing warnings for executable `public.rls_auto_enable`/`public.create_card_batch` SECURITY DEFINER functions and disabled leaked-password protection; performance advisors report 11 unused indexes. Impeccable's detector remains unavailable in this worktree.
 

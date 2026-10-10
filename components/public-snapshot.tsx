@@ -7,7 +7,7 @@ import { destinationStrategyFor, getProviderMetadata, isPaymentProvider, payment
 
 type Item = { label?: string; url?: string; value?: string; alt?: string; provider?: string; enabled?: boolean; icon?: string; destinationStrategy?: string; profileOverride?: boolean };
 type Section = { key?: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
-type Snapshot = { business?: { name?: string; category?: string }; page?: { branchName?: string; template?: string }; providerProfiles?: Record<string, ProviderProfile>; sections?: Section[] };
+export type Snapshot = { business?: { name?: string; category?: string }; page?: { branchName?: string; template?: string }; providerProfiles?: Record<string, ProviderProfile>; sections?: Section[]; publicationId?: string; version?: number };
 
 const iconFiles: Record<string, string> = { whatsapp: "whatsapp", facebook: "facebook", instagram: "instagram", tiktok: "tiktok", snapchat: "snapchat", youtube: "youtube", x: "x", twitter: "x", telegram: "telegram", linkedin: "linkedin", pinterest: "pinterest", messenger: "messenger", google: "google" };
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
