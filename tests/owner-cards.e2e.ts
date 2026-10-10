@@ -1,5 +1,6 @@
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
+import fs from "node:fs/promises";
 
 test("the only eligible published page is selected for card activation", async ({ app, screen, browser }) => {
   test.skip(
@@ -22,6 +23,8 @@ test("the only eligible published page is selected for card activation", async (
   await screen.getByRole("combobox").nth(0).selectOption({ label: "مفعّلة" });
   await screen.getByRole("button", "تطبيق التصفية").tap();
   await expect(browser).toHaveURL(/\/admin\/cards\?.*status=active(?:&|$)/);
+  // URL changes can precede the streamed table; wait for the filtered rows.
+  await expect(browser.locator('.table-wrap tbody tr').first().getByText("active", { exact: true })).toBeVisible();
   const shownStatuses = await browser.evaluate(() =>
     Array.from(document.querySelectorAll(".table-wrap tbody tr"), row => row.children[1]?.textContent?.trim() || ""),
   );
@@ -33,9 +36,11 @@ test("the only eligible published page is selected for card activation", async (
   );
   expect(linkPath).toMatch(/^\/c\/[A-Za-z0-9_-]{32,64}\?via=nfc$/);
 
-  await app.open("/admin/cards");
+  const fixture = process.env.E2E_FIXTURE_PATH ? JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH, "utf8")) : null;
+  await app.open(fixture ? `/admin/cards?batch=${fixture.batchId}&page_search=${fixture.slug}` : "/admin/cards");
+  if (fixture) await expect(browser.locator('.card-assignment-form select[name="page_id"]')).toHaveCount(1);
   const assignment = await browser.evaluate(() => {
-    const selectors = Array.from(document.querySelectorAll<HTMLSelectElement>('select[name="page_id"]'));
+    const selectors = Array.from(document.querySelectorAll<HTMLSelectElement>('.card-assignment-form select[name="page_id"]'));
     if (selectors.length === 0) return { cards: 0, pageOptions: 0, selected: [] as string[], eligiblePageId: "" };
     return {
       cards: selectors.length,

@@ -260,11 +260,3 @@ export async function createBatch(fd:FormData){
  revalidatePath("/admin/cards");
  redirect("/admin/cards/batches/"+batch.id+"?created=1");
 }
-export async function assignCard(fd:FormData){
- const {supabase}=await requireOwner();const cardId=val(fd,"card_id",50),pageId=val(fd,"page_id",50),mode=val(fd,"mode",20),businessId=val(fd,"business_id",50);
- if(fd.get("confirm")!=="on")redirect("/admin/cards?error=confirmation");
- const nextStatus=mode==="disable"?"disabled":"active";
- const {error}=await supabase.rpc("assign_card",{card_id:cardId,target_page_id:mode==="disable"?null:pageId,next_status:nextStatus,change_reason:mode==="disable"?"deactivation":"reassignment"});
- if(error)redirect("/admin/cards?error=assignment");
- revalidatePath("/admin/cards");redirect("/admin/cards?assigned=1"+(businessId?"&business="+businessId:""));
-}

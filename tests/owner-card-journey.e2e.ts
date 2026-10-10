@@ -76,7 +76,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await expect(browser).toHaveURL(/\/admin\/cards\/batches\/[0-9a-f-]+\?created=1/);
   const createdBatchId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
   expect(createdBatchId).toMatch(/^[0-9a-f-]{36}$/i);
-  await app.open(`/admin/cards?batch=${createdBatchId}`);
+  await app.open(`/admin/cards?batch=${createdBatchId}&page_search=${originalSlug}`);
 
   const card = await browser.evaluate(async () => {
     const batchId = new URL(location.href).searchParams.get("batch");
@@ -102,9 +102,9 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
 
   const firstCardRow = browser.locator("tr").filter({ hasText: card.serial });
   const firstPageAssignment = firstCardRow.getByRole("combobox");
-  expect(await firstPageAssignment.count()).toBe(1);
+  await expect(firstPageAssignment).toHaveCount(1);
   const firstPageList = await browser.evaluate(() => {
-    const select = document.querySelector<HTMLSelectElement>('select[name="page_id"]');
+    const select = document.querySelector<HTMLSelectElement>('.card-assignment-form select[name="page_id"]');
     return select ? {
       selected: select.value,
       options: Array.from(select.options).slice(1).map(option => ({ id: option.value, text: option.textContent || "" })),
@@ -163,7 +163,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await screen.getByRole("button", "Publish").tap();
   await expect(screen.getByRole("status")).toContainText("Published");
 
-  await app.open("/admin/cards");
+  await app.open(`/admin/cards?batch=${createdBatchId}&page_search=${secondSlug}`);
   const secondCardRow = browser.locator("tr").filter({ hasText: card.serial });
   await secondCardRow.getByRole("combobox").selectOption({ value: secondPageId });
   // Assignment is confirmed in the dialog; this form has no row checkbox.
@@ -180,4 +180,13 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
 
   await app.open(`/admin/businesses/${secondBusinessId}`);
   await expect(screen.getByRole("heading", `إدارة E2E Target ${suffix}`)).toBeVisible();
+
+  await app.open(`/admin/cards?batch=${createdBatchId}`);
+  await browser.locator("tr").filter({ hasText: card.serial }).getByRole("button", "تعطيل", { exact: true }).tap();
+  await screen.getByRole("button", "تعطيل البطاقة", { exact: true }).tap();
+  await expect(browser.locator('[role="status"].success')).toContainText("تم تحديث تعيين البطاقة.");
+  const disabledRedirect = await fetch(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
+  expect(disabledRedirect.status).toBe(302);
+  expect(disabledRedirect.headers.get("location")).toContain("/card/unavailable?state=inactive");
+  expect(disabledRedirect.headers.get("cache-control")).toContain("no-store");
 });

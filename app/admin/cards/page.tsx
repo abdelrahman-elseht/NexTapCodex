@@ -2,7 +2,7 @@ import { requireOwner } from "@/lib/auth/owner";
 import { headers } from "next/headers";
 import { cardUrls, getCardOrigin } from "@/lib/card-manufacturing";
 import { CopyNfcUrl } from "@/components/copy-nfc-url";
-import { assignCard, createBatch } from "../businesses/actions";
+import { createBatch } from "../businesses/actions";
 import { randomUUID } from "node:crypto";
 import { SubmitButton } from "@/components/submit-button";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
@@ -256,7 +256,7 @@ export default async function Cards({
                   <td dir="ltr"><a className="encoded-url" href={cardUrls(card.token, requestOrigin).qrUrl} target="_blank" rel="noreferrer">{cardUrls(card.token, requestOrigin).qrUrl}</a></td>
                   <td><CopyNfcUrl token={card.token} /></td>
                   <td>
-                    <form id={`assign-card-${card.id}`} action={assignCard} className="inline card-assignment-form">
+                    <form id={`assign-card-${card.id}`} action="/api/admin/cards/assignment" method="post" className="inline card-assignment-form">
                       <input type="hidden" name="card_id" value={card.id} />
                       <input type="hidden" name="confirm" value="on" />
                       <select
@@ -274,7 +274,7 @@ export default async function Cards({
                       </select>
                       <ConfirmSubmitButton targetForm={`assign-card-${card.id}`} disabled={eligiblePages.length === 0} className="button" title="تأكيد تعيين البطاقة" message={`سيتم تفعيل البطاقة ${card.serial} وربطها بالصفحة المختارة.`} confirmLabel="تأكيد التعيين" cancelLabel="إلغاء" dialogLabel="تأكيد" pendingText="جارٍ تحديث البطاقة...">تفعيل / نقل</ConfirmSubmitButton>
                     </form>
-                    <form id={`disable-card-${card.id}`} action={assignCard} className="inline card-disable-form">
+                    <form id={`disable-card-${card.id}`} action="/api/admin/cards/assignment" method="post" className="inline card-disable-form">
                       <input type="hidden" name="card_id" value={card.id} />
                       <input type="hidden" name="mode" value="disable" />
                       <input type="hidden" name="confirm" value="on" />

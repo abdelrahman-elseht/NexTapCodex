@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - beta01.5
+      - beta01.6
+      - integration/preprod
+      - staging
+      - chore/production-setup
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXTAP_ENV: test
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      NEXT_PUBLIC_SITE_URL: https://preview.example.invalid
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Migration and RLS contracts (disposable PostgreSQL)
+        run: npm run test:db
+
+      - name: Production build
+        run: npm run build
+
+      - name: Install Chromium
+        run: npx e2e-web install chromium --with-deps
+
+      - name: Public desktop and mobile smoke tests
+        run: npx e2e run tests/public-journey.e2e.ts tests/quick-actions-layout.e2e.ts --output artifacts/ci-smoke
+        env:
+          E2E_SERVER_MODE: production
+
+      - name: Preserve browser test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-smoke-report
+          path: artifacts/ci-smoke
+          if-no-files-found: ignore
+          retention-days: 7

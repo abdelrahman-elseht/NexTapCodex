@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+import { assertSupabaseEnvironment } from "./lib/environment.mjs";
+assertSupabaseEnvironment(process.env);
 const nextConfig: NextConfig = {
   distDir: process.env.NEXTAP_BUILD_DIR || ".next",
   poweredByHeader: false,

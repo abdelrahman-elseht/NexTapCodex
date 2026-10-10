@@ -1,11 +1,14 @@
 import type { E2EConfig } from "e2e";
 import { web } from "@e2e-dev/web";
+import { assertSupabaseEnvironment } from "./lib/environment.mjs";
 
 try { process.loadEnvFile(".env.local"); } catch { /* Environment may be injected by CI. */ }
+assertSupabaseEnvironment({ ...process.env, NEXTAP_ENV: "test", VERCEL_ENV: undefined });
 
 const node = process.execPath;
+const productionServer = process.env.E2E_SERVER_MODE === "production";
 const env = {
-  NEXTAP_BUILD_DIR: ".next-e2e",
+  NEXTAP_BUILD_DIR: productionServer ? ".next" : ".next-e2e",
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_e2e_placeholder",
   NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3137",
@@ -14,7 +17,7 @@ const app = {
   url: "http://127.0.0.1:3137",
   command: {
     executable: node,
-    args: ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", "3137"],
+    args: ["node_modules/next/dist/bin/next", productionServer ? "start" : "dev", "--hostname", "127.0.0.1", "--port", "3137"],
     cwd: process.cwd(),
     env,
     startupTimeout: 120_000,

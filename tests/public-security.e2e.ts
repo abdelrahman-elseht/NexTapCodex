@@ -7,6 +7,7 @@ test("anonymous users are redirected from owner pages and card exports to login"
     "/admin/cards",
     "/admin/businesses/new",
     "/admin/cards/export?batch=00000000-0000-0000-0000-000000000000",
+    "/admin/cards/batches/00000000-0000-4000-8000-000000000000/manufacturing.zip",
   ];
   for (const path of paths) {
     await app.open(path);

@@ -3,7 +3,7 @@ import { expect } from "e2e";
 import fs from "node:fs/promises";
 
 test("public media has responsive variants, eager hero/logo, lazy gallery and stable geometry", async ({ app, browser }) => {
-  const fixture = JSON.parse(await fs.readFile(".e2e/optimization-phase123/fixture.json", "utf8"));
+  const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH || ".e2e/optimization-phase123/fixture.json", "utf8"));
   await app.open(`/b/${fixture.slug}`);
   await expect(browser.locator('.hero-photo')).toHaveAttribute("loading", "eager");
   await expect(browser.locator('.hero-photo')).toHaveAttribute("fetchpriority", "high");
@@ -12,6 +12,9 @@ test("public media has responsive variants, eager hero/logo, lazy gallery and st
   await expect(browser.locator('.gallery-photo img').first()).toHaveAttribute("loading", "lazy");
   await expect(browser.locator('.map-preview img')).toHaveAttribute("loading", "lazy");
   await expect(browser.locator('.payments-section img.section-background-photo')).toHaveAttribute("loading", "lazy");
+  // Offscreen sections use content-visibility:auto; measure after bringing them into view.
+  await browser.evaluate(() => { document.querySelector('.gallery-photo')!.scrollIntoView(); return null; });
+  await expect(browser.locator('.gallery-photo').first()).toBeVisible();
   const geometry = await browser.evaluate(() => {
     const hero = document.querySelector<HTMLImageElement>('.hero-photo')!;
     const logo = document.querySelector<HTMLImageElement>('.business-logo img')!;
@@ -26,7 +29,7 @@ test("public media has responsive variants, eager hero/logo, lazy gallery and st
 });
 
 test("broken optimized images preserve actions and recover after reload", async ({ app, browser, screen }) => {
-  const fixture = JSON.parse(await fs.readFile(".e2e/optimization-phase123/fixture.json", "utf8"));
+  const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH || ".e2e/optimization-phase123/fixture.json", "utf8"));
   await browser.route("**/_next/image?**", route => route.abort());
   await app.open(`/b/${fixture.slug}`);
   await expect(browser.locator('.business-logo .image-unavailable')).toBeVisible();

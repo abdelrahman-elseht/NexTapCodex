@@ -8,8 +8,11 @@ out
 !.env.example
 coverage
 *.zip
+!app/**/manufacturing.zip/
 *.tsbuildinfo
 install.log
 .playwright-mcp/
 .e2e/
 %SystemDrive%/
+artifacts/
+supabase/.temp/

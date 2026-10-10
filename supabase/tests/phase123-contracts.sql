@@ -24,7 +24,7 @@ begin
     perform public.save_page_draft(bid,pid,'Failed edit','QA','active','phase123-sql-'||left(pid::text,8),'professional',
       '[{"section_key":"invalid","kind":"invalid","position":0,"enabled":true,"content":{}}]', '{}');
     raise exception 'invalid section accepted';
-  exception when check_violation then null;
+  exception when check_violation or invalid_parameter_value then null;
   end;
   if original is distinct from (select jsonb_agg(to_jsonb(s)) from public.page_sections s where page_id=pid) then raise exception 'partial save escaped transaction'; end if;
   if snapshot is distinct from (select pp.snapshot from public.page_publications pp where page_id=pid) then raise exception 'publication mutated'; end if;
