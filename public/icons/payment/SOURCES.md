@@ -2,6 +2,12 @@
 
 These provider marks are stored locally so public pages do not fetch logos from a third-party CDN.
 
+Repository recheck, 2026-10-11: `assets/payment/instapay.svg` and
+`assets/payment/vodafone-svgrepo-com.svg` are the retained supplied source files.
+Their SHA-256 hashes exactly match `public/icons/payment/instapay.svg` and
+`public/icons/payment/vodafone.svg`, respectively. This confirms the copies,
+not additional licensing or redistribution rights.
+
 - `instapay.svg`: copied from the supplied handoff asset `F:\projects\NexTabCodex-redesign\instapay.svg` to `public/icons/payment/instapay.svg` on 2026-10-09. The supplied file has no author, source page, direct download URL, license metadata, or attribution terms. Source decision: use the supplied asset in this implementation as explicitly requested; that request does not establish third-party redistribution rights. Those rights and attribution terms remain unverified before shipping. No geometry or color transformation was applied. `instapay.png` remains the local fallback.
 - `vodafone.svg`: copied from the supplied handoff asset `F:\projects\NexTabCodex-redesign\vodafone-svgrepo-com.svg` to `public/icons/payment/vodafone.svg` on 2026-10-09. The file contains an SVG Repo generator comment. SVG Repo requests returned HTTP 429, so its specific asset page and license remain unverified. The supplied path geometry was compared byte-for-byte to the [Simple Icons Vodafone source](https://github.com/simple-icons/simple-icons/blob/develop/icons/vodafone.svg) and matched exactly. [Direct download](https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/vodafone.svg), accessed 2026-10-09, HTTP 200. This identical geometry is available from Simple Icons under [CC0 1.0 Universal](https://raw.githubusercontent.com/simple-icons/simple-icons/develop/LICENSE.md), accessed 2026-10-09, HTTP 200; no copyright attribution is required. Source decision: retain the supplied monochrome wrapper with the permitted Simple Icons geometry as provenance; do not claim a verified SVG Repo license. No geometry or color transformation was applied. Brand/trademark rights are separate from CC0. `vodafone.png` remains the local fallback.
 

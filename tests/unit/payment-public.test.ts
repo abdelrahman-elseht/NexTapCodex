@@ -4,10 +4,10 @@ import { describe, expect, it } from "vitest";
 import { PublicSnapshot } from "../../src/components/business/public-snapshot";
 
 const recipient = "fixture-only@instapay";
-const render = (items: Array<{ provider: string; value?: string; label?: string; url?: string; destinationStrategy?: string; profileOverride?: boolean }>, profiles = {}) => renderToStaticMarkup(React.createElement(PublicSnapshot, {
+const render = (items: Array<{ provider: string; value?: string; label?: string; url?: string; destinationStrategy?: string; profileOverride?: boolean }>, profiles = {}, kind = "payments") => renderToStaticMarkup(React.createElement(PublicSnapshot, {
   snapshot: {
     providerProfiles: profiles,
-    sections: [{ kind: "payments", title: "Payment options", position: 0, enabled: true, content: { items } }],
+    sections: [{ kind, title: "Payment options", position: 0, enabled: true, content: { items } }],
   },
 }));
 
@@ -42,6 +42,26 @@ describe("public payment privacy", () => {
       expect(html).not.toContain('<a ');
       expect(html).not.toContain(recipient);
       expect(html).toContain('<button');
+    }
+  });
+
+  it.each(["payments", "quick_actions"])("rejects control characters in %s links and retains the private fallback", kind => {
+    for (const url of ["\nhttps://payments.example.test/fixture", "https://payments.example.test/fixture\r"]) {
+      const html = render([{ provider: "instapay", value: recipient, url }], {}, kind);
+      expect(html).not.toContain("<a ");
+      expect(html).not.toContain(recipient);
+      expect(html).toContain('aria-haspopup="dialog"');
+    }
+  });
+
+  it.each(["payments", "quick_actions"])("keeps link-only %s cards accessible for every payment provider", kind => {
+    for (const provider of ["instapay", "vodafone", "bank"]) {
+      const url = `https://payments.example.test/S/test/${provider}/MixedCase%2Ffixture`;
+      const html = render([{ provider, url, destinationStrategy: "verified_deep_link" }], {}, kind);
+      expect(html).toContain(`href="${url}"`);
+      expect(html).toContain("aria-label=");
+      expect(html).not.toContain("target=");
+      expect(html).not.toContain("<button");
     }
   });
 

@@ -26,6 +26,70 @@ See [provider-destination-research.md](../research/provider-destination-research
 
 ## Validation and artifacts
 
+### Preproduction branch verification (2026-10-11)
+
+Branch: `fix/preprod-redirection`, created from `fix/preprod-quality` at
+`e98948e`. The core requested payment UI and owner-supplied HTTPS navigation
+were already implemented on that base. This pass preserves that behavior and
+fixes a URL-validation gap: leading/trailing control characters were removed
+before validation. Payment links now reject those characters before trimming;
+ordinary surrounding spaces remain accepted. Five new assertions reproduced
+the gap before the fix.
+
+New coverage checks exact path/query/fragment preservation, unsafe schemes and
+credentials, link-only cards for all three payment providers in Payments and
+Quick Actions, and identifier-free fallback markup for rejected URLs. A new
+browser journey exercises the hydrated Quick Actions fallback, keyboard
+activation, private guidance, Escape, and focus restoration. The existing
+owner journey now uses a reserved URL with mixed case, encoded path/query
+characters, and a fragment to check preservation through Save/Publish/navigation.
+
+Validation:
+
+- `npm.cmd test`: 104 passed in 16 files. An initial concurrent run timed out
+  importing the unrelated public-publication module; the separate full rerun
+  passed without changing that test or increasing its timeout.
+- `npm.cmd run typecheck`: passed, including after the production build.
+- `npm.cmd run lint`: no errors; 13 existing warnings in unchanged files.
+- `npm.cmd run build`: passed.
+- Public E2E (`payment-redirect`, `public-journey`, `public-security`):
+  30 passed across desktop and mobile, with `--no-cache`.
+  Report: `artifacts/preprod-payment-public-e2e/report.json`.
+- Owner E2E (`owner-card-journey`, `business-editor-actions`), with
+  `E2E_ALLOW_MUTATIONS=true`: all four cases skipped because owner credentials
+  are absent. Report: `artifacts/preprod-payment-owner-e2e/report.json`.
+  This pass does not establish fresh draft/publish/RLS or outbound navigation
+  evidence for authenticated workflows; earlier results below are historical.
+- `git diff --check`: passed. No UI component was changed, so the handoff's
+  changed-UI-file Impeccable check has no target in this pass.
+
+Chrome DevTools captures use illustrative `/demo` content. The mobile captures
+use the production build with an explicitly emulated 390x844 viewport; these
+are browser evidence, not Android/iPhone native app-launch evidence:
+
+- [Desktop payment cards](../../artifacts/preprod-payment-desktop.png)
+- [Mobile payment cards](../../artifacts/preprod-payment-mobile.png)
+- [Mobile fallback dialog](../../artifacts/preprod-payment-mobile-fallback.png)
+- [Mobile accessibility snapshot](../../artifacts/preprod-payment-mobile-accessibility.txt)
+- [Fallback accessibility snapshot](../../artifacts/preprod-payment-fallback-accessibility.txt)
+- [Mobile action trace](../../artifacts/preprod-payment-mobile-action-trace.txt)
+- [Fallback network log](../../artifacts/preprod-payment-fallback-network.txt)
+- [Fallback console log](../../artifacts/preprod-payment-fallback-console.txt)
+
+The mobile trace confirms `/demo` remains open, the dialog opens, viewport and
+content widths are both 390px, payment recipient text is absent, and no public
+copy control exists. The production console has no messages.
+
+The three first-party URLs recorded above were fetched again on 2026-10-11
+and returned HTTP 200. The InstaPay HTML contained IPA guidance but no
+`ipn.eg`, `instapay://`, or `intent://` reference; Vodafone still contained
+`*9*7#` guidance. This limited recheck establishes no new recipient-prefill
+grammar or native app contract. `verified_deep_link` remains disabled.
+Both public SVG files match their `assets/payment/` source files by SHA-256;
+the provenance and unresolved rights limitations below remain applicable.
+No real recipient URL was visited, no payment was submitted, and no merge or
+deployment was performed.
+
 ### Continuation verification (2026-10-10)
 
 Quick Actions follow-up: the owner-selected one-to-four column count is now

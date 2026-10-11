@@ -3,6 +3,7 @@ import {
   buildProviderProfiles,
   destinationStrategyFor,
   getProviderMetadata,
+  paymentLinkHref,
   resolveProviderItem,
 } from "../../src/lib/business/providers";
 
@@ -24,6 +25,32 @@ describe("provider metadata and destinations", () => {
       expect(destinationStrategyFor(provider, "copy_identifier", "https://payments.example.test/checkout")).toBe("external_url");
       expect(getProviderMetadata(provider)?.verifiedDeepLink).toBe(false);
     }
+  });
+});
+
+describe("owner-supplied payment links", () => {
+  it("preserves the supplied path, query, and fragment exactly", () => {
+    const url = "https://payments.example.test/S/test/MixedCase%2Ffixture?first=a%2Bb&second=two#handoff";
+    expect(paymentLinkHref(url)).toBe(url);
+    expect(paymentLinkHref(`  ${url}  `)).toBe(url);
+  });
+
+  it.each([
+    "\nhttps://payments.example.test/fixture",
+    "https://payments.example.test/fixture\r",
+    "\thttps://payments.example.test/fixture",
+    "https://payments.example.test/fix\tture",
+    "https://payments.example.test/fixture\u0000",
+    "https://payments.example.test/fixture\u007f",
+    "https://user:password@payments.example.test/fixture",
+    "http://payments.example.test/fixture",
+    "instapay://fixture",
+    "intent://fixture",
+    "//payments.example.test/fixture",
+    "javascript:alert(1)",
+  ])("rejects unsafe input without silently repairing it: %j", url => {
+    expect(paymentLinkHref(url)).toBe("");
+    expect(destinationStrategyFor("instapay", undefined, url)).toBe("copy_identifier");
   });
 });
 

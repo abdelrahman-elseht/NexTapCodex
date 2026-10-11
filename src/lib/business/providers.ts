@@ -94,8 +94,10 @@ export function isPaymentProvider(provider: string | undefined) {
 // Open the complete link supplied by the owner. Never construct recipient links
 // or label an owner-supplied URL as a provider-verified deep-link contract.
 export function paymentLinkHref(value: string | undefined) {
-  const input = value?.trim() || "";
-  if (!safeUrl(input) || /[\u0000-\u001f\u007f]/.test(input)) return "";
+  // Reject control characters before trimming can silently remove them.
+  if (!value || /[\u0000-\u001f\u007f]/.test(value)) return "";
+  const input = value.trim();
+  if (!safeUrl(input)) return "";
   const url = new URL(input);
   return url.protocol === "https:" && !url.username && !url.password ? input : "";
 }

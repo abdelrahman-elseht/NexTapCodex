@@ -1,5 +1,13 @@
 # Payment Icon and App Redirect Handoff
 
+## Preproduction follow-up (2026-10-11)
+
+The implementation was checked on `fix/preprod-redirection`; the existing
+payment behavior was retained and control-character URL validation was hardened.
+See the [preproduction verification record](../implementation/payment-redirect-implementation.md#preproduction-branch-verification-2026-10-11)
+for current test results, screenshots, and the owner-credential/native-device
+verification limits.
+
 ## Continuation status (2026-10-10)
 
 The requested implementation is present in the working tree. Continue from

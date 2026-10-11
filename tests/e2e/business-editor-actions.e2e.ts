@@ -81,7 +81,7 @@ test("owners can configure provider-aware actions, social links, and payment lin
   await expect(itemRow(0).getByRole("alert")).toHaveCount(0);
   await itemRow(0).getByRole("textbox").nth(0).fill("");
   // Reserved test host: never manufacture or visit a real payment token.
-  const paymentUrl = "https://payments.example.test/S/test/instapay/fixture";
+  const paymentUrl = "https://payments.example.test/S/test/MixedCase%2Ffixture?first=a%2Bb&second=two#handoff";
   await itemRow(0).getByRole("textbox").nth(2).fill(paymentUrl);
   await itemRow(0).getByRole("textbox").nth(1).fill("");
   await screen.getByRole("button", "Add Vodafone Cash").tap();
