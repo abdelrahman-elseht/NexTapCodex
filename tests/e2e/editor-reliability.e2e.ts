@@ -1,0 +1,180 @@
+import { afterEach, test } from "@e2e-dev/web";
+import { credentials, expect } from "e2e";
+import { createClient } from "@supabase/supabase-js";
+import { mkdir, writeFile } from "node:fs/promises";
+
+let fixtureId = "";
+afterEach(async () => {
+  if (!fixtureId || process.env.E2E_KEEP_RELIABILITY_FIXTURE === "true") return;
+  const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);
+  const { error: login } = await client.auth.signInWithPassword({ email: process.env.E2E_USER_OWNER_USERNAME!, password: process.env.E2E_USER_OWNER_PASSWORD! });
+  if (login) throw new Error("Fixture cleanup sign-in failed");
+  // Published snapshots are intentionally immutable; retire fixtures, never delete them.
+  const { error: pagesError } = await client.from("business_pages").update({ is_active: false }).eq("business_id", fixtureId);
+  const { error } = await client.from("businesses").update({ status: "archived" }).eq("id", fixtureId);
+  await client.auth.signOut({ scope: "local" });
+  fixtureId = "";
+  if (error || pagesError) throw new Error("Fixture cleanup failed");
+});
+
+test("hours, repeated providers, services and optional text survive draft and publication", { timeout: 180_000 }, async ({ app, screen, browser }) => {
+  test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires isolated staging fixtures.");
+  await app.open("/login");
+  await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
+  await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
+  await screen.getByRole("button", "دخول آمن").tap();
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
+  await app.open("/admin/businesses/new");
+  const slug = `reliability-${Date.now().toString(36)}`;
+  await screen.getByLabel("اسم النشاط").fill(`Reliability ${slug}`);
+  await screen.getByLabel("رابط الصفحة").fill(slug);
+  await screen.getByRole("button", "إنشاء النشاط والصفحة").tap();
+  await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/, { timeout: 30_000 });
+  const editorPath = await browser.evaluate(() => location.pathname);
+  fixtureId = editorPath.split("/").at(-1)!;
+  // Page activation is fixture setup; publishing still runs through the editor UI.
+  const setupClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);
+  const { error: setupLogin } = await setupClient.auth.signInWithPassword({ email: process.env.E2E_USER_OWNER_USERNAME!, password: process.env.E2E_USER_OWNER_PASSWORD! });
+  expect(setupLogin).toBeNull();
+  const { error: activation } = await setupClient.from("business_pages").update({ is_active: true }).eq("business_id", fixtureId);
+  expect(activation).toBeNull();
+  await setupClient.auth.signOut({ scope: "local" });
+  const row = (index: number) => browser.locator(".editor-form-pane > .live-items-editor > .live-item-row").nth(index);
+  const select = async (name: string) => {
+    if (await browser.evaluate(() => innerWidth < 800)) await screen.getByRole("button", "Editor", { exact: true }).tap();
+    await browser.locator(".navigator-item").filter({ hasText: name }).tap();
+  };
+  const enable = async () => {
+    if (!await browser.evaluate(() => document.querySelector<HTMLInputElement>(".selected-section-heading input[type=checkbox]")!.checked)) await browser.locator(".selected-section-heading .toggle-control").tap();
+    await expect(browser.locator(".selected-section-heading input[type=checkbox]")).toBeChecked();
+  };
+  await browser.locator(".navigator-item").filter({ hasText: "Opening hours" }).tap();
+  await screen.getByRole("button", "+ Add", { exact: true }).tap();
+  await row(0).getByLabel("Label", { exact: true }).fill("Monday");
+  await row(0).getByLabel("Hours", { exact: true }).fill("09:00–17:00");
+  await screen.getByRole("button", "+ Add", { exact: true }).tap();
+  await row(1).getByLabel("Label", { exact: true }).fill("Tuesday");
+  await row(1).getByLabel("Hours", { exact: true }).fill("10:00–18:00");
+  await row(1).getByLabel("Hours", { exact: true }).fill("11:00–19:00");
+  await expect(row(0).getByLabel("Hours", { exact: true })).toHaveValue("09:00–17:00");
+  await screen.getByRole("button", "Save draft", { exact: true }).tap();
+  await expect(screen.getByRole("status")).toContainText("Draft saved");
+  await browser.reload();
+  await browser.locator(".navigator-item").filter({ hasText: "Opening hours" }).tap();
+  await expect(row(0).getByLabel("Hours", { exact: true })).toHaveValue("09:00–17:00");
+  await expect(row(1).getByLabel("Hours", { exact: true })).toHaveValue("11:00–19:00");
+  const mondayId = await row(0).getAttribute("data-item-id");
+  await row(1).getByRole("button", "Move item 2 up").tap();
+  await expect(row(1)).toHaveAttribute("data-item-id", mondayId!);
+  await expect(row(1).getByLabel("Hours", { exact: true })).toHaveValue("09:00–17:00");
+  await row(0).getByRole("button", "Move item 1 down").tap();
+  await screen.getByRole("button", "+ Add", { exact: true }).tap();
+  await row(2).getByLabel("Label", { exact: true }).fill("Temporary day");
+  await row(2).getByRole("button", "Remove item 3").tap();
+  await expect(row(0)).toHaveAttribute("data-item-id", mondayId!);
+  await browser.locator(".navigator-item").filter({ hasText: "Services" }).tap();
+  await enable();
+  await screen.getByRole("button", "Add Custom URL", { exact: true }).tap();
+  await expect(row(0).getByRole("textbox").nth(1)).toHaveValue("");
+  await row(0).getByLabel("Label", { exact: true }).fill("First service");
+  await row(0).getByRole("textbox").nth(1).fill("https://example.test/service-one");
+  await row(0).getByText("Service buttons", { exact: true }).tap();
+  const serviceButtons = browser.locator(".editor-form-pane > .live-items-editor > .live-item-row .live-items-editor").nth(0);
+  await serviceButtons.getByRole("button", "+ Add", { exact: true }).tap();
+  await serviceButtons.getByRole("textbox").nth(0).fill("Book service");
+  await serviceButtons.getByRole("textbox").nth(1).fill("https://example.test/book");
+  await serviceButtons.getByRole("button", "+ Add", { exact: true }).tap();
+  const secondServiceButton = browser.locator(".editor-form-pane .live-items-editor .live-items-editor .live-item-row").nth(1);
+  await secondServiceButton.getByRole("textbox").nth(0).fill("Service details");
+  await secondServiceButton.getByRole("textbox").nth(1).fill("https://example.test/details");
+  await screen.getByRole("button", "Add Custom URL", { exact: true }).tap();
+  await expect(row(1).getByRole("textbox").nth(1)).toHaveValue("");
+  await row(1).getByLabel("Label", { exact: true }).fill("Second service");
+  await row(1).getByRole("textbox").nth(1).fill("https://example.test/service-two");
+  await row(1).getByRole("button", "Move item 2 up").tap();
+  await row(0).getByText("Optional item text", { exact: true }).tap();
+  await row(0).getByLabel("Item subtitle", { exact: true }).fill("Remove this subtitle");
+  await row(0).getByLabel("Item subtitle", { exact: true }).fill("");
+  await row(0).getByLabel("Label", { exact: true }).fill("");
+  await screen.getByLabel("Section heading", { exact: true }).fill("");
+  await screen.getByText("Optional section text", { exact: true }).tap();
+  for (const field of ["eyebrow", "description", "badge"]) {
+    await screen.getByLabel(`Section ${field}`, { exact: true }).fill(`Remove ${field}`);
+    await screen.getByLabel(`Section ${field}`, { exact: true }).fill("");
+  }
+
+  await select("Quick Actions");
+  await screen.getByRole("button", "Add WhatsApp", { exact: true }).tap();
+  await row(0).getByRole("textbox").nth(1).fill("01012345678");
+  await screen.getByRole("button", "Add WhatsApp", { exact: true }).tap();
+  await expect(row(1).getByRole("textbox").nth(1)).toHaveValue("01012345678");
+  await row(1).getByRole("combobox").nth(0).selectOption({ label: "Override for this item" });
+  await row(1).getByRole("textbox").nth(1).fill("01098765432");
+  await row(1).getByRole("textbox").nth(0).fill("Alternate WhatsApp");
+  await row(0).getByRole("textbox").nth(1).fill("01011112222");
+  await expect(row(1).getByRole("textbox").nth(1)).toHaveValue("01098765432");
+  await screen.getByRole("button", "Add WhatsApp", { exact: true }).tap();
+  await expect(row(2).getByRole("textbox").nth(1)).toHaveValue("01011112222");
+  await row(1).getByRole("button", "Move item 2 up").tap();
+  await expect(row(1).getByRole("textbox").nth(1)).toHaveValue("01011112222");
+  await screen.getByRole("button", "Other links", { exact: true }).tap();
+  for (const label of ["First custom", "Second custom"]) {
+    await screen.getByRole("button", "Add Custom URL", { exact: true }).tap();
+    const current = label === "First custom" ? row(3) : row(4);
+    await current.getByRole("textbox").nth(0).fill(label);
+    await current.getByRole("textbox").nth(1).fill(`https://example.test/${label.replace(" ", "-")}`);
+  }
+  await select("Social & Community");
+  for (let i = 0; i < 2; i++) {
+    await screen.getByRole("button", "Add Facebook", { exact: true }).tap();
+    if (i) await row(i).getByRole("combobox").selectOption({ label: "Override for this item" });
+    await row(i).getByRole("textbox").nth(1).fill(`https://facebook.com/fixture-${i}`);
+  }
+  await select("Payments");
+  await enable();
+  await screen.getByRole("button", "Add InstaPay", { exact: true }).tap();
+  const paymentUrl = "https://payments.example.test/verified-owner-link?token=synthetic-fixture";
+  await row(0).getByRole("textbox").nth(2).fill(paymentUrl);
+  await screen.getByRole("button", "Save draft", { exact: true }).tap();
+  await expect(screen.getByRole("status")).toContainText("Draft saved");
+  await app.open(`/b/${slug}`);
+  await expect(screen.getByText("First service", { exact: true })).toHaveCount(0);
+  await app.open(editorPath);
+  await select("Services");
+  await expect(screen.getByLabel("Section heading", { exact: true })).toHaveValue("");
+  await expect(row(0).getByRole("textbox").nth(1)).toHaveValue("https://example.test/service-two");
+  await expect(row(1).getByRole("textbox").nth(1)).toHaveValue("https://example.test/service-one");
+  await select("Quick Actions");
+  await expect(row(0).getByRole("textbox").nth(1)).toHaveValue("01098765432");
+  await expect(row(1).getByRole("textbox").nth(1)).toHaveValue("01011112222");
+  await expect(row(2).getByRole("textbox").nth(1)).toHaveValue("01011112222");
+  await screen.getByRole("button", "Preview", { exact: true }).tap();
+  const preview = browser.locator(".editor-phone-screen");
+  await expect(preview.getByText("09:00–17:00", { exact: true }).last()).toBeVisible();
+  await expect(preview.getByText("11:00–19:00", { exact: true })).toBeVisible();
+  await expect(preview.getByRole("link", "Book service", { exact: true })).toHaveAttribute("href", "https://example.test/book");
+  await screen.getByRole("button", "Publish", { exact: true }).tap();
+  await expect(screen.getByRole("status")).toContainText("Published");
+  // The publication resolver deliberately caches even unpublished lookups for 5s.
+  await expect.poll(async () => (await fetch(new URL(`/b/${slug}`, app.baseUrl))).status, { timeout: 20_000 }).toBe(200);
+  await app.open(`/b/${slug}`);
+  await expect(screen.getByText("09:00–17:00", { exact: true }).last()).toBeVisible();
+  await expect(screen.getByText("11:00–19:00", { exact: true })).toBeVisible();
+  await expect(screen.getByRole("link", "Book service", { exact: true })).toHaveAttribute("href", "https://example.test/book");
+  await expect(screen.getByRole("link", "Service details", { exact: true })).toHaveAttribute("href", "https://example.test/details");
+  await expect(screen.getByRole("link", "Alternate WhatsApp", { exact: true })).toHaveAttribute("href", "https://wa.me/201098765432");
+  await expect(browser.locator('.social-tile[href="https://facebook.com/fixture-0"]')).toHaveCount(1);
+  await expect(browser.locator('.social-tile[href="https://facebook.com/fixture-1"]')).toHaveCount(1);
+  await expect(browser.locator(".business-section-services h2, .business-section-services .section-overline, .business-section-services .section-intro, .business-section-services .item-subtitle")).toHaveCount(0);
+  await expect(browser.locator('.business-section-services a[href="https://example.test/service-two"]')).toHaveAttribute("aria-label", "Custom URL");
+  await browser.locator(".payment-link-help summary").tap();
+  await expect(screen.getByText(/Open supported links/)).toBeVisible();
+  await expect(screen.getByRole("link", "Open InstaPay", { exact: true })).toHaveAttribute("href", paymentUrl);
+  await browser.route("https://payments.example.test/**", route => route.fulfill({ status: 200, contentType: "text/html", body: "<h1>Provider fixture</h1>" }));
+  await browser.locator(".payment-grid").getByRole("link", "InstaPay", { exact: true }).tap();
+  await expect(browser).toHaveURL(paymentUrl);
+  if (process.env.E2E_KEEP_RELIABILITY_FIXTURE === "true") {
+    await mkdir("artifacts/business-editor-reliability", { recursive: true });
+    await writeFile("artifacts/business-editor-reliability/fixture.json", JSON.stringify({ businessId: fixtureId, editorPath, slug }));
+  }
+});

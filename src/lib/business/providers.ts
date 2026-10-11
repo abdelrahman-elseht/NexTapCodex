@@ -59,7 +59,7 @@ export function buildProviderProfiles(items: ProviderItemLike[]): Record<string,
   const profiles: Record<string, ProviderProfile> = {};
   for (const item of items) {
     const provider = item.provider;
-    if (!provider || profiles[provider] || item.profileOverride) continue;
+    if (!provider || provider === "custom" || !getProviderMetadata(provider) || profiles[provider] || item.profileOverride) continue;
     if (!String(item.value || "").trim() && !String(item.url || "").trim()) continue;
     profiles[provider] = {
       id: provider as ProviderId,
@@ -72,19 +72,19 @@ export function buildProviderProfiles(items: ProviderItemLike[]): Record<string,
 }
 
 export function resolveProviderItem<T extends ProviderItemLike>(item: T, profiles: Record<string, ProviderProfile>): T {
-  if (!item.provider || item.profileOverride) return item;
+  if (!item.provider || item.provider === "custom" || !getProviderMetadata(item.provider) || item.profileOverride) return item;
   const profile = profiles[item.provider];
   if (!profile) return item;
   return {
     ...item,
-    value: profile.value ?? item.value ?? "",
-    url: profile.url ?? item.url ?? "",
+    value: profile.value ?? "",
+    url: profile.url ?? "",
     destinationStrategy: profile.destinationStrategy ?? item.destinationStrategy,
   };
 }
 
 export function getProviderMetadata(provider: string | undefined): ProviderMetadata | undefined {
-  return provider && provider in providerMetadata ? providerMetadata[provider as ProviderId] : undefined;
+  return provider && Object.hasOwn(providerMetadata, provider) ? providerMetadata[provider as ProviderId] : undefined;
 }
 
 export function isPaymentProvider(provider: string | undefined) {

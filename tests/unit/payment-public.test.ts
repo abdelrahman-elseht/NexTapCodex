@@ -30,7 +30,10 @@ describe("public payment privacy", () => {
     for (const destinationStrategy of [undefined, "copy_identifier", "external_url"]) {
       const html = render([{ provider: "instapay", value: recipient, url, destinationStrategy }]);
       expect(html).toContain(`href="${url}"`);
-      expect(html).not.toContain('target="_blank"');
+      const paymentAnchors = html.match(/<a[^>]+href="https:\/\/payments\.example\.test[^>]+>/g) || [];
+      expect(paymentAnchors).toHaveLength(2); // Direct action and explicit fallback retry.
+      expect(paymentAnchors.every(anchor => !anchor.includes('target='))).toBe(true);
+      expect(html).toContain("Open supported links");
       expect(html).not.toContain("aria-haspopup");
       expect(html).not.toContain(recipient);
     }
@@ -74,6 +77,14 @@ describe("public payment privacy", () => {
 
   it("never renders saved bank instructions or account details", () => {
     expect(render([{ provider: "bank", value: "fixture-only-account" }])).not.toContain("fixture-only-account");
+  });
+
+  it("hides recipient-shaped payment labels even when only a provider URL is saved", () => {
+    for (const label of ["Pay fixture-only@instapay", "Pay 01012345678"]) {
+      const html = render([{ provider: "instapay", label, url: "https://payments.example.test/checkout" }]);
+      expect(html).not.toContain(label);
+      expect(html).toContain('aria-label="InstaPay"');
+    }
   });
 
   it("redacts wallet labels with a differently formatted recipient number", () => {

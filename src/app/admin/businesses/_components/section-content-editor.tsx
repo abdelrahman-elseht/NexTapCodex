@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { createEditorItem, normalizeEditorItems, type EditorItem as Item } from "@/lib/business/editor-items";
+import { useId, useState } from "react";
 import { sectionKinds } from "@/lib/business/content";
 
 type Content = Record<string, unknown>;
-type Item = { label: string; value: string; url: string; provider?: string; enabled?: boolean; icon?: string };
+
 const labels: Record<string, string> = {
   hero: "الرئيسية", about: "عن النشاط", hours: "مواعيد العمل", contact: "التواصل والموقع", quick_actions: "الإجراءات السريعة",
   social: "الشبكات الاجتماعية", payments: "طرق الدفع", links: "روابط إضافية", services: "الخدمات",
@@ -19,23 +20,9 @@ const defaults: Record<string, Content> = {
   gallery: { items: [] }, reviews: { url: "" }, branch: { items: [] },
 };
 
-function normalizeItems(value: unknown): Item[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap(item => {
-    if (!item || typeof item !== "object") return [];
-    const record = item as Record<string, unknown>;
-    return [{
-      label: typeof record.label === "string" ? record.label : "",
-      value: typeof record.value === "string" ? record.value : "",
-      url: typeof record.url === "string" ? record.url : "",
-      provider: typeof record.provider === "string" ? record.provider : undefined,
-      enabled: record.enabled !== false,
-      icon: typeof record.icon === "string" ? record.icon : undefined,
-    }];
-  }).slice(0, 100);
-}
-
 export function SectionContentEditor({ initialContent, kind: initialKind }: { initialContent: Content; kind: string }) {
+  const scope = useId();
+  const normalizeItems = (value: unknown, itemKind = initialKind) => normalizeEditorItems(value,itemKind,scope);
   const [kind, setKind] = useState(initialKind);
   const [base, setBase] = useState<Content>(() => Object.fromEntries(Object.entries(initialContent).filter(([key]) => key !== "items")));
   const [items, setItems] = useState<Item[]>(() => normalizeItems(initialContent.items));
@@ -45,14 +32,14 @@ export function SectionContentEditor({ initialContent, kind: initialKind }: { in
   const [raw, setRaw] = useState(() => JSON.stringify(initialContent, null, 2));
   const [parseError, setParseError] = useState("");
 
-  function updateItem(index: number, key: keyof Item, value: string | boolean) {
-    setItems(current => current.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item));
+  function updateItem(id: string, key: keyof Item, value: string | boolean) {
+    setItems(current => current.map(item => item.id === id ? { ...item, [key]: value } : item));
   }
   function addItem() {
-    setItems(current => current.length >= 100 ? current : [...current, { label: "", value: "", url: "", enabled: true }]);
+    setItems(current => current.length >= 100 ? current : [...current, createEditorItem()]);
   }
-  function removeItem(index: number) {
-    setItems(current => current.filter((_, itemIndex) => itemIndex !== index));
+  function removeItem(id: string) {
+    setItems(current => current.filter(item => item.id !== id));
   }
   function updateField(key: string, value: string) {
     setBase(current => ({ ...current, [key]: value }));
@@ -61,7 +48,7 @@ export function SectionContentEditor({ initialContent, kind: initialKind }: { in
     setKind(nextKind);
     const next = defaults[nextKind] || {};
     setBase(Object.fromEntries(Object.entries(next).filter(([key]) => key !== "items")));
-    setItems(normalizeItems(next.items));
+    setItems(normalizeItems(next.items,nextKind));
     setRaw(JSON.stringify(next, null, 2));
     setMode(["hero", "contact", "about", "reviews"].includes(nextKind) || itemKinds.includes(nextKind) ? "items" : "json");
     setParseError("");
@@ -82,7 +69,7 @@ export function SectionContentEditor({ initialContent, kind: initialKind }: { in
         return;
       }
       const record = parsed as Content;
-      setItems(normalizeItems(record.items));
+      setItems(normalizeItems(record.items,kind));
       setBase(Object.fromEntries(Object.entries(record).filter(([key]) => key !== "items")));
       setParseError("");
       setMode("items");
@@ -148,13 +135,13 @@ export function SectionContentEditor({ initialContent, kind: initialKind }: { in
               <p className="items-editor-help">{help}</p>
               <div className="editable-items">
                 {items.map((item, index) => (
-                  <fieldset className="editable-item" key={index}>
+                  <fieldset className="editable-item" key={item.id}>
                     <legend>العنصر {index + 1}</legend>
-                    <button className="small-button danger remove-item" type="button" onClick={() => removeItem(index)} aria-label={"حذف العنصر " + (index + 1)}>حذف</button>
+                    <button className="small-button danger remove-item" type="button" onClick={() => removeItem(item.id)} aria-label={"حذف العنصر " + (index + 1)}>حذف</button>
                     <div className="form-grid">
-                      <label className="field">الاسم<input required maxLength={80} value={item.label} dir="auto" onChange={event => updateItem(index, "label", event.target.value)} /></label>
-                      <label className="field">القيمة أو التفاصيل<input maxLength={500} value={item.value} dir="auto" onChange={event => updateItem(index, "value", event.target.value)} /></label>
-                      <label className="field item-url-field">الرابط (اختياري)<input maxLength={2048} value={item.url} dir="ltr" inputMode="url" placeholder="https://" onChange={event => updateItem(index, "url", event.target.value)} /></label>
+                      <label className="field">الاسم<input name={`${scope}.${item.id}.label`} maxLength={80} value={item.label} dir="auto" onChange={event => updateItem(item.id, "label", event.target.value)} /></label>
+                      <label className="field">القيمة أو التفاصيل<input maxLength={500} value={item.value} dir="auto" onChange={event => updateItem(item.id, "value", event.target.value)} /></label>
+                      <label className="field item-url-field">الرابط (اختياري)<input maxLength={2048} value={item.url} dir="ltr" inputMode="url" placeholder="https://" onChange={event => updateItem(item.id, "url", event.target.value)} /></label>
                     </div>
                   </fieldset>
                 ))}

@@ -152,6 +152,8 @@ test("owners can configure provider-aware actions, social links, and payment lin
   await expect(itemRow(0).getByRole("textbox").nth(1)).toHaveValue("");
   await screen.getByRole("button", "Publish").tap();
   await expect(screen.getByRole("status")).toContainText("Published");
+  // A prior unpublished lookup remains cached for up to five seconds.
+  await expect.poll(async () => (await fetch(new URL(`/b/${slug}`, app.baseUrl))).status, { timeout: 20_000 }).toBe(200);
   await app.open(`/b/${slug}`);
   await expect(screen.getByRole("heading", `E2E Editor ${suffix}`)).toBeVisible();
   const publicEvidence = await browser.evaluate(() => {

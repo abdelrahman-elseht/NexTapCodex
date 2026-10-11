@@ -458,6 +458,21 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.24}
 .hero-photo,.section-background-photo{object-fit:cover;z-index:-2}
 .business-logo{position:relative;flex:none;overflow:hidden}
 .business-logo img{object-fit:contain}
+.payment-link-help{padding:14px 20px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.payment-link-help summary{cursor:pointer;min-height:44px;display:list-item;padding-block:10px;font-weight:600}
+.payment-link-help a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.payment-link-help a:focus-visible,.payment-link-help summary:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.payments-section .payment-link-help{padding-inline:0}
+.item-subtitle,.item-badge{display:block;overflow-wrap:anywhere}
+.item-subtitle{font-weight:400}
+.premium-public .configured-actions-section>.quick-actions{margin:0;padding:12px 0 0;box-shadow:none;border-radius:0}
+.premium-public .configured-actions-section:not(:has(>h2,>.section-overline,>.section-intro,>.section-badge)){padding:12px 18px 16px}
+.premium-public .generic-items .configured-actions-section{padding:0;border:0;margin:0;box-shadow:none;content-visibility:visible}
+.section-optional-text,.item-optional-text,.live-item-fields>details{grid-column:1/-1;min-width:0}
+.section-optional-text summary,.live-item-fields>details>summary{cursor:pointer;padding-block:12px;min-height:44px}
+.live-item-fields .live-items-editor{min-width:0;margin-block:12px}
+.business-section:not(:has(>h2,>.section-overline,>.section-intro,>.section-badge))>.generic-items,
+.business-section:not(:has(>h2,>.section-overline,>.section-intro,>.section-badge))>.social-tile-grid{margin-top:0}
 .payments-section:before{position:absolute;inset:0;z-index:-1;content:"";background:linear-gradient(90deg,#451317ed 0%,#451317d8 39%,#351111b5 100%)}
 .image-unavailable{position:absolute;inset:0;display:grid;place-items:center;padding:12px;color:inherit;background:#d9d2c7;font-size:12px;text-align:center}
 .hero-photo.image-unavailable,.section-background-photo.image-unavailable{background:transparent}

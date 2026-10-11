@@ -6,6 +6,7 @@ import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/business/content";
 import { destinationStrategyFor, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
 import { z } from "zod";
+import { normalizeEditorItems } from "@/lib/business/editor-items";
 import { captureOperationError } from "@/lib/observability/operations";
 
 const slugSchema=z.string().trim().toLowerCase().regex(/^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?[a-z0-9]$/,"استخدم أحرفاً صغيرة وأرقاماً وشرطات فقط.");
@@ -71,10 +72,10 @@ function parseDraft(fd: FormData) {
  const cleanSections = sections.map((section, index) => {
    if (!section || !sectionKinds.includes(section.kind as any)) throw new Error("Unsupported section type.");
    const key = String(section.section_key || section.key || section.kind).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40) || `section_${index + 1}`;
-   const content = section.content && typeof section.content === "object" ? cleanSectionContent(section.content as Record<string, unknown>) : {};
+   const content = section.content && typeof section.content === "object" ? cleanSectionContent(section.content as Record<string, unknown>, section.kind, key) : {};
    // Run the same URL/item checks used by the legacy section form.
-   parseSectionContent(JSON.stringify(content));
-   return { key, kind: section.kind, title: String(section.title || section.kind).trim().slice(0, 80), position: index, enabled: Boolean(section.enabled), content };
+   parseSectionContent(JSON.stringify(content), section.kind);
+   return { key, kind: section.kind, title: String(section.title ?? section.kind).trim().slice(0, 80), position: index, enabled: Boolean(section.enabled), content };
  });
  const providerProfiles = Object.fromEntries(Object.entries(parsed.providerProfiles || {}).slice(0, 40).map(([provider, profile]) => [provider.slice(0, 40), {
    value: String(profile?.value || "").trim().slice(0, 500) || undefined,
@@ -84,7 +85,8 @@ function parseDraft(fd: FormData) {
  return { businessId: parsed.businessId, pageId: parsed.pageId, name, category, slug, template, archived: Boolean(parsed.archived), sections: cleanSections, providerProfiles };
 }
 
-function cleanSectionContent(content: Record<string, unknown>): Record<string, unknown> {
+function cleanSectionContent(content: Record<string, unknown>, kind: string, scope: string): Record<string, unknown> {
+ content = {...content,...(Array.isArray(content.items)?{items:normalizeEditorItems(content.items,kind,scope)}:{})};
  const next: Record<string, unknown> = { ...content };
  for (const [key, value] of Object.entries(next)) {
   if (!Array.isArray(value)) continue;
@@ -92,7 +94,7 @@ function cleanSectionContent(content: Record<string, unknown>): Record<string, u
    if (!raw || typeof raw !== "object") return false;
    const item = raw as Record<string, unknown>;
    // Empty rows are editor placeholders; omit them from the persisted snapshot.
-    return [item.label, item.url, item.value, item.provider, item.icon].some(part => typeof part === "string" && part.trim());
+    return (Array.isArray(item.actions) && item.actions.length > 0) || [item.label, item.url, item.value, item.provider, item.icon, item.subtitle, item.badge].some(part => typeof part === "string" && part.trim());
   }).map(raw => {
    const item = raw as Record<string, unknown>;
    const provider = typeof item.provider === "string" ? item.provider.trim().slice(0, 40) : undefined;
@@ -113,7 +115,7 @@ function cleanSectionContent(content: Record<string, unknown>): Record<string, u
     throw new Error("Use a valid Egyptian wallet number for Vodafone Cash.");
    }
     const destinationStrategy = destinationStrategyFor(provider, typeof item.destinationStrategy === "string" ? item.destinationStrategy : undefined, url);
-    return { label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
+    return { id: item.id, subtitle: typeof item.subtitle === "string" ? item.subtitle.trim().slice(0,500) : undefined, badge: typeof item.badge === "string" ? item.badge.trim().slice(0,80) : undefined, ...(Array.isArray(item.actions) ? {actions: cleanSectionContent({items:item.actions}, "quick_actions", String(item.id)).items} : {}), label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
   });
  }
  return next;

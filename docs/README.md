@@ -7,6 +7,7 @@
 - [Integration handover](handovers/INTEGRATION_HANDOFF.md): environment and preproduction integration evidence.
 - [Observability handover](handovers/OBSERVABILITY_HANDOFF.md): telemetry and performance evidence.
 - [Optimization handover](handovers/optimization-experience-handoff.md): optimization phases and follow-up verification.
+- [Business Editor reliability handover](handovers/BUSINESS_EDITOR_RELIABILITY_HANDOFF.md): phases 1–3, payment-link limitations, regression results, and browser evidence.
 - [Implementation reports](implementation/): detailed reports for completed changes.
 - [Research](research/): provider documentation and technical findings.
 

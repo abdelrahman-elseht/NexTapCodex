@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
 import { PaymentLogo } from "@/components/business/payment-logo";
 import { isPaymentProvider, paymentLinkHref, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/business/providers";
 
-export type EditorItem = { label: string; value: string; url: string; alt?: string; provider?: string; enabled?: boolean; icon?: string; destinationStrategy?: string; profileOverride?: boolean };
+import { createEditorItem, type EditorItem } from "@/lib/business/editor-items";
+export type { EditorItem } from "@/lib/business/editor-items";
 type Section = { id: string; kind: string };
 
 const valueLabels: Partial<Record<ProviderId, string>> = {
@@ -48,7 +49,7 @@ function itemValidationError(item: EditorItem) {
 }
 
 export function ItemEditor({ section, items, onChange, businessId, track, mutationLocked = false }: { section: Section; items: EditorItem[]; onChange: (items: EditorItem[]) => void; businessId?: string; track?: UploadTracker; mutationLocked?: boolean }) {
-  const set = (index: number, patch: Partial<EditorItem>) => onChange(items.map((item, current) => current === index ? { ...item, ...patch } : item));
+  const set = (id: string, patch: Partial<EditorItem>) => onChange(items.map(item => item.id === id ? { ...item, ...patch } : item));
   const move = (index: number, offset: number) => {
     const target = index + offset;
     if (target < 0 || target >= items.length) return;
@@ -57,10 +58,10 @@ export function ItemEditor({ section, items, onChange, businessId, track, mutati
     next.splice(target, 0, item);
     onChange(next);
   };
-  const add = () => onChange([...items, { label: "", value: "", url: "", provider: "custom", enabled: true, icon: "link" }]);
+  const add = () => { if (items.length < 100) onChange([...items, createEditorItem(section.kind === "hours" || section.kind === "gallery" ? undefined : "custom")]); };
 
   return <div className="live-items-editor">
-    <div className="live-items-heading"><strong>{section.kind === "hours" ? "Weekly schedule" : "Entries"}</strong><button type="button" className="small-button" onClick={add}>+ Add</button></div>
+    <div className="live-items-heading"><strong>{section.kind === "hours" ? "Weekly schedule" : "Entries"}</strong><button type="button" className="small-button" disabled={items.length >= 100 || mutationLocked} onClick={add}>+ Add</button></div>
     {items.map((item, index) => {
       const provider = (item.provider || "custom") as ProviderId;
       const isAction = section.kind === "quick_actions";
@@ -78,27 +79,30 @@ export function ItemEditor({ section, items, onChange, businessId, track, mutati
         : provider === "bank" ? "Account or payment instructions"
         : isHours ? "9:00 AM – 5:00 PM" : "Details";
       const urlPlaceholder = provider === "reviews" ? "https://g.page/r/…/review" : "https://";
-      return <div className="live-item-row" key={`${item.provider || "item"}-${index}`}>
+      return <div className="live-item-row" key={item.id} data-item-id={item.id}>
         <span className="item-drag" aria-hidden="true">:::</span>
         <div className="live-item-fields">
           {(isAction || isSocial || isPayment) && <span className={`provider-inline-icon provider-${provider}`}>{providerIcon(provider)}</span>}
-          <label className="field"><span>{isAction ? "Button label" : "Label"}</span><input id={`item-${section.id}-${index}`} value={item.label} placeholder={isHours ? "Day or period" : providerLabels[provider]} onChange={event => set(index, { label: event.target.value })} /></label>
-          {needsValue && <label className="field"><span>{valueLabel}</span><input dir={provider === "bank" ? "auto" : "ltr"} inputMode={provider === "call" || provider === "phone" || provider === "whatsapp" || provider === "vodafone" ? "tel" : undefined} value={item.value} placeholder={valuePlaceholder} onChange={event => {
+          <label className="field"><span>{isAction ? "Button label" : "Label"}</span><input id={`item-${section.id}-${item.id}-label`} name={`${section.id}.${item.id}.label`} value={item.label} placeholder={isHours ? "Day or period" : providerLabels[provider]} onChange={event => set(item.id, { label: event.target.value })} /></label>
+          {needsValue && <label className="field"><span>{valueLabel}</span><input name={`${section.id}.${item.id}.value`} dir={provider === "bank" ? "auto" : "ltr"} inputMode={provider === "call" || provider === "phone" || provider === "whatsapp" || provider === "vodafone" ? "tel" : undefined} value={item.value} placeholder={valuePlaceholder} onChange={event => {
             const value = event.target.value;
             const patch: Partial<EditorItem> = { value };
             if (provider === "instagram") patch.url = normalizeInstagram(value);
             if (provider === "whatsapp") patch.url = item.url && item.url !== whatsappHref(item.value) ? item.url : whatsappHref(value);
-            set(index, patch);
+            set(item.id, patch);
           }} />{!isHours && <small className="field-hint">{provider === "bank" ? "These instructions stay available to your team. Visitors request transfer details directly from the business." : ["instapay", "vodafone"].includes(provider) ? "Optional fallback details. Add a provider link to open the payment destination directly." : `This destination stays tied to ${providerLabels[provider]} if you change the button label.`}</small>}</label>}
-          {section.kind === "gallery" && businessId && track && <ImageField businessId={businessId} label={`Gallery image ${index + 1}`} value={item.url} alt={item.alt || ""} onChange={url => set(index, { url })} onAltChange={alt => set(index, { alt })} track={track} />}
-          {needsUrl && section.kind !== "gallery" && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(index, { url: event.target.value })} /><small className="field-hint">{["instapay", "vodafone", "bank"].includes(provider) ? "Paste the complete HTTPS payment link from your provider. Tapping the card opens that exact link; app opening depends on the provider and the phone. No details are copied when a link is set." : optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
-          {provider !== "custom" && !isHours && <label className="profile-override"><input type="checkbox" checked={item.profileOverride === true} onChange={event => set(index, { profileOverride: event.target.checked })} /> Override shared {providerLabels[provider]} details for this item</label>}
-          {(isAction || isPayment) && <label className="field"><span>Button icon</span><select value={item.icon || ""} onChange={event => set(index, { icon: event.target.value || undefined })}><option value="">Provider icon</option><option value="link">Link</option><option value="phone">Phone</option><option value="pin">Location pin</option><option value="menu">Menu</option><option value="calendar">Calendar</option><option value="google">Google</option><option value="globe">Website</option></select></label>}
+          {section.kind === "gallery" && businessId && track && <ImageField businessId={businessId} label={`Gallery image ${index + 1}`} value={item.url} alt={item.alt || ""} onChange={url => set(item.id, { url })} onAltChange={alt => set(item.id, { alt })} track={track} />}
+          {needsUrl && section.kind !== "gallery" && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input id={`item-${section.id}-${item.id}-url`} name={`${section.id}.${item.id}.url`} dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(item.id, { url: event.target.value })} /><small className="field-hint">{["instapay", "vodafone", "bank"].includes(provider) ? "Paste the complete HTTPS payment link from your provider. Tapping the card opens that exact link; app opening depends on the provider and the phone. No details are copied when a link is set." : optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
+          {provider !== "custom" && !isHours && <label className="field"><span>Destination source</span><select value={item.profileOverride ? "override" : "default"} onChange={event => set(item.id, { profileOverride: event.target.value === "override" })}><option value="default">Use business default</option><option value="override">Override for this item</option></select><small>{item.profileOverride ? "Only this item changes." : "Editing these details updates the business default and other inherited items."}</small></label>}
+          {!isHours && <details className="item-optional-text"><summary>Optional item text</summary><label className="field">Item subtitle<input name={`${section.id}.${item.id}.subtitle`} value={item.subtitle || ""} maxLength={500} onChange={event => set(item.id,{subtitle:event.target.value})}/></label><label className="field">Item badge<input name={`${section.id}.${item.id}.badge`} value={item.badge || ""} maxLength={80} onChange={event => set(item.id,{badge:event.target.value})}/></label></details>}
+          {section.kind === "services" && <><label className="field">Service description<textarea value={item.value} maxLength={500} onChange={event => set(item.id,{value:event.target.value})}/></label><details><summary>Service buttons</summary><ItemEditor section={{id:`${section.id}-${item.id}`,kind:"quick_actions"}} items={item.actions || []} onChange={actions=>set(item.id,{actions})} mutationLocked={mutationLocked}/></details></>}
+
+          {(isAction || isPayment) && <label className="field"><span>Button icon</span><select value={item.icon || ""} onChange={event => set(item.id, { icon: event.target.value || undefined })}><option value="">Provider icon</option><option value="link">Link</option><option value="phone">Phone</option><option value="pin">Location pin</option><option value="menu">Menu</option><option value="calendar">Calendar</option><option value="google">Google</option><option value="globe">Website</option></select></label>}
           {itemValidationError(item) && <small className="field-error" role="alert">{itemValidationError(item)}</small>}
         </div>
-        <label className="item-enabled"><input type="checkbox" checked={item.enabled !== false} onChange={event => set(index, { enabled: event.target.checked })} /> on</label>
+        <label className="item-enabled"><input type="checkbox" checked={item.enabled !== false} onChange={event => set(item.id, { enabled: event.target.checked })} /> on</label>
         <div className="item-reorder"><button type="button" onClick={() => move(index, -1)} disabled={index === 0 || mutationLocked} aria-label={`Move item ${index + 1} up`}>↑</button><button type="button" onClick={() => move(index, 1)} disabled={index === items.length - 1 || mutationLocked} aria-label={`Move item ${index + 1} down`}>↓</button></div>
-        <button type="button" className="small-button danger" disabled={mutationLocked} onClick={() => onChange(items.filter((_, current) => current !== index))} aria-label={`Remove item ${index + 1}`}>×</button>
+        <button type="button" className="small-button danger" disabled={mutationLocked} onClick={() => onChange(items.filter(entry => entry.id !== item.id))} aria-label={`Remove item ${index + 1}`}>×</button>
       </div>;
     })}
   </div>;

@@ -13,7 +13,10 @@ export const safeContentUrl = (value: unknown): value is string => {
   return safeUrl(value);
 };
 export const providerSchema = z.string().trim().max(40).regex(/^[a-z0-9_-]+$/i).optional();
-export const itemSchema = z.object({
+const itemFields = {
+  id: z.string().trim().min(1).max(200).optional(),
+  subtitle: z.string().trim().max(500).optional(),
+  badge: z.string().trim().max(80).optional(),
   label: z.string().trim().max(80).optional().or(z.literal("")),
   url: z.string().trim().max(2048).optional().or(z.literal("")),
   value: z.string().trim().max(500).optional().or(z.literal("")),
@@ -23,9 +26,16 @@ export const itemSchema = z.object({
   enabled: z.boolean().optional(),
   icon: z.string().trim().max(40).optional(),
   alt: z.string().trim().max(200).optional(),
-}).strict().superRefine((item, ctx) => {
+};
+const actionSchema = z.object(itemFields).strict();
+export const itemSchema = z.object({ ...itemFields, actions: z.array(actionSchema).max(100).optional() }).strict().superRefine((item, ctx) => {
   if (item.url && !safeContentUrl(item.url)) ctx.addIssue({ code: "custom", path: ["url"], message: "Use a safe local path or complete URL." });
+  for (const action of item.actions || []) if (action.url && !safeContentUrl(action.url)) ctx.addIssue({ code: "custom", path: ["actions"], message: "Use a safe action URL." });
 });
+// Section contracts keep local schedule/image data out of destination inheritance.
+export const hoursItemSchema = itemSchema.refine(item => !item.provider && !item.url && !item.actions, "Working hours cannot contain provider destinations or actions.");
+export const galleryItemSchema = itemSchema.refine(item => !item.provider && !item.actions, "Gallery images cannot inherit provider destinations.");
+export type HoursItem = z.infer<typeof hoursItemSchema>;
 export const sectionContentSchema = z.record(z.string(), z.unknown()).superRefine((content, ctx) => {
   for (const [key, value] of Object.entries(content)) {
     if (/url|link|href/i.test(key) && typeof value === "string" && value && !safeContentUrl(value)) ctx.addIssue({ code: "custom", message: "Use a safe local path or complete http(s), mailto, or tel URL." });
@@ -37,9 +47,14 @@ export const sectionContentSchema = z.record(z.string(), z.unknown()).superRefin
     }
   }
 });
-export function parseSectionContent(raw: string) {
+export function parseSectionContent(raw: string, kind?: string) {
   const parsed = sectionContentSchema.safeParse(JSON.parse(raw));
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Invalid section content.");
+  const schema = kind === "hours" ? hoursItemSchema : kind === "gallery" ? galleryItemSchema : itemSchema;
+  if (Array.isArray(parsed.data.items)) for (const item of parsed.data.items) {
+    const result = schema.safeParse(item);
+    if (!result.success) throw new Error(result.error.issues[0]?.message || "Invalid section item.");
+  }
   return parsed.data;
 }
 export function reorderSectionIds<T extends { id: string }>(sections: T[], movingId: string, targetId: string) {
