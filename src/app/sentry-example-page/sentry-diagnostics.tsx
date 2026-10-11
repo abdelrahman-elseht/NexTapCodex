@@ -1,6 +1,6 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
+import { captureClientException } from "@/lib/observability/client";
 import { useState } from "react";
 
 export default function SentryDiagnostics() {
@@ -8,10 +8,9 @@ export default function SentryDiagnostics() {
 
   async function sendClientError() {
     setStatus("sending");
-    const eventId = Sentry.captureException(new Error("NexTap controlled client verification error"), {
+    const eventId = await captureClientException(new Error("NexTap controlled client verification error"), {
       tags: { verification: "client", surface: "sentry-diagnostics" },
     });
-    await Sentry.flush(2000);
     setStatus(eventId ? "sent" : "disabled");
   }
 

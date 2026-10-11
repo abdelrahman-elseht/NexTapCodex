@@ -37,6 +37,12 @@ export default withSentryConfig(nextConfig, {
     name: process.env.SENTRY_RELEASE || process.env.VERCEL_GIT_COMMIT_SHA || undefined,
   },
   webpack: {
-    treeshake: { removeDebugLogging: true },
+    // Client tracing adds browser instrumentation to every route. Error capture,
+    // request error hooks, and server-side telemetry remain enabled.
+    // Error boundaries and operation wrappers capture app errors explicitly;
+    // avoid injecting the full browser SDK into every App Router route.
+    autoInstrumentAppDirectory: false,
+    disableSentryConfig: true,
+    treeshake: { removeDebugLogging: true, removeTracing: true },
   },
 });

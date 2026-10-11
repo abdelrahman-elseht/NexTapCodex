@@ -13,6 +13,8 @@ const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 Sentry.init({
   dsn,
   enabled: sentryEnabled(dsn),
+  // Lightweight startup listeners own these events, including before lazy init.
+  integrations: defaults => defaults.filter(integration => integration.name !== "GlobalHandlers"),
   environment: sentryEnvironment(),
   release: sentryRelease(),
   tracesSampleRate: 0.05,
@@ -37,3 +39,9 @@ Sentry.init({
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+
+export function captureException(error: unknown, context?: Record<string, unknown>) {
+  return Sentry.captureException(error, context);
+}
+
+export const flush = Sentry.flush;

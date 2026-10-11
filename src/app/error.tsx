@@ -1,13 +1,13 @@
 ﻿"use client";
 
 import Link from "next/link";
-import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { BrandLogo } from "@/components/ui/brand-logo";
+import { captureClientException } from "@/lib/observability/client";
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    Sentry.captureException(error, { tags: { surface: "public.error" } });
+    void captureClientException(error, { tags: { surface: "public.error" } });
   }, [error]);
   return (
     <main className="status-screen">

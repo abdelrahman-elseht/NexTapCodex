@@ -14,7 +14,7 @@ function DevicePreview({ english }: { english: boolean }) {
           <div className="device-screen" dir={english ? "ltr" : "rtl"}>
             <div className="device-topline"><span>NexTap / {english ? "business page" : "صفحة النشاط"}</span><span className="dot" /></div>
             <span className="device-mark">ق</span>
-            <h3>{english ? "Qahwa & Mazaj" : "قهوة ومزاج"}</h3>
+            <p className="device-title">{english ? "Qahwa & Mazaj" : "قهوة ومزاج"}</p>
             <p>{english ? "Specialty coffee · New Cairo" : "قهوة مختصة · القاهرة الجديدة"}</p>
             <div className="device-actions">
               <span>{english ? "Chat on WhatsApp" : "تواصل عبر واتساب"}</span>

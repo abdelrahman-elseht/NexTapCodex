@@ -15,6 +15,7 @@ test("baseline published synthetic business keeps its media and actions usable",
   await expect(screen.getByRole("heading", "Preprod QA illustrative media")).toBeVisible();
   await expect(screen.getByRole("link", "Website", { exact: true })).toHaveAttribute("href", "https://example.com");
   await expect(browser.locator(".hero-photo")).toHaveAttribute("fetchpriority", "high");
+  await browser.evaluate(() => { document.querySelector(".gallery-section")!.scrollIntoView(); return null; });
   await expect(browser.locator(".gallery-photo")).toHaveCount(100);
   await expect.poll(() => browser.evaluate(() => {
     const image = document.querySelector<HTMLImageElement>(".hero-photo");

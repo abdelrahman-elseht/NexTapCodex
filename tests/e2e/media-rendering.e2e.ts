@@ -8,6 +8,7 @@ test("public media has responsive variants, eager hero/logo, lazy gallery and st
   await expect(browser.locator('.hero-photo')).toHaveAttribute("loading", "eager");
   await expect(browser.locator('.hero-photo')).toHaveAttribute("fetchpriority", "high");
   await expect(browser.locator('.business-logo img')).toHaveAttribute("loading", "eager");
+  await browser.evaluate(() => { document.querySelector('.gallery-section')!.scrollIntoView(); return null; });
   await expect(browser.locator('.gallery-photo')).toHaveCount(100);
   await expect(browser.locator('.gallery-photo img').first()).toHaveAttribute("loading", "lazy");
   await expect(browser.locator('.map-preview img')).toHaveAttribute("loading", "lazy");

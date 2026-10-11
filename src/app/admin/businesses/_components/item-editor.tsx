@@ -18,7 +18,7 @@ const brandIcons = new Set(["whatsapp", "facebook", "instagram", "tiktok", "yout
 
 function providerIcon(provider: ProviderId): ReactNode {
   if (provider === "instapay" || provider === "vodafone") return <PaymentLogo provider={provider} />;
-  if (brandIcons.has(provider)) return <img src={`/icons/social/${provider}.svg`} alt="" />;
+  if (brandIcons.has(provider)) return <img src={`/icons/social/${provider}.svg`} alt="" width={24} height={24} />;
   const paths: Record<string, ReactNode> = {
     call: <path d="M6 3.8 9 3l2 4.5-2.1 1.7a13 13 0 0 0 5.9 5.9l1.7-2.1 4.5 2-.8 3a2.3 2.3 0 0 1-2.6 1.7C10 18.8 5.2 14 4.3 6.4A2.3 2.3 0 0 1 6 3.8Z" />,
     maps: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,

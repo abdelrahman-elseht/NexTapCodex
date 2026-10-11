@@ -20,7 +20,7 @@ describe("public publication resolver", () => {
     rpc.mockResolvedValueOnce({ data: null, error: new Error("cache fill failed") });
     rpc.mockResolvedValueOnce({ data: { publicationId: "11111111-1111-4111-8111-111111111111", version: 1 }, error: null });
     const { getPublicPublication } = await import("../../src/lib/business/public-publication");
-    await expect(getPublicPublication("cairo-shop")).resolves.toMatchObject({ version: 1 });
+    await expect(getPublicPublication("fallback-shop")).resolves.toMatchObject({ version: 1 });
     expect(rpc.mock.calls[2][0]).toBe("get_published_page");
   });
 

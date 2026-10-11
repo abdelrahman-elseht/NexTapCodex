@@ -1,12 +1,12 @@
 ﻿"use client";
 
 import Link from "next/link";
-import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import { captureClientException } from "@/lib/observability/client";
 
 export default function AdminError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    Sentry.captureException(error, { tags: { surface: "admin.error" } });
+    void captureClientException(error, { tags: { surface: "admin.error" } });
   }, [error]);
   return (
     <section className="editor-panel error-panel" role="alert">

@@ -48,7 +48,7 @@ export function ImageField({ businessId, label, value, alt, role = "photo", onCh
     <legend>{label}</legend>
     <label className="field">{label} URL<input dir="ltr" value={value} onChange={event => onChange(event.target.value)} disabled={pending} /></label>
     <label className="field">{label} alt text<input value={alt} maxLength={200} onChange={event => onAltChange(event.target.value)} /></label>
-    {value && <div className="upload-preview">{broken === value ? <span>Image unavailable. Replace the URL or upload another image.</span> : <img src={value} alt={alt || `${label} preview`} onError={() => setBroken(value)} />}</div>}
+    {value && <div className="upload-preview">{broken === value ? <span>Image unavailable. Replace the URL or upload another image.</span> : <img src={value} alt={alt || `${label} preview`} width={240} height={120} onError={() => setBroken(value)} />}</div>}
     <label className="field">Upload {label.toLowerCase()}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={pending} onChange={event => { const chosen = event.target.files?.[0]; event.target.value = ""; if (chosen) void upload(chosen); }} /></label>
     <small>Still JPEG, PNG or WebP. Up to 5 MiB per image. Uploaded images are publicly readable by URL.</small>
     {pending && <progress max={100} value={progress} aria-label={`${label} upload progress`} />}
