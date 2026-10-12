@@ -143,3 +143,33 @@ Include:
 - Ask for approval only for Production-impacting or destructive operations.
 
 Stop after successful hosted validation. Do not activate Production.
+
+## Execution status — 2026-10-13
+
+The implementation work is recorded in the companion
+[`HOSTED_STAGING_VALIDATION_HANDOFF.md`](../../HOSTED_STAGING_VALIDATION_HANDOFF.md).
+The repository and Staging database checks pass, but the hosted gate remains
+blocked until Vercel produces a deployment whose API target is `preview`.
+Vercel classified both Git-triggered and direct `--target preview` attempts as
+`production`; each was removed immediately. There are currently no Vercel
+deployments or aliases, and no Production DNS or Supabase data was changed.
+
+The GitHub quality check passes after forwarding `CI=true` into the e2e app
+process. Local typecheck, lint, unit tests, database contracts, production
+build, and desktop/mobile e2e checks also pass. Sentry Staging searches found
+no errors, logs, or traces in the last 24 hours.
+
+Hostinger DNS must contain only this staging record:
+
+```text
+Type: CNAME
+Name: staging
+Target: 2d714148d09163d5.vercel-dns-017.com.
+TTL: default
+```
+
+Do not change nameservers, the apex `@` record, Production domains, or mail
+records. Cloudflare has only a pending/unresolvable zone and is not the active
+DNS authority. After DNS resolves, add the generated Preview origin and
+`https://staging.nextab.services/auth/callback` to Supabase Staging Auth, then
+rerun the hosted desktop/mobile journeys and complete the remaining checklist.
