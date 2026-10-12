@@ -9,6 +9,7 @@ const node = process.execPath;
 const productionServer = process.env.E2E_SERVER_MODE === "production";
 const sentryDiagnostics = process.env.SENTRY_TEST_ERRORS_ENABLED === "1";
 const env = {
+  CI: process.env.CI ?? "",
   NEXTAP_BUILD_DIR: productionServer ? ".next" : ".next-e2e",
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_e2e_placeholder",
