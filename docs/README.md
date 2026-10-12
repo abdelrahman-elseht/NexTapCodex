@@ -8,6 +8,7 @@
 - [Observability handover](handovers/OBSERVABILITY_HANDOFF.md): telemetry and performance evidence.
 - [Architecture and capacity handoff](handovers/ARCHITECTURE_CAPACITY_HANDOFF.md): read-only schema, request-path, cache, quota, and analytics audit.
 - [Launch architecture handoff](handovers/LAUNCH_ARCHITECTURE_HANDOFF.md): security, cache parity, analytics, and operational launch gates.
+- [Staging schema reconciliation handoff](handovers/STAGING_SCHEMA_RECONCILIATION_HANDOFF.md): Staging migration history, rollout evidence, and hosted validation gates.
 - [Optimization handover](handovers/optimization-experience-handoff.md): optimization phases and follow-up verification.
 - [Business Editor reliability handover](handovers/BUSINESS_EDITOR_RELIABILITY_HANDOFF.md): phases 1–3, payment-link limitations, regression results, and browser evidence.
 - [Implementation reports](implementation/): detailed reports for completed changes.
