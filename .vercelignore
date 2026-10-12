@@ -1,0 +1,12 @@
+node_modules
+.next
+.next-e2e
+.next-browser
+.git
+.e2e
+.playwright-mcp
+artifacts
+.env.local
+.env.*
+!.env.example
+*.log
