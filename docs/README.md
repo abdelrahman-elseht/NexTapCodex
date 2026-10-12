@@ -6,6 +6,8 @@
 - [Original agent specification](specs/NEXTAP_FROM_SCRATCH_AGENT_SPEC.md): historical implementation requirements.
 - [Integration handover](handovers/INTEGRATION_HANDOFF.md): environment and preproduction integration evidence.
 - [Observability handover](handovers/OBSERVABILITY_HANDOFF.md): telemetry and performance evidence.
+- [Architecture and capacity handoff](handovers/ARCHITECTURE_CAPACITY_HANDOFF.md): read-only schema, request-path, cache, quota, and analytics audit.
+- [Launch architecture handoff](handovers/LAUNCH_ARCHITECTURE_HANDOFF.md): security, cache parity, analytics, and operational launch gates.
 - [Optimization handover](handovers/optimization-experience-handoff.md): optimization phases and follow-up verification.
 - [Business Editor reliability handover](handovers/BUSINESS_EDITOR_RELIABILITY_HANDOFF.md): phases 1–3, payment-link limitations, regression results, and browser evidence.
 - [Implementation reports](implementation/): detailed reports for completed changes.
