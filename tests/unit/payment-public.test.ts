@@ -2,6 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { PublicSnapshot } from "../../src/components/business/public-snapshot";
+import { parseSectionContent } from "../../src/lib/business/content";
 
 const recipient = "fixture-only@instapay";
 const render = (items: Array<{ provider: string; value?: string; label?: string; url?: string; destinationStrategy?: string; profileOverride?: boolean }>, profiles = {}) => renderToStaticMarkup(React.createElement(PublicSnapshot, {
@@ -12,6 +13,23 @@ const render = (items: Array<{ provider: string; value?: string; label?: string;
 }));
 
 describe("public payment privacy", () => {
+  it.each(["payments", "quick_actions"])("makes InstaPay help optional in %s without changing payment actions", kind => {
+    const url = "https://payments.example.test/owner-link?token=fixture";
+    for (const showInstapayHelp of [undefined, true, false]) {
+      const content = parseSectionContent(JSON.stringify({ showInstapayHelp, items: [{ provider: "instapay", value: recipient, url }] }), kind);
+      const html = renderToStaticMarkup(React.createElement(PublicSnapshot, {
+        snapshot: { sections: [{ kind, title: "Payments", position: 0, enabled: true, content }] },
+      }));
+      expect(html.includes('class="payment-link-help"')).toBe(showInstapayHelp !== false);
+      expect(html).toContain(`href="${url}"`);
+      expect(html).toContain('aria-label="InstaPay"');
+      expect(html).not.toContain(recipient);
+      const anchors = html.match(/<a[^>]+href="https:\/\/payments\.example\.test[^>]+>/g) || [];
+      expect(anchors).toHaveLength(showInstapayHelp === false ? 1 : 2);
+      expect(anchors.every(anchor => !anchor.includes("target="))).toBe(true);
+    }
+  });
+
   it("renders local monochrome logos and keyboard actions without recipient text", () => {
     const html = render([{ provider: "instapay", value: recipient }, { provider: "vodafone", value: "fixture-only-wallet", label: "My wallet" }]);
     expect(html).toContain('/icons/payment/instapay.svg');
@@ -92,5 +110,23 @@ describe("public payment privacy", () => {
     const html = render([{ provider: "vodafone", value: `+20${local.slice(1)}`, label: `Wallet ${local.slice(0, 3)} ${local.slice(3)}` }]);
     expect(html).not.toContain(`Wallet ${local.slice(0, 3)}`);
     expect(html).toContain('aria-label="Vodafone Cash"');
+  });
+
+  it("renders Etisalat and Orange wallet actions without exposing recipient numbers", () => {
+    const etisalatNumber = "01100000000";
+    const orangeNumber = "01200000000";
+    const html = render([
+      { provider: "etisalat", value: etisalatNumber, label: `Wallet ${etisalatNumber}` },
+      { provider: "orange", value: `+20${orangeNumber.slice(1)}`, label: `Wallet ${orangeNumber.slice(0, 3)} ${orangeNumber.slice(3)}` },
+    ]);
+
+    expect(html).toContain('aria-label="Etisalat Cash"');
+    expect(html).toContain('aria-label="Orange Cash (Mobinil)"');
+    expect(html).toContain("payment-logo-wordmark-etisalat");
+    expect(html).toContain('/icons/payment/orange.svg');
+    expect(html.match(/aria-haspopup="dialog"/g)).toHaveLength(2);
+    expect(html).not.toContain(etisalatNumber);
+    expect(html).not.toContain(orangeNumber);
+    expect(html).not.toMatch(/<a\b/);
   });
 });

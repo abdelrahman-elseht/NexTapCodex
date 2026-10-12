@@ -17,7 +17,7 @@ afterEach(async () => {
   if (error || pagesError) throw new Error("Fixture cleanup failed");
 });
 
-test("hours, repeated providers, services and optional text survive draft and publication", { timeout: 180_000 }, async ({ app, screen, browser }) => {
+test("hours, repeated providers, services and optional text survive draft and publication", { timeout: 240_000 }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires isolated staging fixtures.");
   await app.open("/login");
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
@@ -42,7 +42,9 @@ test("hours, repeated providers, services and optional text survive draft and pu
   const row = (index: number) => browser.locator(".editor-form-pane > .live-items-editor > .live-item-row").nth(index);
   const select = async (name: string) => {
     if (await browser.evaluate(() => innerWidth < 800)) await screen.getByRole("button", "Editor", { exact: true }).tap();
-    await browser.locator(".navigator-item").filter({ hasText: name }).tap();
+    // Keyboard activation avoids WebKit pointer races while the editor scrolls its selection into view.
+    await browser.locator(".navigator-item").filter({ hasText: name }).press("Enter");
+    await expect(browser.locator(".selected-section-heading").getByRole("heading", name, { exact: true })).toBeVisible();
   };
   const enable = async () => {
     if (!await browser.evaluate(() => document.querySelector<HTMLInputElement>(".selected-section-heading input[type=checkbox]")!.checked)) await browser.locator(".selected-section-heading .toggle-control").tap();
@@ -58,7 +60,7 @@ test("hours, repeated providers, services and optional text survive draft and pu
   await row(1).getByLabel("Hours", { exact: true }).fill("11:00–19:00");
   await expect(row(0).getByLabel("Hours", { exact: true })).toHaveValue("09:00–17:00");
   await screen.getByRole("button", "Save draft", { exact: true }).tap();
-  await expect(screen.getByRole("status")).toContainText("Draft saved");
+  await expect(screen.getByRole("status")).toContainText("Draft saved", { timeout: 30_000 });
   await browser.reload();
   await browser.locator(".navigator-item").filter({ hasText: "Opening hours" }).tap();
   await expect(row(0).getByLabel("Hours", { exact: true })).toHaveValue("09:00–17:00");
@@ -135,26 +137,35 @@ test("hours, repeated providers, services and optional text survive draft and pu
   await screen.getByRole("button", "Add InstaPay", { exact: true }).tap();
   const paymentUrl = "https://payments.example.test/verified-owner-link?token=synthetic-fixture";
   await row(0).getByRole("textbox").nth(2).fill(paymentUrl);
+  const helpLabel = 'Show "InstaPay app didn\'t open?" help';
+  await expect(screen.getByRole("checkbox", helpLabel, { exact: true })).toBeChecked();
+  await screen.getByText(helpLabel, { exact: true }).tap();
+  await expect(screen.getByRole("checkbox", helpLabel, { exact: true })).not.toBeChecked();
   await screen.getByRole("button", "Save draft", { exact: true }).tap();
-  await expect(screen.getByRole("status")).toContainText("Draft saved");
+  await expect(screen.getByRole("status")).toContainText("Draft saved", { timeout: 30_000 });
   await app.open(`/b/${slug}`);
   await expect(screen.getByText("First service", { exact: true })).toHaveCount(0);
   await app.open(editorPath);
+  await select("Payments");
+  await expect(screen.getByRole("checkbox", helpLabel, { exact: true })).not.toBeChecked();
   await select("Services");
   await expect(screen.getByLabel("Section heading", { exact: true })).toHaveValue("");
   await expect(row(0).getByRole("textbox").nth(1)).toHaveValue("https://example.test/service-two");
   await expect(row(1).getByRole("textbox").nth(1)).toHaveValue("https://example.test/service-one");
   await select("Quick Actions");
+  await expect(screen.getByRole("checkbox", helpLabel, { exact: true })).toBeChecked();
   await expect(row(0).getByRole("textbox").nth(1)).toHaveValue("01098765432");
   await expect(row(1).getByRole("textbox").nth(1)).toHaveValue("01011112222");
   await expect(row(2).getByRole("textbox").nth(1)).toHaveValue("01011112222");
   await screen.getByRole("button", "Preview", { exact: true }).tap();
   const preview = browser.locator(".editor-phone-screen");
+  await expect(browser.locator(".editor-phone-screen .payment-link-help")).toHaveCount(0);
+  await expect(preview.getByRole("link", "InstaPay", { exact: true })).toHaveAttribute("href", paymentUrl);
   await expect(preview.getByText("09:00–17:00", { exact: true }).last()).toBeVisible();
   await expect(preview.getByText("11:00–19:00", { exact: true })).toBeVisible();
   await expect(preview.getByRole("link", "Book service", { exact: true })).toHaveAttribute("href", "https://example.test/book");
   await screen.getByRole("button", "Publish", { exact: true }).tap();
-  await expect(screen.getByRole("status")).toContainText("Published");
+  await expect(screen.getByRole("status")).toContainText("Published", { timeout: 30_000 });
   // The publication resolver deliberately caches even unpublished lookups for 5s.
   await expect.poll(async () => (await fetch(new URL(`/b/${slug}`, app.baseUrl))).status, { timeout: 20_000 }).toBe(200);
   await app.open(`/b/${slug}`);
@@ -167,6 +178,26 @@ test("hours, repeated providers, services and optional text survive draft and pu
   await expect(browser.locator('.social-tile[href="https://facebook.com/fixture-1"]')).toHaveCount(1);
   await expect(browser.locator(".business-section-services h2, .business-section-services .section-overline, .business-section-services .section-intro, .business-section-services .item-subtitle")).toHaveCount(0);
   await expect(browser.locator('.business-section-services a[href="https://example.test/service-two"]')).toHaveAttribute("aria-label", "Custom URL");
+  await expect(browser.locator(".payment-link-help")).toHaveCount(0);
+  await expect(browser.locator(".payment-grid").getByRole("link", "InstaPay", { exact: true })).toHaveAttribute("href", paymentUrl);
+  await app.open(editorPath);
+  await select("Payments");
+  await screen.getByText(helpLabel, { exact: true }).tap();
+  await screen.getByRole("button", "Save draft", { exact: true }).tap();
+  await expect(screen.getByRole("status")).toContainText("Draft saved", { timeout: 30_000 });
+  await browser.reload();
+  await select("Payments");
+  await expect(screen.getByRole("checkbox", helpLabel, { exact: true })).toBeChecked();
+  await screen.getByRole("button", "Preview", { exact: true }).tap();
+  await expect(browser.locator(".editor-phone-screen .payment-link-help summary")).toBeVisible();
+  // Saving a draft must not change the published help visibility.
+  await app.open(`/b/${slug}`);
+  await expect(browser.locator(".payment-link-help")).toHaveCount(0);
+  await app.open(editorPath);
+  await screen.getByRole("button", "Publish", { exact: true }).tap();
+  await expect(screen.getByRole("status")).toContainText("Published", { timeout: 30_000 });
+  await expect.poll(async () => (await (await fetch(new URL(`/b/${slug}`, app.baseUrl))).text()).includes('class="payment-link-help"'), { timeout: 20_000 }).toBe(true);
+  await app.open(`/b/${slug}`);
   await browser.locator(".payment-link-help summary").tap();
   await expect(screen.getByText(/Open supported links/)).toBeVisible();
   await expect(screen.getByRole("link", "Open InstaPay", { exact: true })).toHaveAttribute("href", paymentUrl);

@@ -96,7 +96,7 @@ test("payment cards keep recipient details private and guide the payer through t
   }));
   expect(privacy.text).not.toContain("@instapay");
   expect(privacy.text).not.toContain("Copy identifier");
-  expect(privacy.names).toEqual(["InstaPay", "Vodafone Cash", "Bank instructions"]);
+  expect(privacy.names).toEqual(["InstaPay", "Vodafone Cash", "Etisalat Cash", "Orange Cash (Mobinil)", "Bank instructions"]);
   expect(privacy.hrefs).toEqual([]);
   expect(privacy.copyButtons).toBe(0);
   await screen.getByRole("button", "Close", { exact: true }).press("Escape");
@@ -118,5 +118,5 @@ test("clipboard denial keeps payment instructions usable and local logo failures
   await screen.getByRole("button", "Close", { exact: true }).tap();
   await browser.route("**/icons/payment/*.png", route => route.abort());
   await browser.reload();
-  await expect(browser.locator(".payment-grid .payment-logo-fallback")).toHaveCount(2);
+  await expect(browser.locator(".payment-grid .payment-logo-fallback")).toHaveCount(3);
 });

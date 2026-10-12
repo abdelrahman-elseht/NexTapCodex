@@ -87,13 +87,20 @@ test("owners can configure provider-aware actions, social links, and payment lin
   await screen.getByRole("button", "Add Vodafone Cash").tap();
   await itemRow(1).getByRole("textbox").nth(0).fill("Wallet");
   await itemRow(1).getByRole("textbox").nth(1).fill("01055556666");
+  await screen.getByRole("button", "Add Etisalat Cash").tap();
+  await itemRow(2).getByRole("textbox").nth(1).fill("not-a-phone");
+  await expect(itemRow(2).getByRole("alert")).toContainText("Use a valid Egyptian mobile number");
+  await itemRow(2).getByRole("textbox").nth(1).fill("01100000000");
+  await expect(itemRow(2).getByRole("alert")).toHaveCount(0);
+  await screen.getByRole("button", "Add Orange Cash (Mobinil)").tap();
+  await itemRow(3).getByRole("textbox").nth(1).fill("01200000000");
   await screen.getByRole("button", "Other methods").tap();
   await screen.getByRole("button", "Add Custom URL").tap();
-  await itemRow(2).getByRole("textbox").nth(0).fill("Online Pay");
-  await itemRow(2).getByRole("textbox").nth(1).fill("https://payments.example.test/checkout");
+  await itemRow(4).getByRole("textbox").nth(0).fill("Online Pay");
+  await itemRow(4).getByRole("textbox").nth(1).fill("https://payments.example.test/checkout");
   await screen.getByRole("button", "Add Bank instructions").tap();
-  await itemRow(3).getByRole("textbox").nth(0).fill("Bank transfer");
-  await itemRow(3).getByRole("textbox").nth(1).fill("Transfer to demo account 123");
+  await itemRow(5).getByRole("textbox").nth(0).fill("Bank transfer");
+  await itemRow(5).getByRole("textbox").nth(1).fill("Transfer to demo account 123");
 
   if (await browser.evaluate(() => innerWidth < 800)) await screen.getByRole("button", "Preview").tap();
   const paymentPreview = await browser.evaluate(() => {
@@ -107,9 +114,9 @@ test("owners can configure provider-aware actions, social links, and payment lin
       actionCount: grid?.querySelectorAll("button.payment-tile").length || 0,
     };
   });
-  expect(paymentPreview.count).toBe(4);
+  expect(paymentPreview.count).toBe(6);
   expect(paymentPreview.copyCount).toBe(0);
-  expect(paymentPreview.actionCount).toBe(2);
+  expect(paymentPreview.actionCount).toBe(4);
   expect(paymentPreview.background.includes("payment-nfc.webp")).toBe(true);
   const viewportWidth = await browser.evaluate(() => innerWidth);
   expect(paymentPreview.columns).toBe(viewportWidth < 560 ? 2 : 3);
@@ -180,12 +187,13 @@ test("owners can configure provider-aware actions, social links, and payment lin
   expect(publicEvidence.actionHref).toBe("https://instagram.com/nextapqa");
   expect(publicEvidence.socialHref).toBe("https://www.linkedin.com/company/nextapqa");
   expect(publicEvidence.socialIcon).toBe("/icons/social/linkedin.svg");
-  expect(publicEvidence.paymentCount).toBe(4);
-  expect(publicEvidence.paymentActions).toHaveLength(2);
+  expect(publicEvidence.paymentCount).toBe(6);
+  expect(publicEvidence.paymentActions).toHaveLength(4);
   expect(publicEvidence.paymentActions[0]).toEqual({ label: "Wallet", text: "Wallet" });
+  expect(publicEvidence.paymentActions.map(action => action.label)).toEqual(["Wallet", "Etisalat Cash", "Orange Cash (Mobinil)", "Bank instructions"]);
   expect(publicEvidence.paymentHrefs).toContain(paymentUrl);
-  expect(publicEvidence.paymentActions.every(action => !/nextap@instapay|01055556666|Copy identifier/i.test(`${action.label} ${action.text}`))).toBe(true);
-  expect(publicEvidence.paymentHrefs.every(href => !/nextap@instapay|01055556666/i.test(href))).toBe(true);
+  expect(publicEvidence.paymentActions.every(action => !/nextap@instapay|01055556666|01100000000|01200000000|Copy identifier/i.test(`${action.label} ${action.text}`))).toBe(true);
+  expect(publicEvidence.paymentHrefs.every(href => !/nextap@instapay|01055556666|01100000000|01200000000/i.test(href))).toBe(true);
   expect(publicEvidence.paymentBackground.includes("payment-nfc.webp")).toBe(true);
   const publicWidth = await browser.evaluate(() => innerWidth);
   expect(publicEvidence.paymentColumns).toBe(publicWidth < 560 ? 2 : 3);

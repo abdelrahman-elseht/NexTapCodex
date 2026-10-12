@@ -3,7 +3,7 @@
 import { ImageField, type UploadTracker } from "./image-field";
 import type { ReactNode } from "react";
 import { PaymentLogo } from "@/components/business/payment-logo";
-import { isPaymentProvider, paymentLinkHref, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/business/providers";
+import { isLocalWalletProvider, isMobileWalletProvider, isPaymentProvider, paymentLinkHref, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/business/providers";
 
 import { createEditorItem, type EditorItem } from "@/lib/business/editor-items";
 export type { EditorItem } from "@/lib/business/editor-items";
@@ -11,14 +11,14 @@ type Section = { id: string; kind: string };
 
 const valueLabels: Partial<Record<ProviderId, string>> = {
   call: "Phone number", phone: "Phone number", whatsapp: "WhatsApp number",
-  instapay: "InstaPay ID", vodafone: "Vodafone Cash number", bank: "Payment instructions",
+  instapay: "InstaPay ID", vodafone: "Vodafone Cash number", etisalat: "Etisalat Cash number", orange: "Orange Cash number", bank: "Payment instructions",
   email: "Email address", instagram: "Instagram handle or URL",
 };
-const valueProviders = new Set<ProviderId>(["call", "phone", "whatsapp", "instapay", "vodafone", "bank", "email", "instagram"]);
+const valueProviders = new Set<ProviderId>(["call", "phone", "whatsapp", "instapay", "vodafone", "etisalat", "orange", "bank", "email", "instagram"]);
 const brandIcons = new Set(["whatsapp", "facebook", "instagram", "tiktok", "youtube", "snapchat", "x", "linkedin", "telegram", "instapay", "vodafone"]);
 
 function providerIcon(provider: ProviderId): ReactNode {
-  if (provider === "instapay" || provider === "vodafone") return <PaymentLogo provider={provider} />;
+  if (isLocalWalletProvider(provider)) return <PaymentLogo provider={provider} />;
   if (brandIcons.has(provider)) return <img src={`/icons/social/${provider}.svg`} alt="" width={24} height={24} />;
   const paths: Record<string, ReactNode> = {
     call: <path d="M6 3.8 9 3l2 4.5-2.1 1.7a13 13 0 0 0 5.9 5.9l1.7-2.1 4.5 2-.8 3a2.3 2.3 0 0 1-2.6 1.7C10 18.8 5.2 14 4.3 6.4A2.3 2.3 0 0 1 6 3.8Z" />,
@@ -40,7 +40,7 @@ function providerIcon(provider: ProviderId): ReactNode {
 
 function itemValidationError(item: EditorItem) {
   const provider = item.provider as ProviderId | undefined;
-  if (["whatsapp", "vodafone", "phone", "call"].includes(provider || "") && item.value.trim() && !normalizeEgyptianPhone(item.value)) return "Use a valid Egyptian mobile number, such as 01012345678.";
+  if ((["whatsapp", "phone", "call"].includes(provider || "") || isMobileWalletProvider(provider)) && item.value.trim() && !normalizeEgyptianPhone(item.value)) return "Use a valid Egyptian mobile number, such as 01012345678.";
   if (provider === "instagram" && item.value.trim() && !normalizeInstagram(item.value)) return "Use an Instagram handle or https://instagram.com/ URL.";
   if (provider === "instapay" && item.value.trim() && !normalizeProviderValue("instapay", item.value)) return "Use an InstaPay IPA such as name@instapay.";
   if (provider === "email" && item.value.trim() && !normalizeProviderValue("email", item.value)) return "Use a valid email address.";
@@ -69,10 +69,10 @@ export function ItemEditor({ section, items, onChange, businessId, track, mutati
       const isPayment = section.kind === "payments";
       const isHours = section.kind === "hours";
       const needsValue = isHours || valueProviders.has(provider);
-      const optionalUrl = !isHours && (isPayment || (isAction && ["whatsapp", "instapay", "vodafone", "bank"].includes(provider)) || (isSocial && provider === "whatsapp"));
+      const optionalUrl = !isHours && (isPayment || (isAction && (["whatsapp", "bank"].includes(provider) || isLocalWalletProvider(provider))) || (isSocial && provider === "whatsapp"));
       const needsUrl = !isHours && (!needsValue || optionalUrl);
       const valueLabel = isHours ? "Hours" : valueLabels[provider] || "Details";
-      const valuePlaceholder = provider === "call" || provider === "phone" || provider === "whatsapp" || provider === "vodafone" ? "01012345678"
+      const valuePlaceholder = provider === "call" || provider === "phone" || provider === "whatsapp" || isMobileWalletProvider(provider) ? "01012345678"
         : provider === "instapay" ? "name@instapay"
         : provider === "instagram" ? "@yourbusiness"
         : provider === "email" ? "name@example.com"
@@ -84,15 +84,15 @@ export function ItemEditor({ section, items, onChange, businessId, track, mutati
         <div className="live-item-fields">
           {(isAction || isSocial || isPayment) && <span className={`provider-inline-icon provider-${provider}`}>{providerIcon(provider)}</span>}
           <label className="field"><span>{isAction ? "Button label" : "Label"}</span><input id={`item-${section.id}-${item.id}-label`} name={`${section.id}.${item.id}.label`} value={item.label} placeholder={isHours ? "Day or period" : providerLabels[provider]} onChange={event => set(item.id, { label: event.target.value })} /></label>
-          {needsValue && <label className="field"><span>{valueLabel}</span><input name={`${section.id}.${item.id}.value`} dir={provider === "bank" ? "auto" : "ltr"} inputMode={provider === "call" || provider === "phone" || provider === "whatsapp" || provider === "vodafone" ? "tel" : undefined} value={item.value} placeholder={valuePlaceholder} onChange={event => {
+          {needsValue && <label className="field"><span>{valueLabel}</span><input name={`${section.id}.${item.id}.value`} dir={provider === "bank" ? "auto" : "ltr"} inputMode={provider === "call" || provider === "phone" || provider === "whatsapp" || isMobileWalletProvider(provider) ? "tel" : undefined} value={item.value} placeholder={valuePlaceholder} onChange={event => {
             const value = event.target.value;
             const patch: Partial<EditorItem> = { value };
             if (provider === "instagram") patch.url = normalizeInstagram(value);
             if (provider === "whatsapp") patch.url = item.url && item.url !== whatsappHref(item.value) ? item.url : whatsappHref(value);
             set(item.id, patch);
-          }} />{!isHours && <small className="field-hint">{provider === "bank" ? "These instructions stay available to your team. Visitors request transfer details directly from the business." : ["instapay", "vodafone"].includes(provider) ? "Optional fallback details. Add a provider link to open the payment destination directly." : `This destination stays tied to ${providerLabels[provider]} if you change the button label.`}</small>}</label>}
+          }} />{!isHours && <small className="field-hint">{provider === "bank" ? "These instructions stay available to your team. Visitors request transfer details directly from the business." : isLocalWalletProvider(provider) ? "Optional fallback details. Add a provider link to open the payment destination directly." : `This destination stays tied to ${providerLabels[provider]} if you change the button label.`}</small>}</label>}
           {section.kind === "gallery" && businessId && track && <ImageField businessId={businessId} label={`Gallery image ${index + 1}`} value={item.url} alt={item.alt || ""} onChange={url => set(item.id, { url })} onAltChange={alt => set(item.id, { alt })} track={track} />}
-          {needsUrl && section.kind !== "gallery" && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input id={`item-${section.id}-${item.id}-url`} name={`${section.id}.${item.id}.url`} dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(item.id, { url: event.target.value })} /><small className="field-hint">{["instapay", "vodafone", "bank"].includes(provider) ? "Paste the complete HTTPS payment link from your provider. Tapping the card opens that exact link; app opening depends on the provider and the phone. No details are copied when a link is set." : optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
+          {needsUrl && section.kind !== "gallery" && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input id={`item-${section.id}-${item.id}-url`} name={`${section.id}.${item.id}.url`} dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(item.id, { url: event.target.value })} /><small className="field-hint">{isPaymentProvider(provider) ? "Paste the complete HTTPS payment link from your provider. Tapping the card opens that exact link; app opening depends on the provider and the phone. No details are copied when a link is set." : optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
           {provider !== "custom" && !isHours && <label className="field"><span>Destination source</span><select value={item.profileOverride ? "override" : "default"} onChange={event => set(item.id, { profileOverride: event.target.value === "override" })}><option value="default">Use business default</option><option value="override">Override for this item</option></select><small>{item.profileOverride ? "Only this item changes." : "Editing these details updates the business default and other inherited items."}</small></label>}
           {!isHours && <details className="item-optional-text"><summary>Optional item text</summary><label className="field">Item subtitle<input name={`${section.id}.${item.id}.subtitle`} value={item.subtitle || ""} maxLength={500} onChange={event => set(item.id,{subtitle:event.target.value})}/></label><label className="field">Item badge<input name={`${section.id}.${item.id}.badge`} value={item.badge || ""} maxLength={80} onChange={event => set(item.id,{badge:event.target.value})}/></label></details>}
           {section.kind === "services" && <><label className="field">Service description<textarea value={item.value} maxLength={500} onChange={event => set(item.id,{value:event.target.value})}/></label><details><summary>Service buttons</summary><ItemEditor section={{id:`${section.id}-${item.id}`,kind:"quick_actions"}} items={item.actions || []} onChange={actions=>set(item.id,{actions})} mutationLocked={mutationLocked}/></details></>}

@@ -1,6 +1,11 @@
 import { safeUrl } from "./content";
 
-export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"linkedin"|"telegram"|"website"|"maps"|"reviews"|"booking"|"order"|"location"|"call"|"instapay"|"vodafone"|"phone"|"email"|"menu"|"custom"|"bank";
+export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"linkedin"|"telegram"|"website"|"maps"|"reviews"|"booking"|"order"|"location"|"call"|"instapay"|"vodafone"|"etisalat"|"orange"|"phone"|"email"|"menu"|"custom"|"bank";
+export type LocalWalletProvider = "instapay"|"vodafone"|"etisalat"|"orange";
+export type MobileWalletProvider = "vodafone"|"etisalat"|"orange";
+
+const localWalletProviders = new Set<LocalWalletProvider>(["instapay", "vodafone", "etisalat", "orange"]);
+const mobileWalletProviders = new Set<MobileWalletProvider>(["vodafone", "etisalat", "orange"]);
 
 export type DestinationStrategy = "verified_deep_link" | "external_url" | "copy_identifier" | "instructions";
 export type ProviderValueKind = "url" | "phone" | "email" | "identifier" | "instructions" | "none";
@@ -34,6 +39,8 @@ export const providerMetadata: Record<ProviderId, ProviderMetadata> = {
   call: { id: "call", label: "Call", icon: "phone", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   instapay: { id: "instapay", label: "InstaPay", icon: "instapay", valueKind: "identifier", sensitive: true, defaultDestinationStrategy: "copy_identifier", verifiedDeepLink: false, officialHelpUrl: "https://www.instapay.eg/?page_id=348&lang=en" },
   vodafone: { id: "vodafone", label: "Vodafone Cash", icon: "vodafone", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "copy_identifier", verifiedDeepLink: false, officialHelpUrl: "https://web.vodafone.com.eg/en/money-transfer" },
+  etisalat: { id: "etisalat", label: "Etisalat Cash", icon: "etisalat", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "copy_identifier", verifiedDeepLink: false, officialHelpUrl: "https://www.eand.com.eg/portal/etisalat_money/etisalat_money" },
+  orange: { id: "orange", label: "Orange Cash (Mobinil)", icon: "orange", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "copy_identifier", verifiedDeepLink: false, officialHelpUrl: "https://www.orange.eg/en/services/Orange-financial-services" },
   phone: { id: "phone", label: "Phone", icon: "phone", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   email: { id: "email", label: "Email", icon: "link", valueKind: "email", sensitive: true, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   menu: { id: "menu", label: "Menu", icon: "link", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
@@ -87,8 +94,16 @@ export function getProviderMetadata(provider: string | undefined): ProviderMetad
   return provider && Object.hasOwn(providerMetadata, provider) ? providerMetadata[provider as ProviderId] : undefined;
 }
 
+export function isLocalWalletProvider(provider: string | undefined): provider is LocalWalletProvider {
+  return Boolean(provider && localWalletProviders.has(provider as LocalWalletProvider));
+}
+
+export function isMobileWalletProvider(provider: string | undefined): provider is MobileWalletProvider {
+  return Boolean(provider && mobileWalletProviders.has(provider as MobileWalletProvider));
+}
+
 export function isPaymentProvider(provider: string | undefined) {
-  return provider === "instapay" || provider === "vodafone" || provider === "bank";
+  return isLocalWalletProvider(provider) || provider === "bank";
 }
 
 // Open the complete link supplied by the owner. Never construct recipient links
@@ -124,11 +139,11 @@ export function normalizeInstagram(value: string) {
 }
 export function normalizeSafeUrl(value: string) { const input = value.trim(); return safeUrl(input) && /^https?:$/i.test(new URL(input).protocol) ? input : ""; }
 export function normalizeProviderValue(provider: ProviderId, value: string) {
-  if (provider === "whatsapp" || provider === "vodafone" || provider === "phone") return normalizeEgyptianPhone(value);
+  if (provider === "whatsapp" || isMobileWalletProvider(provider) || provider === "phone") return normalizeEgyptianPhone(value);
   if (provider === "instagram") return normalizeInstagram(value);
   if (provider === "instapay") return /^[a-z0-9._-]{2,64}@[a-z0-9._-]{2,64}$/i.test(value.trim()) ? value.trim() : "";
   if (provider === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) ? value.trim() : "";
   if (["facebook","tiktok","youtube","snapchat","x","linkedin","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider)) return normalizeSafeUrl(value);
   return value.trim().slice(0, 500);
 }
-export const providerLabels: Record<ProviderId,string> = { whatsapp:"WhatsApp", facebook:"Facebook", instagram:"Instagram", tiktok:"TikTok", youtube:"YouTube", snapchat:"Snapchat", x:"X", linkedin:"LinkedIn", telegram:"Telegram", website:"Website", maps:"Google Maps", reviews:"Google Reviews", booking:"Booking", order:"Order", location:"Location", call:"Call", instapay:"InstaPay", vodafone:"Vodafone Cash", phone:"Phone", email:"Email", menu:"Menu", custom:"Custom URL", bank:"Bank instructions" };
+export const providerLabels: Record<ProviderId,string> = { whatsapp:"WhatsApp", facebook:"Facebook", instagram:"Instagram", tiktok:"TikTok", youtube:"YouTube", snapchat:"Snapchat", x:"X", linkedin:"LinkedIn", telegram:"Telegram", website:"Website", maps:"Google Maps", reviews:"Google Reviews", booking:"Booking", order:"Order", location:"Location", call:"Call", instapay:"InstaPay", vodafone:"Vodafone Cash", etisalat:"Etisalat Cash", orange:"Orange Cash (Mobinil)", phone:"Phone", email:"Email", menu:"Menu", custom:"Custom URL", bank:"Bank instructions" };

@@ -28,7 +28,7 @@ The internal owner team uses a protected admin application for business and page
 - Public pages and admin tooling support Arabic RTL and English LTR; Arabic is the current default.
 - Business pages are assembled from editable ordered sections and can represent contact, hours, social links, external payment information, links, services, galleries, reviews, and branches.
 - Cards support QR/NFC resolution, activation, deactivation, assignment and reassignment; batches support manufacturing asset and CSV exports.
-- Payments are business-provided external/contact details, including Egyptian options such as InstaPay, Vodafone Cash, and bank transfer. NexTap does not process payments.
+- Payments are business-provided external/contact details, including Egyptian options such as InstaPay, Vodafone Cash, Etisalat Cash (e& money), Orange Cash (Mobinil), and bank transfer. NexTap does not process payments.
 - Card resolution must preserve stable card destinations while observing current activation, assignment, and published-page state.
 - Preserve existing Supabase integrations and security boundaries. Do not add backend complexity or expose owner credentials.
 - Current support for card batch manufacturing is under development; do not remove its changes or depend on unapplied migrations without evidence from the local project.

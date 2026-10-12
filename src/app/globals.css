@@ -490,3 +490,9 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.24}
 .admin-list-loading .list-loading-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:18px;padding:15px 16px;border-bottom:1px solid var(--line)}
 
 .premium-public:lang(ar) .business-hero h1{font-family:Alexandria,system-ui,sans-serif}
+
+.provider-etisalat{background:#edf3ef;color:#245d43}.provider-orange{background:#fff0e5;color:#a64e00}
+.payment-icon-etisalat{color:#245d43}.payment-icon-orange{color:#a64e00}.payment-icon-orange img{width:34px;height:34px;object-fit:contain}
+.payment-logo-image{display:block;width:34px;height:34px;object-fit:contain}.provider-mark .payment-logo-image,.provider-inline-icon .payment-logo-image{width:27px;height:27px}.quick-action .payment-logo-image{width:28px;height:28px}
+.payment-logo-wordmark{display:grid;place-items:center;width:34px;height:34px;font-family:'DM Sans',sans-serif;font-weight:800;line-height:1}.payment-logo-wordmark-etisalat{color:#245d43;font-size:18px}.provider-mark .payment-logo-wordmark,.provider-inline-icon .payment-logo-wordmark{width:27px;height:27px;font-size:15px}.quick-action .payment-logo-wordmark{width:28px;height:28px;font-size:15px}
+.payment-logo-fallback-orange{background:#ff7900;color:#fff}.provider-inline-icon.provider-etisalat,.provider-inline-icon.provider-orange{background:transparent}

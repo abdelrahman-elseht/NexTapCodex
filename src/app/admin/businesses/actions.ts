@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/business/content";
-import { destinationStrategyFor, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
+import { destinationStrategyFor, isMobileWalletProvider, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
 import { z } from "zod";
 import { normalizeEditorItems } from "@/lib/business/editor-items";
 import { captureOperationError } from "@/lib/observability/operations";
@@ -111,8 +111,8 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
     if (url && !normalizeSafeUrl(url) && !(provider === "custom" && url.startsWith("/") && !url.startsWith("//") && !url.includes(".."))) throw new Error("Use a complete https:// destination URL.");
    } else if (provider === "instapay" && valueText && !normalizeProviderValue("instapay" as ProviderId, valueText)) {
     throw new Error("Use an InstaPay ID such as name@provider.");
-   } else if (provider === "vodafone" && valueText && !normalizeEgyptianPhone(valueText)) {
-    throw new Error("Use a valid Egyptian wallet number for Vodafone Cash.");
+   } else if (isMobileWalletProvider(provider) && valueText && !normalizeEgyptianPhone(valueText)) {
+    throw new Error("Use a valid Egyptian wallet number.");
    }
     const destinationStrategy = destinationStrategyFor(provider, typeof item.destinationStrategy === "string" ? item.destinationStrategy : undefined, url);
     return { id: item.id, subtitle: typeof item.subtitle === "string" ? item.subtitle.trim().slice(0,500) : undefined, badge: typeof item.badge === "string" ? item.badge.trim().slice(0,80) : undefined, ...(Array.isArray(item.actions) ? {actions: cleanSectionContent({items:item.actions}, "quick_actions", String(item.id)).items} : {}), label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };

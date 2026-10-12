@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { LocalWalletProvider } from "@/lib/business/providers";
 
-export function PaymentLogo({ provider }: { provider: "instapay" | "vodafone" }) {
-  const sources = [`/icons/payment/${provider}.svg`, `/icons/payment/${provider}.png`];
+export function PaymentLogo({ provider }: { provider: LocalWalletProvider }) {
+  const sources = provider === "etisalat"
+    ? []
+    : provider === "orange"
+      ? ["/icons/payment/orange.svg"]
+      : [`/icons/payment/${provider}.svg`, `/icons/payment/${provider}.png`];
   const [sourceIndex, setSourceIndex] = useState(0);
   const image = useRef<HTMLImageElement>(null);
   const source = sources[sourceIndex];
@@ -14,7 +19,9 @@ export function PaymentLogo({ provider }: { provider: "instapay" | "vodafone" })
     }
   }, [source, sourceIndex]);
   if (!source) {
-    return <span className={`payment-logo-fallback payment-logo-fallback-${provider}`} aria-hidden="true">{provider === "instapay" ? "IP" : "V"}</span>;
+    if (provider === "etisalat") return <span className="payment-logo-wordmark payment-logo-wordmark-etisalat" aria-hidden="true">e&amp;</span>;
+    const fallback = provider === "instapay" ? "IP" : provider === "vodafone" ? "V" : "O";
+    return <span className={`payment-logo-fallback payment-logo-fallback-${provider}`} aria-hidden="true">{fallback}</span>;
   }
-  return <img key={source} ref={image} src={source} onError={() => setSourceIndex(sourceIndex + 1)} alt="" width={36} height={36} />;
+  return <img key={source} ref={image} className="payment-logo-image" src={source} onError={() => setSourceIndex(sourceIndex + 1)} alt="" width={36} height={36} />;
 }

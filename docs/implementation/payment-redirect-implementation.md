@@ -4,23 +4,26 @@ Implemented on branch `beta01.6`, 2026-10-09; updated for the subsequent request
 
 ## Result
 
-- InstaPay and Vodafone Cash use the supplied monochrome SVGs in `public/icons/payment/`, including the owner picker and item editor. `PaymentLogo` falls back to the existing local PNG and then a local text mark. Failed preloads before React hydration also recover.
+- InstaPay, Vodafone Cash, Etisalat Cash, and Orange Cash use local provider marks in `public/icons/payment/` (the Etisalat `e&` wordmark is an in-code fallback), including the owner picker and item editor. `PaymentLogo` falls back to the existing local PNG or a local text mark. Failed preloads before React hydration also recover.
 - The payment card/logo is the accessible button. Labels remain optional; icon-only payments save, reload, preview and publish. The public copy-identifier button is removed from Payments and Quick Actions.
 - When a complete HTTPS provider link is set, Payments and payment Quick Actions open the exact supplied URL in the same tab. Link-only cards work without an IPA/wallet value; legacy copy settings do not override a supplied link. Draft saving records `external_url`. Provider app opening and recipient prefill are handled by the supplied link and the phone. No link/token is generated and no clipboard operation occurs for this action.
 - Without a link, `copy_identifier` performs an intentional clipboard action and shows identifier-free provider guidance. Clipboard denial explains recovery without revealing the saved recipient. `instructions` shows generic guidance and asks the payer to obtain details from the business; saved bank instructions remain in the protected editor.
 - The native dialog traps focus, supports Escape, restores focus, and provides Arabic RTL and English LTR text. All payment work must be completed in the official provider service. NexTap neither submits nor confirms payment.
 - Provider identity comes from provider metadata; labels never become provider IDs. Legacy social icons can resolve from destination hostnames. Shared profiles resolve across sections; explicit item-level overrides win. A label containing the saved recipient, including a differently formatted wallet number, is omitted publicly.
-- Shared InstaPay/Vodafone/bank HTTPS provider links and explicit item overrides work directly. Unsafe schemes, HTTP payment links, and URL credentials are rejected by the public payment resolver. Custom external checkout URLs retain their existing behavior. LinkedIn remains the existing monochrome local SVG.
+- Shared InstaPay/Vodafone/Etisalat/Orange/bank HTTPS provider links and explicit item overrides work directly. Unsafe schemes, HTTP payment links, and URL credentials are rejected by the public payment resolver. Custom external checkout URLs retain their existing behavior. LinkedIn remains the existing monochrome local SVG.
 
 ## Provider verification and asset provenance
 
-The current first-party pages were re-fetched successfully on 2026-10-09:
+The current first-party pages were reviewed on 2026-10-09 and 2026-10-12:
 
 - https://www.instapay.eg/?page_id=348&lang=en
 - https://www.instapay.eg/?lang=en
 - https://web.vodafone.com.eg/en/money-transfer
+- https://www.eand.com.eg/portal/index.html
+- https://www.eand.com.eg/portal/etisalat_money/etisalat_money
+- https://www.orange.eg/en/services/Orange-financial-services
 
-No recipient-prefill URL/URI grammar or token encoding is documented in the reviewed sources. The official InstaPay app supports an in-app IPA transfer; Vodafone documents the Egyptian `*9*7#` service flow. No reviewed InstaPay page establishes the ownership or token semantics of `ipn.eg/S/x/`. No link was manufactured or payment attempted. The user subsequently explicitly requested opening complete owner-supplied payment URLs. These are now supported as `external_url`, using the exact supplied destination in the same tab. This changes the earlier verification gate for owner-supplied links; the gate still applies to generating recipient-prefill links or claiming a provider-verified contract. Without a link, the instructions/copy fallback remains. App availability and handoff behavior belong to the provider link and operating system.
+No recipient-prefill URL/URI grammar or token encoding is documented in the reviewed sources. The official InstaPay app supports an in-app IPA transfer; Vodafone documents the Egyptian `*9*7#` service flow; Orange documents transfers through Max it or `#7115#`; and the e& portal identifies etisalat money, while its detailed wallet page returned HTTP 500 during the check. No reviewed InstaPay page establishes the ownership or token semantics of `ipn.eg/S/x/`. No link was manufactured or payment attempted. The user subsequently explicitly requested opening complete owner-supplied payment URLs. These are now supported as `external_url`, using the exact supplied destination in the same tab. This changes the earlier verification gate for owner-supplied links; the gate still applies to generating recipient-prefill links or claiming a provider-verified contract. Without a link, the instructions/copy fallback remains. App availability and handoff behavior belong to the provider link and operating system.
 
 See [provider-destination-research.md](../research/provider-destination-research.md) for source dates, supported surfaces, recipient inputs and the destination gate. See [payment asset sources](../../public/icons/payment/SOURCES.md) for original/final paths, retrieval dates, transformations, attribution and licensing decisions. Vodafone's supplied path exactly matches Simple Icons' CC0 geometry; the specific SVG Repo asset license could not be confirmed because requests returned HTTP 429. InstaPay's original author and redistribution terms remain undocumented; the supplied asset is incorporated as requested, with rights confirmation still required before shipping.
 

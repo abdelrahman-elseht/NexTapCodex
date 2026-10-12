@@ -18,6 +18,7 @@ const snapshot = { business: { name: "Coffee & Mood", category: "Coffee shop —
   ] } },
   { key: "payments", kind: "payments", title: "Easy & Secure Payments", position: 3, enabled: true, content: { items: [
     { label: "InstaPay", provider: "instapay", value: "coffee.mood@instapay" }, { label: "Vodafone Cash", provider: "vodafone", value: "+20 100 000 0000" },
+    { label: "Etisalat Cash", provider: "etisalat", value: "+20 111 000 0000" }, { label: "Orange Cash (Mobinil)", provider: "orange", value: "+20 120 000 0000" },
     { label: "Bank instructions", provider: "bank", value: "Ask the team for account details" },
   ] } },
   { key: "contact", kind: "contact", title: "Find Us", position: 4, enabled: true, content: { mapsUrl: "https://maps.google.com/?q=Cairo", address: "New Cairo, Egypt" } },

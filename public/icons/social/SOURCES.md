@@ -2,7 +2,7 @@
 Each SVG is distributed under CC0 1.0 Universal (public domain dedication). Simple Icons versions and brand records can be checked in its package metadata and icon source. Assets are stored locally so public profile views do not depend on a third-party icon CDN.
 Files currently included: Facebook, Google, Instagram, LinkedIn, Messenger, Pinterest, Snapchat, Telegram, TikTok, WhatsApp, X, and YouTube.
 
-LinkedIn is a locally hosted monochrome adaptation of the LinkedIn brand mark for icon-only use. InstaPay and Vodafone Cash use the supplied local monochrome SVGs under `public/icons/payment/`, with the existing local PNGs and a text mark as runtime fallbacks. See `../payment/SOURCES.md` for the current SVG provenance and source decisions.
+LinkedIn is a locally hosted monochrome adaptation of the LinkedIn brand mark for icon-only use. InstaPay and Vodafone Cash use the supplied local monochrome SVGs under `public/icons/payment/`; Orange Cash uses its local SVG, and Etisalat Cash uses an in-code wordmark. See `../payment/SOURCES.md` for the current payment asset provenance and source decisions.
 
 Payment asset sources and licensing:
 

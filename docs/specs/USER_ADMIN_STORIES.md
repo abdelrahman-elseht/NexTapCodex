@@ -84,7 +84,7 @@ The values must never be copied into this catalog, an E2E test file, a screensho
 
 ### PUB-04 — Visitor understands payment information
 
-**As an Egyptian customer,** I want to see external payment/contact instructions such as InstaPay, Vodafone Cash, bank transfer, or a custom note.
+**As an Egyptian customer,** I want to see external payment/contact instructions such as InstaPay, Vodafone Cash, Etisalat Cash (e& money), Orange Cash (Mobinil), bank transfer, or a custom note.
 
 **Acceptance:** Payment details are presented as informational external instructions; NexTap never implies that it processes the payment.
 

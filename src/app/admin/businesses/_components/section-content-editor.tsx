@@ -80,7 +80,7 @@ export function SectionContentEditor({ initialContent, kind: initialKind }: { in
 
   const kindHelp: Record<string, string> = {
     hours: "اكتب اليوم أو الفترة في الاسم، ومواعيدها في القيمة.",
-    payments: "أضف InstaPay أو Vodafone Cash أو تحويلاً بنكياً. NexTap لا يعالج المدفوعات.",
+    payments: "أضف InstaPay أو Vodafone Cash أو Etisalat Cash أو Orange Cash أو تحويلاً بنكياً. NexTap لا يعالج المدفوعات.",
     social: "ضع اسم الحساب والرابط الكامل للملف الاجتماعي.",
     gallery: "أضف وصف الصورة ورابطها الآمن.",
   };

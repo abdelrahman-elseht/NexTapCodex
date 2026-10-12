@@ -30,7 +30,11 @@ export function PaymentAction({ value, provider, mode = "copy", accessibleLabel,
     ? (ar ? "افتح تطبيق InstaPay الرسمي، واختر إرسال الأموال إلى عنوان الدفع IPA. أدخل المبلغ وتحقق من المستفيد ثم أكمل التحويل في التطبيق." : "Open the official InstaPay app and choose Send Money to a Payment Address (IPA). Enter the amount, verify the beneficiary, and complete the transfer in the app.")
     : provider === "vodafone"
       ? (ar ? "اطلب *9*7# واختر تحويل الأموال. أدخل رقم المستفيد والمبلغ، ثم أكمل التحويل في خدمة Vodafone Cash الرسمية." : "Dial *9*7# and choose money transfer. Enter the recipient number and amount, then complete the transfer in the official Vodafone Cash flow.")
-      : (ar ? "اطلب من النشاط تعليمات التحويل وبيانات المستفيد، وتحقق منها ثم أكمل التحويل في تطبيق البنك الرسمي." : "Ask the business for transfer instructions and recipient details. Verify them and complete the transfer in your bank's official app.");
+      : provider === "etisalat"
+        ? (ar ? "افتح خدمة e& money الرسمية (محفظة اتصالات كاش). أدخل رقم المستفيد والمبلغ، وتحقق من بياناته ثم أكمل التحويل داخل المحفظة." : "Open the official e& money wallet (Etisalat Cash). Enter the recipient's mobile number and amount, verify the recipient, then complete the transfer in the wallet.")
+        : provider === "orange"
+          ? (ar ? "افتح خدمة Orange Cash الرسمية (محفظة موبينيل سابقًا). اطلب #7115# أو استخدم تطبيق Max it، واختر تحويل الأموال، ثم أدخل رقم المستفيد والمبلغ وتحقق من بياناته قبل إتمام التحويل." : "Open the official Orange Cash wallet (formerly Mobinil). Use the Max it app or dial #7115#, choose money transfer, enter the recipient's mobile number and amount, verify the recipient, then complete the transfer.")
+          : (ar ? "اطلب من النشاط تعليمات التحويل وبيانات المستفيد، وتحقق منها ثم أكمل التحويل في تطبيق البنك الرسمي." : "Ask the business for transfer instructions and recipient details. Verify them and complete the transfer in your bank's official app.");
   return <>
     <button type="button" className={className} onClick={activate} aria-label={accessibleLabel} aria-haspopup="dialog">{children}</button>
     {open && createPortal(<dialog ref={dialog} className="payment-instructions-dialog" aria-labelledby={headingId} dir={ar ? "rtl" : "ltr"} lang={language} onClose={() => setOpen(false)} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
