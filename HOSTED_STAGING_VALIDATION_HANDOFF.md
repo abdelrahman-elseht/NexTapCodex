@@ -3,7 +3,7 @@
 Date: 2026-10-13
 Branch: `chore/hosted-staging-validation`
 Base: `chore/staging-schema-reconciliation`
-Latest commit: `6f7ea7c` (`fix: preserve CI flag for e2e app process`)
+Latest commit: `559bbb6` (`docs: annotate hosted staging validation status`)
 Draft PR: https://github.com/abdelrahman-elseht/NexTapCodex/pull/1
 
 ## Current result
