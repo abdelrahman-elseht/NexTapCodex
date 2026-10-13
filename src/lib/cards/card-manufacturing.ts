@@ -7,7 +7,7 @@ export type ManufacturingCard = {
   status: string;
 };
 
-export const CARD_ORIGIN = "https://nextab.services";
+export const CARD_ORIGIN = "https://nextap.services";
 
 function normalizeOrigin(value: string | null | undefined) {
   const candidate = value?.trim();

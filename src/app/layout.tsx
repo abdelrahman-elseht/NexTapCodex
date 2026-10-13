@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "NexTap | بطاقة واحدة، صفحة واحدة", template: "%s | NexTap" },
   description: "بطاقات NFC وQR تفتح صفحات أعمال سريعة للأنشطة المصرية.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nextab.services"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nextap.services"),
   openGraph: {
     siteName: "NexTap",
     type: "website",
