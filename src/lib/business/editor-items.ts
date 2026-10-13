@@ -1,0 +1,53 @@
+import { resolveProviderItem, type ProviderProfile } from "./providers";
+
+export type EditorItem = {
+  id: string;
+  label: string;
+  value: string;
+  url: string;
+  subtitle?: string;
+  badge?: string;
+  alt?: string;
+  provider?: string;
+  enabled?: boolean;
+  icon?: string;
+  destinationStrategy?: string;
+  profileOverride?: boolean;
+  actions?: EditorItem[];
+};
+
+export function createEditorItem(provider?: string): EditorItem {
+  return { id: crypto.randomUUID(), label: "", value: "", url: "", enabled: true, ...(provider ? { provider } : {}) };
+}
+
+// Upgrade legacy JSON once at the section boundary. IDs survive edits, moves and saves.
+// Hours and images are local content, never a source of provider destinations.
+export function normalizeEditorItems(value: unknown, kind: string, scope: string): EditorItem[] {
+  if (!Array.isArray(value)) return [];
+  const used = new Set<string>();
+  return value.slice(0, 100).flatMap((raw, index) => {
+    if (!raw || typeof raw !== "object") return [];
+    const item = raw as Record<string, unknown>;
+    const text = (key: string) => typeof item[key] === "string" ? item[key] as string : "";
+    let id = text("id") || `${scope}-item-${index}`;
+    while (used.has(id)) id += `-${index}`;
+    used.add(id);
+    const local = kind === "hours" || kind === "gallery";
+    return [{
+      id, label: text("label"), value: text("value"), url: kind === "hours" ? "" : text("url"),
+      subtitle: text("subtitle"), badge: text("badge"), alt: text("alt"), enabled: item.enabled !== false,
+      provider: local ? undefined : text("provider") || undefined,
+      icon: local ? undefined : text("icon") || undefined,
+      destinationStrategy: local ? undefined : text("destinationStrategy") || undefined,
+      profileOverride: local || item.profileOverride === true,
+      ...(kind === "services" ? { actions: normalizeEditorItems(item.actions, "quick_actions", id) } : {}),
+    }];
+  });
+}
+
+export function resolveSectionItems(items: EditorItem[], kind: string, profiles: Record<string, ProviderProfile>) {
+  if (kind === "hours" || kind === "gallery") return items;
+  return items.map(item => ({ ...resolveProviderItem(item, profiles), ...(item.actions ? {
+    actions: item.actions.map(action => resolveProviderItem(action, profiles)),
+  } : {}) }));
+}

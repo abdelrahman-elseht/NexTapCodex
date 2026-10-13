@@ -1,0 +1,91 @@
+name: Hosted Staging E2E
+
+on:
+  workflow_dispatch:
+    inputs:
+      allow_mutations:
+        description: Run acceptance journeys with new synthetic Staging fixtures
+        type: boolean
+        default: false
+  push:
+    branches:
+      - staging
+      # Bootstrap hosted validation before this workflow reaches the default branch.
+      # Remove this temporary branch after the candidate is accepted.
+      - chore/hosted-staging-validation
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hosted-e2e-staging
+  cancel-in-progress: false
+
+jobs:
+  hosted-e2e:
+    name: hosted E2E
+    if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/chore/hosted-staging-validation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: staging
+      url: https://staging.nextap.services
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx e2e-web install chromium --with-deps
+
+      - name: Run hosted staging E2E
+        env:
+          E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+          NEXTAP_ENV: staging
+          NEXT_PUBLIC_SITE_URL: https://staging.nextap.services
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          E2E_USER_OWNER_USERNAME: ${{ secrets.E2E_USER_OWNER_USERNAME }}
+          E2E_USER_OWNER_PASSWORD: ${{ secrets.E2E_USER_OWNER_PASSWORD }}
+          E2E_USER_NON_OWNER_USERNAME: ${{ secrets.E2E_USER_NON_OWNER_USERNAME }}
+          E2E_USER_NON_OWNER_PASSWORD: ${{ secrets.E2E_USER_NON_OWNER_PASSWORD }}
+          E2E_FIXTURE_JSON: ${{ vars.E2E_FIXTURE_JSON }}
+          E2E_FIXTURE_PATH: artifacts/hosted-staging/fixture.json
+          AUDIT_FIXTURE_PATH: artifacts/hosted-staging/fixture.json
+          E2E_ALLOW_MUTATIONS: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_mutations && 'true' || 'false' }}
+        run: |
+          node scripts/ci/hosted-staging-preflight.mjs
+          if [[ "$E2E_ALLOW_MUTATIONS" == "true" ]]; then
+            npm run test:e2e:seed
+          fi
+          test_status=0
+          # Failure diagnostics can contain card URLs or session data. Publish
+          # only the allowlisted summary, even when a journey fails.
+          npm run test:e2e:hosted -- --output artifacts/hosted-staging > artifacts/hosted-staging/runner.log 2>&1 || test_status=$?
+          node scripts/ci/hosted-staging-preflight.mjs --verify-deployment-only
+          exit "$test_status"
+
+      - name: Summarize hosted E2E without session data
+        if: always()
+        run: node scripts/ci/summarize-hosted-e2e.mjs
+
+      - name: Preserve sanitized hosted E2E summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hosted-staging-e2e-summary
+          path: artifacts/hosted-staging/summary.json
+          if-no-files-found: ignore
+          retention-days: 7

@@ -2,6 +2,10 @@
 
 NexTap is an Arabic-first owner dashboard for Egyptian businesses using permanent NFC/QR cards and editable microsites. It is a Next.js App Router modular monolith backed by Supabase Auth, PostgreSQL and Storage.
 
+## Repository navigation
+
+Start with the [architecture map](docs/ARCHITECTURE.md) for source ownership and placement rules, and the [documentation index](docs/README.md) for product specifications and implementation handovers. Application code lives in `src/`, automated checks in `tests/` and `supabase/tests/`, operational tools in `scripts/`, and source artwork in `assets/`.
+
 ## Local setup
 
 1. Install Node.js 20+ and run `npm ci`.
