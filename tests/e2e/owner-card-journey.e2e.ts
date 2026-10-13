@@ -14,7 +14,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
   await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
   await screen.getByRole("button", "دخول آمن").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
 
   const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   const originalSlug = `e2e-${suffix}`;
@@ -27,7 +27,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await screen.getByLabel("التصنيف").fill("E2E");
   await screen.getByLabel("رابط الصفحة").fill(originalSlug);
   await screen.getByRole("button", "إنشاء النشاط والصفحة").tap();
-  await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/);
+  await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/, { timeout: 30_000 });
 
   const firstBusinessId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
   const firstEditorPath = `/admin/businesses/${firstBusinessId}`;
@@ -66,6 +66,10 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await app.open(firstEditorPath);
   await screen.getByRole("button", "Publish").tap();
   await expect(screen.getByRole("status")).toContainText("Published");
+  // The earlier draft-isolation lookup may remain unpublished in the public
+  // resolver's five-second cache. Wait for the public read before navigating;
+  // a browser assertion alone cannot refresh that already-rendered response.
+  await expect.poll(async () => (await (await fetchApp(new URL(`/b/${originalSlug}`, app.baseUrl))).text()).includes(draftDescription), { timeout: 20_000 }).toBe(true);
   await app.open(`/b/${originalSlug}`);
   await expect(screen.getByText(draftDescription)).toBeVisible();
 
@@ -74,7 +78,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await browser.locator('input[name="name"]').fill(batchName);
   await screen.getByRole("spinbutton").fill("1");
   await screen.getByRole("button", "إنشاء دفعة").tap();
-  await expect(browser).toHaveURL(/\/admin\/cards\/batches\/[0-9a-f-]+\?created=1/);
+  await expect(browser).toHaveURL(/\/admin\/cards\/batches\/[0-9a-f-]+\?created=1/, { timeout: 30_000 });
   const createdBatchId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
   expect(createdBatchId).toMatch(/^[0-9a-f-]{36}$/i);
   await app.open(`/admin/cards?batch=${createdBatchId}&page_search=${originalSlug}`);
@@ -153,7 +157,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await screen.getByLabel("التصنيف").fill("E2E");
   await screen.getByLabel("رابط الصفحة").fill(secondSlug);
   await screen.getByRole("button", "إنشاء النشاط والصفحة").tap();
-  await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/);
+  await expect(browser).toHaveURL(/\/admin\/businesses\/[0-9a-f-]+\?created=1/, { timeout: 30_000 });
   const secondBusinessId = await browser.evaluate(() => location.pathname.split("/").at(-1) || "");
   await expect(browser.locator('a[href*="/preview?page="]')).toBeVisible();
   const secondPageId = await browser.evaluate(() => {

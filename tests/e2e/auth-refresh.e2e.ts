@@ -7,7 +7,7 @@ test("expired cookie sessions refresh on admin routes and sign-out removes owner
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
   await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
   await screen.getByRole("button", "دخول آمن").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
   await expect(screen.getByRole("heading", "لوحة التحكم")).toBeVisible();
   const cookies = (await browser.cookies()).filter(cookie => /sb-.*-auth-token/.test(cookie.name)).sort((a,b) => a.name.localeCompare(b.name));
   expect(cookies.length > 0).toBe(true);

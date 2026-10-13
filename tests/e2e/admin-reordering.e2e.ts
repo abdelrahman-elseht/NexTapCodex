@@ -11,7 +11,7 @@ test("an owner can reorder sections, save them, and keep the order on reload", a
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
   await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
   await screen.getByRole("button", "دخول آمن").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
 
   // Keep this mutation independent from customer records and other test suites.
   const suffix = Date.now().toString(36);

@@ -12,7 +12,7 @@ test("the only eligible published page is selected for card activation", async (
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
   await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
   await screen.getByRole("button", "دخول آمن").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
 
   await app.open("/admin/cards");
   await expect(screen.getByRole("heading", "البحث والتصفية")).toBeVisible();

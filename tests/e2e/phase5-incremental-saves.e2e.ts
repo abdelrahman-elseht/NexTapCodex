@@ -11,7 +11,7 @@ test("phase 5 keeps section edits and order across incremental saves", async ({ 
   await screen.getByLabel("Email address").fill(credentials.user("owner").username);
   await screen.getByLabel("Password").fill(credentials.user("owner").password);
   await screen.getByRole("button", "Sign in securely").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
 
   const suffix = Date.now().toString(36);
   await app.open("/admin/businesses/new");

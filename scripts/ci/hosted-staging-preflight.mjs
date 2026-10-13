@@ -16,7 +16,7 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL !== "https://flkakuysakgwfoemgbwn.supab
 if (process.env.E2E_BASE_URL !== "https://staging.nextap.services") {
   throw new Error("Hosted CI must target the stable Staging origin.");
 }
-for (const name of ["VERCEL_AUTOMATION_BYPASS_SECRET", "E2E_USER_OWNER_USERNAME", "E2E_USER_OWNER_PASSWORD"]) {
+for (const name of ["VERCEL_AUTOMATION_BYPASS_SECRET", "E2E_USER_OWNER_USERNAME", "E2E_USER_OWNER_PASSWORD", "E2E_USER_NON_OWNER_USERNAME", "E2E_USER_NON_OWNER_PASSWORD"]) {
   if (!process.env[name]?.trim()) throw new Error(`Missing protected Staging secret: ${name}`);
 }
 await verifyDeployment({ wait: true });

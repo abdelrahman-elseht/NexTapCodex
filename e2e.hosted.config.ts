@@ -39,5 +39,9 @@ export default {
       username: process.env.E2E_USER_OWNER_USERNAME ?? "",
       password: () => process.env.E2E_USER_OWNER_PASSWORD ?? "",
     },
+    nonOwner: {
+      username: process.env.E2E_USER_NON_OWNER_USERNAME ?? "",
+      password: () => process.env.E2E_USER_NON_OWNER_PASSWORD ?? "",
+    },
   },
 } satisfies E2EConfig;

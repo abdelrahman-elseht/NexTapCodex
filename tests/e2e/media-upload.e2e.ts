@@ -8,7 +8,7 @@ test("managed images survive upload, draft reload and publication, with pending-
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
   await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
   await screen.getByRole("button", "دخول آمن").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
   const slug = `media-qa-${Date.now().toString(36)}`;
   await app.open("/admin/businesses/new");
   await screen.getByLabel("اسم النشاط").fill("Media QA illustrative fixture");
@@ -74,7 +74,7 @@ test("newer edits remain dirty during save; failures retry without losing input"
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
   await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
   await screen.getByRole("button", "دخول آمن").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
   const fs = await import("node:fs/promises");
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH || ".e2e/optimization-phase123/fixture.json", "utf8"));
   await app.open(`/admin/businesses/${fixture.businessId}`);

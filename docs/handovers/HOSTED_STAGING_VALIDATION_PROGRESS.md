@@ -1,6 +1,6 @@
 # Hosted Staging validation progress
 
-Updated: October 13, 2026. This is progress evidence, not Staging acceptance.
+Updated: October 14, 2026 (Cairo). This is progress evidence, not Staging acceptance.
 
 ## Reviewed implementation
 
@@ -66,14 +66,46 @@ migrations were applied. Never link/mutate Production from a local shell.
 Sentry access to `abdelrahman-0n/nextap` works. Hosted DSN/environment setup and
 capture evidence remain pending under the post-acceptance provider steps.
 
+## Protected hosted results and follow-up
+
+Candidate `c1fc2e5c26d19de6c5d721411074f1f70b724712` was pushed and its Ready
+deployment is `dpl_6Uc4RzByxw3TSDEmisiqcMSzWR7D`, hosted at
+`nextap-f18cnbq2y-abdelrahman-867e.vercel.app`. The stable Staging alias served
+that exact commit before and after both protected GitHub runs.
+
+- [Read-only run 38464692426](https://github.com/abdelrahman-elseht/NexTapCodex/actions/runs/38464692426)
+  passed 44 checks, failed 0 and skipped 20 (18 mutation cases and 2 controlled
+  Sentry diagnostics). Nothing was unselected.
+- [Mutation run 38464934917](https://github.com/abdelrahman-elseht/NexTapCodex/actions/runs/38464934917)
+  passed 57, failed 4, was flaky in 1 case and skipped 2 Sentry diagnostics.
+  It is a failed acceptance run, despite its successful identity verification.
+- The editor-actions failures reproduced a stale assertion: the test sets a
+  custom bank label to `Bank transfer` and incorrectly expects the default
+  `Bank instructions`. The expectation now preserves the custom label.
+- The card journey read an unpublished page before publishing and then opened
+  the cached negative response immediately after publishing. Its assertion
+  cannot refresh that rendered response. A bounded HTTP content poll now waits
+  for the publication before navigating, as other publishing journeys do.
+- Hosted owner login occasionally exceeds the runner's default five-second
+  assertion. Login URL checks now allow 30 seconds; failures still fail the run.
+
+A synthetic Staging-only non-owner was provisioned with generated credentials
+stored directly in GitHub Environment secrets `E2E_USER_NON_OWNER_USERNAME` and
+`E2E_USER_NON_OWNER_PASSWORD`. It is not on `owner_users`. Direct verification
+proved dashboard denial (307 to unauthorized login), upload API denial (401)
+and zero visible business/owner rows under RLS. The protected suite now includes
+UI rejection and direct authenticated-session denial coverage for this fixture.
+Staging has two Auth users and one owner; Production still has no Auth users,
+owners, businesses or Storage objects at the isolation readback.
+
 ## Remaining acceptance and release gates
 
 1. Push the reviewed candidate and verify the new Ready deployment identity.
 2. Approve the protected GitHub hosted job and inspect its sanitized summary.
 3. Dispatch mutation acceptance explicitly with `allow_mutations=true`, approve
    the environment gate and seed a fresh uniquely namespaced synthetic fixture.
-4. Complete non-owner authenticated denial coverage, runtime publication/RPC
-   evidence and monitoring acceptance; document diagnostic skips explicitly.
+4. Verify automated non-owner denial and corrected mutation journeys on the new
+   deployed SHA; retain publication/RPC evidence and document monitoring skips.
 5. Only after acceptance, obtain release/merge authorization before advancing
    `staging`, binding its domain, creating `main` or changing Production Branch.
    The user's standing instruction remains: do not merge anything.

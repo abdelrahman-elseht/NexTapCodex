@@ -9,7 +9,7 @@ test("card confirmation finishes in a production build", async ({ app, screen, b
   await screen.getByLabel("Email address").fill(credentials.user("owner").username);
   await screen.getByLabel("Password").fill(credentials.user("owner").password);
   await screen.getByRole("button", "Sign in securely").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
   await app.open(`/admin/cards?batch=${fixture.batchId}&page_search=${fixture.slug}`);
   await expect(browser.locator('.card-assignment-form select')).toHaveValue(fixture.pageId);
   await browser.locator('.card-assignment-form').getByRole("button", "تفعيل / نقل").tap();

@@ -59,6 +59,8 @@ jobs:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           E2E_USER_OWNER_USERNAME: ${{ secrets.E2E_USER_OWNER_USERNAME }}
           E2E_USER_OWNER_PASSWORD: ${{ secrets.E2E_USER_OWNER_PASSWORD }}
+          E2E_USER_NON_OWNER_USERNAME: ${{ secrets.E2E_USER_NON_OWNER_USERNAME }}
+          E2E_USER_NON_OWNER_PASSWORD: ${{ secrets.E2E_USER_NON_OWNER_PASSWORD }}
           E2E_FIXTURE_JSON: ${{ vars.E2E_FIXTURE_JSON }}
           E2E_FIXTURE_PATH: artifacts/hosted-staging/fixture.json
           AUDIT_FIXTURE_PATH: artifacts/hosted-staging/fixture.json

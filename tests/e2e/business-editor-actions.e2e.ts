@@ -12,7 +12,7 @@ test("owners can configure provider-aware actions, social links, and payment lin
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
   await screen.getByLabel("كلمة المرور").fill(credentials.user("owner").password);
   await screen.getByRole("button", "دخول آمن").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
 
   const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   const slug = `editor-${suffix}`;
@@ -191,7 +191,7 @@ test("owners can configure provider-aware actions, social links, and payment lin
   expect(publicEvidence.paymentCount).toBe(6);
   expect(publicEvidence.paymentActions).toHaveLength(4);
   expect(publicEvidence.paymentActions[0]).toEqual({ label: "Wallet", text: "Wallet" });
-  expect(publicEvidence.paymentActions.map(action => action.label)).toEqual(["Wallet", "Etisalat Cash", "Orange Cash (Mobinil)", "Bank instructions"]);
+  expect(publicEvidence.paymentActions.map(action => action.label)).toEqual(["Wallet", "Etisalat Cash", "Orange Cash (Mobinil)", "Bank transfer"]);
   expect(publicEvidence.paymentHrefs).toContain(paymentUrl);
   expect(publicEvidence.paymentActions.every(action => !/nextap@instapay|01055556666|01100000000|01200000000|Copy identifier/i.test(`${action.label} ${action.text}`))).toBe(true);
   expect(publicEvidence.paymentHrefs.every(href => !/nextap@instapay|01055556666|01100000000|01200000000/i.test(href))).toBe(true);
