@@ -1,5 +1,11 @@
 # NexTap — Hosted Staging Deployment & Validation
 
+Current status and continuation instructions:
+[Staging validation and production release handoff](STAGING_VALIDATION_AND_PRODUCTION_RELEASE_HANDOFF.md).
+The task below is historical; its domain spelling and original DNS restrictions
+predate the owner's authorized corrections. Use the current handoff for
+resource state and remaining work.
+
 Work on a new branch:
 
 `chore/hosted-staging-validation`
@@ -146,30 +152,16 @@ Stop after successful hosted validation. Do not activate Production.
 
 ## Execution status — 2026-10-13
 
-The implementation work is recorded in the companion
-[`HOSTED_STAGING_VALIDATION_HANDOFF.md`](../../HOSTED_STAGING_VALIDATION_HANDOFF.md).
-The repository and Staging database checks pass, but the hosted gate remains
-blocked until Vercel produces a deployment whose API target is `preview`.
-Vercel classified both Git-triggered and direct `--target preview` attempts as
-`production`; each was removed immediately. There are currently no Vercel
-deployments or aliases, and no Production DNS or Supabase data was changed.
+The current implementation and release runbook is
+[Staging validation and production release handoff](STAGING_VALIDATION_AND_PRODUCTION_RELEASE_HANDOFF.md).
 
-The GitHub quality check passes after forwarding `CI=true` into the e2e app
-process. Local typecheck, lint, unit tests, database contracts, production
-build, and desktop/mobile e2e checks also pass. Sentry Staging searches found
-no errors, logs, or traces in the last 24 hours.
+A Ready deployment now exists with API target `preview`:
+`dpl_CCGxHYZ9hGgeRZRz9cSfNPQo7W3r`, source commit `814b589`.
+`staging.nextap.services` is bound to `chore/hosted-staging-validation`.
+Apex/admin/staging DNS and certificates work. Hostinger remains authoritative;
+no nameserver change is needed.
 
-Hostinger DNS must contain only this staging record:
-
-```text
-Type: CNAME
-Name: staging
-Target: 2d714148d09163d5.vercel-dns-017.com.
-TTL: default
-```
-
-Do not change nameservers, the apex `@` record, Production domains, or mail
-records. Cloudflare has only a pending/unresolvable zone and is not the active
-DNS authority. After DNS resolves, add the generated Preview origin and
-`https://staging.nextab.services/auth/callback` to Supabase Staging Auth, then
-rerun the hosted desktop/mobile journeys and complete the remaining checklist.
+Hosted Auth and complete desktop/mobile journeys remain pending. The existing
+E2E configuration runs locally, and inspected Vercel metadata contains no
+Sentry DSNs. These gaps and prior local/CI evidence are recorded in the current
+handoff. Production activation remains pending.
