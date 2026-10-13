@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test:e2e": "e2e run",
+    "test:e2e:hosted": "e2e run --config e2e.hosted.config.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

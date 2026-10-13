@@ -5,11 +5,7 @@ on:
   push:
     branches:
       - main
-      - beta01.5
-      - beta01.6
-      - integration/preprod
       - staging
-      - chore/production-setup
 
 permissions:
   contents: read

@@ -10,6 +10,7 @@
 - [Launch architecture handoff](handovers/LAUNCH_ARCHITECTURE_HANDOFF.md): security, cache parity, analytics, and operational launch gates.
 - [Staging schema reconciliation handoff](handovers/STAGING_SCHEMA_RECONCILIATION_HANDOFF.md): Staging migration history, rollout evidence, and hosted validation gates.
 - [Staging validation and production release handoff](handovers/STAGING_VALIDATION_AND_PRODUCTION_RELEASE_HANDOFF.md): current DNS/TLS and Preview state, remaining Auth and hosted tests, first release, rollback, and ongoing staging workflow.
+- [Environment separation and CI/CD handoff](handovers/ENVIRONMENT_SEPARATION_AND_CICD_HANDOFF.md): branch, code, data, Auth, Storage, migration, CI/CD, release, and rollback guardrails for isolated Staging and Production.
 - [Optimization handover](handovers/optimization-experience-handoff.md): optimization phases and follow-up verification.
 - [Business Editor reliability handover](handovers/BUSINESS_EDITOR_RELIABILITY_HANDOFF.md): phases 1–3, payment-link limitations, regression results, and browser evidence.
 - [Implementation reports](implementation/): detailed reports for completed changes.

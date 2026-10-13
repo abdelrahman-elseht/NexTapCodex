@@ -10,6 +10,12 @@ test("landing page links to the demo and uses a sample fallback when no contact 
   await expect(screen.getByRole("link", "تواصل عبر واتساب")).toHaveCount(0);
   await expect(screen.getByRole("img", "NexTap")).toHaveCount(3);
 
+  const ownerEntryPoints = await browser.evaluate(() => Array.from(document.querySelectorAll("a, button"), element => ({
+    href: element instanceof HTMLAnchorElement ? element.getAttribute("href") : null,
+    text: element.textContent?.trim() || "",
+  })).filter(({ href }) => href && (/^\/admin(?:\/|$)/.test(href) || /^\/login(?:\?|$)/.test(href))));
+  expect(ownerEntryPoints).toEqual([]);
+
   const widths = await browser.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
     content: document.documentElement.scrollWidth,

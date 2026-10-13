@@ -34,7 +34,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
   const { lang } = await searchParams;
   const english = lang === "en";
   const copy = english ? {
-    navHow: "How it works", navBenefits: "What you get", navDemo: "See an example", navLogin: "Team sign in",
+    navHow: "How it works", navBenefits: "What you get", navDemo: "See an example",
     headline: <>One tap opens <strong>your business.</strong></>,
     lead: "An NFC card and QR code open one page for your business. Customers find contact details, location, services and opening hours right from their phone.",
     demo: "See a sample page", discover: "Explore how it works",
@@ -59,9 +59,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
     audience: [["For customers", "WhatsApp · calls · directions · services · reviews"], ["For your team", "Content · branches · publishing · card status"], ["For production", "QR and NFC links lead to the same page"]],
     ctaTitle: "Start with your business page.", ctaIntro: "Explore a mobile example, then contact NexTap if you have a team contact number.",
     contact: "Contact NexTap", example: "Open the example page", footerLine: "Digital business cards for Egyptian businesses",
-    footerExample: "Example", footerTeam: "Team sign in", footerContact: "Contact",
+    footerExample: "Example", footerContact: "Contact",
   } : {
-    navHow: "كيف تعمل", navBenefits: "ما الذي تقدمه", navDemo: "صفحة تجريبية", navLogin: "دخول فريق NexTap",
+    navHow: "كيف تعمل", navBenefits: "ما الذي تقدمه", navDemo: "صفحة تجريبية",
     headline: <>لمسة واحدة تفتح <strong>باب عملك.</strong></>,
     lead: "بطاقة NFC ورمز QR يفتحان صفحة واحدة لنشاطك. يجد عميلك التواصل والموقع والخدمات ومواعيد العمل من هاتفه مباشرة.",
     demo: "شاهد صفحة تجريبية", discover: "اكتشف طريقة العمل",
@@ -86,7 +86,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
     audience: [["للزائر", "واتساب · اتصال · اتجاهات · خدمات · تقييمات"], ["لفريق النشاط", "إدارة المحتوى · الفروع · النشر · حالة البطاقات"], ["للتشغيل", "روابط QR وNFC تقود إلى الصفحة نفسها"]],
     ctaTitle: "ابدأ من صفحة نشاطك.", ctaIntro: "استكشف نموذجاً على الهاتف، ثم تواصل مع فريق NexTap إذا كان رقم التواصل متاحاً.",
     contact: "تواصل عبر واتساب", example: "افتح الصفحة التجريبية", footerLine: "بطاقات أعمال رقمية للأنشطة المصرية",
-    footerExample: "النموذج", footerTeam: "دخول الفريق", footerContact: "التواصل",
+    footerExample: "النموذج", footerContact: "التواصل",
   };
 
   const whatsappNumber = (process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "").replace(/\D/g, "");
@@ -106,7 +106,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             <a href="#benefits">{copy.navBenefits}</a>
             <Link href="/demo">{copy.navDemo}</Link>
             <Link className="language-switch" href={languageHref}>{english ? "العربية" : "English"}</Link>
-            <Link className="button secondary" href={"/login?lang=" + (english ? "en" : "ar")}>{copy.navLogin}</Link>
           </nav>
         </div>
       </header>
@@ -170,7 +169,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           <BrandLogo />
           <span>{copy.footerLine}</span>
           <nav className="footer-links" aria-label={english ? "NexTap links" : "روابط NexTap"}>
-            <Link href="/demo">{copy.footerExample}</Link><Link href={"/login?lang=" + (english ? "en" : "ar")}>{copy.footerTeam}</Link><a href="#contact">{copy.footerContact}</a>
+            <Link href="/demo">{copy.footerExample}</Link><a href="#contact">{copy.footerContact}</a>
           </nav>
           <span>© NexTap</span>
         </div>
