@@ -1,3 +1,4 @@
+import { fetchApp } from "./_helpers/http";
 import { afterEach, test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 import { createClient } from "@supabase/supabase-js";
@@ -167,7 +168,7 @@ test("hours, repeated providers, services and optional text survive draft and pu
   await screen.getByRole("button", "Publish", { exact: true }).tap();
   await expect(screen.getByRole("status")).toContainText("Published", { timeout: 30_000 });
   // The publication resolver deliberately caches even unpublished lookups for 5s.
-  await expect.poll(async () => (await fetch(new URL(`/b/${slug}`, app.baseUrl))).status, { timeout: 20_000 }).toBe(200);
+  await expect.poll(async () => (await fetchApp(new URL(`/b/${slug}`, app.baseUrl))).status, { timeout: 20_000 }).toBe(200);
   await app.open(`/b/${slug}`);
   await expect(screen.getByText("09:00–17:00", { exact: true }).last()).toBeVisible();
   await expect(screen.getByText("11:00–19:00", { exact: true })).toBeVisible();
@@ -196,7 +197,7 @@ test("hours, repeated providers, services and optional text survive draft and pu
   await app.open(editorPath);
   await screen.getByRole("button", "Publish", { exact: true }).tap();
   await expect(screen.getByRole("status")).toContainText("Published", { timeout: 30_000 });
-  await expect.poll(async () => (await (await fetch(new URL(`/b/${slug}`, app.baseUrl))).text()).includes('class="payment-link-help"'), { timeout: 20_000 }).toBe(true);
+  await expect.poll(async () => (await (await fetchApp(new URL(`/b/${slug}`, app.baseUrl))).text()).includes('class="payment-link-help"'), { timeout: 20_000 }).toBe(true);
   await app.open(`/b/${slug}`);
   await browser.locator(".payment-link-help summary").tap();
   await expect(screen.getByText(/Open supported links/)).toBeVisible();

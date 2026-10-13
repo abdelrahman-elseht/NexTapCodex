@@ -1,3 +1,4 @@
+import { fetchApp } from "./_helpers/http";
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
@@ -160,7 +161,7 @@ test("owners can configure provider-aware actions, social links, and payment lin
   await screen.getByRole("button", "Publish").tap();
   await expect(screen.getByRole("status")).toContainText("Published");
   // A prior unpublished lookup remains cached for up to five seconds.
-  await expect.poll(async () => (await fetch(new URL(`/b/${slug}`, app.baseUrl))).status, { timeout: 20_000 }).toBe(200);
+  await expect.poll(async () => (await fetchApp(new URL(`/b/${slug}`, app.baseUrl))).status, { timeout: 20_000 }).toBe(200);
   await app.open(`/b/${slug}`);
   await expect(screen.getByRole("heading", `E2E Editor ${suffix}`)).toBeVisible();
   const publicEvidence = await browser.evaluate(() => {
@@ -215,8 +216,8 @@ test("owners can configure provider-aware actions, social links, and payment lin
   await paymentLink.press("Enter");
   await expect(browser).toHaveURL(paymentUrl);
 
-  const iconResponse = await fetch(new URL("/icons/social/linkedin.svg", app.baseUrl));
-  const backgroundResponse = await fetch(new URL("/payment-nfc.webp", app.baseUrl));
+  const iconResponse = await fetchApp(new URL("/icons/social/linkedin.svg", app.baseUrl));
+  const backgroundResponse = await fetchApp(new URL("/payment-nfc.webp", app.baseUrl));
   expect(iconResponse.status).toBe(200);
   expect(backgroundResponse.status).toBe(200);
 });

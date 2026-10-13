@@ -1,3 +1,4 @@
+import { fetchApp } from "./_helpers/http";
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
@@ -9,7 +10,7 @@ test("controlled Sentry client and server checks stay isolated to the diagnostic
   await screen.getByRole("button", "Send controlled client error").tap();
   await expect(screen.getByRole("status")).toContainText("Client status: sent");
 
-  const response = await fetch(new URL("/api/sentry-example-api", app.baseUrl));
+  const response = await fetchApp(new URL("/api/sentry-example-api", app.baseUrl));
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchObject({ ok: true });
 });

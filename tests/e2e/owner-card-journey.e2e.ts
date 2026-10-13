@@ -1,3 +1,4 @@
+import { fetchApp } from "./_helpers/http";
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
@@ -126,7 +127,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
 
   const baseUrl = app.baseUrl;
   if (!baseUrl) throw new Error("The E2E app target has no base URL.");
-  const initialRedirect = await fetch(new URL(`/c/${card.token}?via=qr`, baseUrl), { redirect: "manual" });
+  const initialRedirect = await fetchApp(new URL(`/c/${card.token}?via=qr`, baseUrl), { redirect: "manual" });
   expect(initialRedirect.status).toBe(302);
   expect(initialRedirect.headers.get("location")).toContain(`/b/${originalSlug}?via=qr`);
   await app.open(`/c/${card.token}?via=qr`);
@@ -142,7 +143,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await app.open(`/b/${originalSlug}`);
   await expect(screen.getByText(draftDescription)).toBeVisible();
 
-  const renamedRedirect = await fetch(new URL(`/c/${card.token}?via=qr`, baseUrl), { redirect: "manual" });
+  const renamedRedirect = await fetchApp(new URL(`/c/${card.token}?via=qr`, baseUrl), { redirect: "manual" });
   expect(renamedRedirect.status).toBe(302);
   expect(renamedRedirect.headers.get("location")).toContain(`/b/${renamedSlug}?via=qr`);
   expect(renamedRedirect.headers.get("cache-control")).toContain("no-store");
@@ -171,7 +172,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await screen.getByRole("button", "تأكيد التعيين").tap();
   await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/, { timeout: 20_000 });
 
-  const reassignedRedirect = await fetch(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
+  const reassignedRedirect = await fetchApp(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
   expect(reassignedRedirect.status).toBe(302);
   expect(reassignedRedirect.headers.get("location")).toContain(`/b/${secondSlug}?via=nfc`);
   expect(reassignedRedirect.headers.get("cache-control")).toContain("no-store");
@@ -185,7 +186,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await browser.locator("tr").filter({ hasText: card.serial }).getByRole("button", "تعطيل", { exact: true }).tap();
   await screen.getByRole("button", "تعطيل البطاقة", { exact: true }).tap();
   await expect(browser.locator('[role="status"].success')).toContainText("تم تحديث تعيين البطاقة.");
-  const disabledRedirect = await fetch(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
+  const disabledRedirect = await fetchApp(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
   expect(disabledRedirect.status).toBe(302);
   expect(disabledRedirect.headers.get("location")).toContain("/card/unavailable?state=inactive");
   expect(disabledRedirect.headers.get("cache-control")).toContain("no-store");

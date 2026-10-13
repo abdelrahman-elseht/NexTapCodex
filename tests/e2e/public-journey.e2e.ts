@@ -1,3 +1,4 @@
+import { fetchApp } from "./_helpers/http";
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
@@ -10,17 +11,27 @@ test("landing page links to the demo and uses a sample fallback when no contact 
   await expect(screen.getByRole("link", "تواصل عبر واتساب")).toHaveCount(0);
   await expect(screen.getByRole("img", "NexTap")).toHaveCount(3);
 
-  const ownerEntryPoints = await browser.evaluate(() => Array.from(document.querySelectorAll("a, button"), element => ({
-    href: element instanceof HTMLAnchorElement ? element.getAttribute("href") : null,
-    text: element.textContent?.trim() || "",
-  })).filter(({ href }) => href && (/^\/admin(?:\/|$)/.test(href) || /^\/login(?:\?|$)/.test(href))));
-  expect(ownerEntryPoints).toEqual([]);
-
   const widths = await browser.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
     content: document.documentElement.scrollWidth,
   }));
   expect(widths.content).toBeLessThanOrEqual(widths.viewport);
+});
+
+test("public landing navigation has no owner entry points in either language", async ({ app, browser }) => {
+  for (const route of ["/", "/?lang=en"]) {
+    await app.open(route);
+    const ownerEntryPoints = await browser.evaluate(() => {
+      const controls = document.querySelectorAll('a, button, form, [role="link"], [role="menuitem"], [data-href], [data-url]');
+      return Array.from(controls).flatMap(element => ["href", "formaction", "action", "data-href", "data-url"].flatMap(attribute => {
+        const value = element.getAttribute(attribute);
+        if (!value) return [];
+        const pathname = decodeURIComponent(new URL(value, location.href).pathname);
+        return /^\/(?:admin|login)(?:\/|$)/i.test(pathname) ? [{ tag: element.tagName, attribute, pathname }] : [];
+      }));
+    });
+    expect(ownerEntryPoints).toEqual([]);
+  }
 });
 
 test("demo presents its map action and returns to the landing page", async ({ app, screen, browser }) => {
@@ -29,7 +40,7 @@ test("demo presents its map action and returns to the landing page", async ({ ap
   await expect(screen.getByRole("heading", "Coffee & Mood")).toBeVisible();
   const iconHref = await browser.evaluate(() => document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.getAttribute("href") || "");
   expect(iconHref).toMatch(/^\/icon\.svg/);
-  const iconResponse = await fetch(new URL(iconHref, app.baseUrl));
+  const iconResponse = await fetchApp(new URL(iconHref, app.baseUrl));
   expect(iconResponse.status).toBe(200);
   await expect(screen.getByRole("link", "Google Maps").first()).toHaveAttribute("href", "https://maps.google.com/?q=Cairo");
   await expect(screen.getByText("Review us on Google")).toBeVisible();

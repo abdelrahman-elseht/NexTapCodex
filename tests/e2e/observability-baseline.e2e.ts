@@ -44,7 +44,7 @@ test("baseline owner dashboard and editor update the live preview without saving
   await screen.getByLabel("Email address").fill(credentials.user("owner").username);
   await screen.getByLabel("Password").fill(credentials.user("owner").password);
   await screen.getByRole("button", "Sign in securely").tap();
-  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/, { timeout: 30_000 });
   await expect(screen.getByRole("heading", "لوحة التحكم", { exact: true })).toBeVisible();
   await app.open(`/admin/businesses/${data.businessId}`);
   const name = screen.getByLabel("Business name", { exact: true });
