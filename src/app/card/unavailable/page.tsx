@@ -1,8 +1,9 @@
 ﻿import Link from "next/link";
 import { BrandLogo } from "@/components/ui/brand-logo";
 
-export default async function UnavailableCard({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
-  const { state } = await searchParams;
+export default async function UnavailableCard({ searchParams }: { searchParams: Promise<{ state?: string; serial?: string }> }) {
+  const { state, serial: rawSerial } = await searchParams;
+  const serial = state === "unassigned" && typeof rawSerial === "string" && /^NT-[0-9]{8}-[0-9]{6}$/.test(rawSerial) ? rawSerial : "";
   const content = state === "unassigned"
     ? { title: "البطاقة في انتظار التفعيل", detail: "لم يربط فريق النشاط هذه البطاقة بصفحة منشورة بعد. جرّب مرة أخرى لاحقاً." }
     : state === "inactive"
@@ -16,6 +17,7 @@ export default async function UnavailableCard({ searchParams }: { searchParams: 
         <span className="eyebrow">NexTap · بطاقة أعمال</span>
         <h1 id="card-state-title">{content.title}</h1>
         <p>{content.detail}</p>
+        {serial && <p className="card-serial" aria-label="Card serial"><strong>Card serial / رقم البطاقة</strong><bdi dir="ltr">{serial}</bdi><small>ابحث عن هذا الرقم في Admin → Cards لإتمام التفعيل.</small></p>}
         <div className="error-actions">
           <Link className="button" href="/">العودة إلى NexTap</Link>
           <Link className="button secondary" href="/demo">عرض نموذج الصفحة</Link>

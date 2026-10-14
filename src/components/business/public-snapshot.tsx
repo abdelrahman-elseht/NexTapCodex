@@ -12,7 +12,7 @@ type Item = { id?: string; subtitle?: string; badge?: string; actions?: Item[]; 
 type Section = { key?: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
 export type Snapshot = { business?: { name?: string; category?: string }; page?: { branchName?: string; template?: string }; providerProfiles?: Record<string, ProviderProfile>; sections?: Section[]; publicationId?: string; version?: number };
 
-const iconFiles: Record<string, string> = { whatsapp: "whatsapp", facebook: "facebook", instagram: "instagram", tiktok: "tiktok", snapchat: "snapchat", youtube: "youtube", x: "x", twitter: "x", telegram: "telegram", linkedin: "linkedin", pinterest: "pinterest", messenger: "messenger", google: "google" };
+const iconFiles: Record<string, string> = { whatsapp: "whatsapp", facebook: "facebook", instagram: "instagram", tiktok: "tiktok", snapchat: "snapchat", youtube: "youtube", x: "x", twitter: "x", telegram: "telegram", linkedin: "linkedin", github: "github", behance: "behance", artstation: "artstation", dribbble: "dribbble", medium: "medium", pinterest: "pinterest", messenger: "messenger", google: "google" };
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function validWebUrl(value: unknown) { const source = text(value); if (!safeUrl(source)) return ""; try { return new URL(source).protocol === "https:" ? source : ""; } catch { return ""; } }
 function imageUrl(value: unknown) { const source = text(value); return source.startsWith("/") && !source.startsWith("//") ? source : validWebUrl(source); }
@@ -38,7 +38,7 @@ function providerFor(item: Item): string {
   // Preserve legacy social icons using destination identity, never the custom label.
   try {
     const host = new URL(text(item.url)).hostname.toLowerCase().replace(/^www\./, "");
-    const domains: Record<string, string> = { "instagram.com": "instagram", "facebook.com": "facebook", "linkedin.com": "linkedin", "tiktok.com": "tiktok", "youtube.com": "youtube", "youtu.be": "youtube", "snapchat.com": "snapchat", "twitter.com": "x", "x.com": "x", "t.me": "telegram", "wa.me": "whatsapp", "whatsapp.com": "whatsapp", "pinterest.com": "pinterest", "messenger.com": "messenger" };
+    const domains: Record<string, string> = { "instagram.com": "instagram", "facebook.com": "facebook", "linkedin.com": "linkedin", "tiktok.com": "tiktok", "youtube.com": "youtube", "youtu.be": "youtube", "snapchat.com": "snapchat", "twitter.com": "x", "x.com": "x", "t.me": "telegram", "wa.me": "whatsapp", "whatsapp.com": "whatsapp", "pinterest.com": "pinterest", "messenger.com": "messenger", "github.com": "github", "behance.net": "behance", "artstation.com": "artstation", "dribbble.com": "dribbble", "medium.com": "medium" };
     return Object.entries(domains).find(([domain]) => host === domain || host.endsWith(`.${domain}`))?.[1] || "custom";
   } catch { return "custom"; }
 }
@@ -56,7 +56,8 @@ function Icon({ name, size = 22 }: { name: string; size?: number }) {
     calendar: <><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></>,
     arrow: <><path d="M4 12h15" /><path d="m13 6 6 6-6 6" /></>,
     link: <><path d="m10.5 13.5 3-3" /><path d="M7.8 16.2 6 18a3 3 0 0 1-4-4l3.1-3.1a3 3 0 0 1 4.2 0" /><path d="m16.2 7.8 1.8-1.8a3 3 0 0 1 4 4l-3.1 3.1a3 3 0 0 1-4.2 0" /></>,
-    globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+    globe: <><circle cx="12" r="9" cy="12" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+    email: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></>,
   };
   return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name] || paths.link}</svg>;
 }
@@ -84,7 +85,7 @@ function PaymentFallback({ items, language }: { items: Item[]; language: "ar" | 
 }
 function SocialSection({ title, items, content }: { title: string; items: Item[]; content: Record<string, unknown> }) {
   const links = items.filter(item => item.enabled !== false && actionHref(item)); if (!links.length) return null;
-  return <section className="business-section social-section"><SectionText title={title} content={content} kind="social"/><div className="social-icon-list social-tile-grid">{links.map((item, index) => { const provider = providerFor(item); const label = accessibleLabel(item, provider); return <ExternalLink href={actionHref(item)} className={`social-tile ${visibleLabel(item) ? "" : "social-tile-icon-only"}`} aria-label={label} key={item.id || index}><span className="social-tile-icon"><Icon name={iconFiles[provider] ? provider : "globe"} size={35}/></span>{visibleLabel(item) && <span>{visibleLabel(item)}</span>}<ItemText item={item}/></ExternalLink>; })}</div></section>;
+  return <section className="business-section social-section"><SectionText title={title} content={content} kind="social"/><div className="social-icon-list social-tile-grid">{links.map((item, index) => { const provider = providerFor(item); const label = accessibleLabel(item, provider); const iconName = iconFiles[provider] || ["email", "phone", "call", "link", "globe"].includes(provider) ? provider : "globe"; return <ExternalLink href={actionHref(item)} className={`social-tile ${visibleLabel(item) ? "" : "social-tile-icon-only"}`} aria-label={label} key={item.id || index}><span className="social-tile-icon"><Icon name={iconName} size={35}/></span>{visibleLabel(item) && <span>{visibleLabel(item)}</span>}<ItemText item={item}/></ExternalLink>; })}</div></section>;
 }
 
 function columnCount(value: unknown) { const columns = Number(value); return Number.isInteger(columns) && columns >= 1 && columns <= 4 ? columns : 4; }

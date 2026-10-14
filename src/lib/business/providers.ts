@@ -1,6 +1,6 @@
 import { safeUrl } from "./content";
 
-export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"linkedin"|"telegram"|"website"|"maps"|"reviews"|"booking"|"order"|"location"|"call"|"instapay"|"vodafone"|"etisalat"|"orange"|"phone"|"email"|"menu"|"custom"|"bank";
+export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"linkedin"|"telegram"|"github"|"behance"|"artstation"|"dribbble"|"medium"|"website"|"maps"|"reviews"|"booking"|"order"|"location"|"call"|"instapay"|"vodafone"|"etisalat"|"orange"|"phone"|"email"|"menu"|"custom"|"bank";
 export type LocalWalletProvider = "instapay"|"vodafone"|"etisalat"|"orange";
 export type MobileWalletProvider = "vodafone"|"etisalat"|"orange";
 
@@ -29,12 +29,17 @@ export const providerMetadata: Record<ProviderId, ProviderMetadata> = {
   snapchat: { id: "snapchat", label: "Snapchat", icon: "snapchat", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   x: { id: "x", label: "X", icon: "x", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   linkedin: { id: "linkedin", label: "LinkedIn", icon: "linkedin", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
+  github: { id: "github", label: "GitHub", icon: "github", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
+  behance: { id: "behance", label: "Behance", icon: "behance", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
+  artstation: { id: "artstation", label: "ArtStation", icon: "artstation", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
+  dribbble: { id: "dribbble", label: "Dribbble", icon: "dribbble", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
+  medium: { id: "medium", label: "Medium", icon: "medium", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   telegram: { id: "telegram", label: "Telegram", icon: "telegram", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   website: { id: "website", label: "Website", icon: "globe", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   maps: { id: "maps", label: "Google Maps", icon: "pin", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   reviews: { id: "reviews", label: "Google Reviews", icon: "google", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   booking: { id: "booking", label: "Booking", icon: "calendar", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
-  order: { id: "order", label: "Order", icon: "link", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
+  order: { id: "order", label: "Ordering / Online Orders", icon: "link", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   location: { id: "location", label: "Location", icon: "pin", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   call: { id: "call", label: "Call", icon: "phone", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   instapay: { id: "instapay", label: "InstaPay", icon: "instapay", valueKind: "identifier", sensitive: true, defaultDestinationStrategy: "copy_identifier", verifiedDeepLink: false, officialHelpUrl: "https://www.instapay.eg/?page_id=348&lang=en" },
@@ -42,7 +47,7 @@ export const providerMetadata: Record<ProviderId, ProviderMetadata> = {
   etisalat: { id: "etisalat", label: "Etisalat Cash", icon: "etisalat", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "copy_identifier", verifiedDeepLink: false, officialHelpUrl: "https://www.eand.com.eg/portal/etisalat_money/etisalat_money" },
   orange: { id: "orange", label: "Orange Cash (Mobinil)", icon: "orange", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "copy_identifier", verifiedDeepLink: false, officialHelpUrl: "https://www.orange.eg/en/services/Orange-financial-services" },
   phone: { id: "phone", label: "Phone", icon: "phone", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
-  email: { id: "email", label: "Email", icon: "link", valueKind: "email", sensitive: true, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
+  email: { id: "email", label: "Email", icon: "email", valueKind: "email", sensitive: true, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   menu: { id: "menu", label: "Menu", icon: "link", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   custom: { id: "custom", label: "Custom URL", icon: "link", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   bank: { id: "bank", label: "Bank instructions", icon: "link", valueKind: "instructions", sensitive: true, defaultDestinationStrategy: "instructions", verifiedDeepLink: false },
@@ -143,7 +148,7 @@ export function normalizeProviderValue(provider: ProviderId, value: string) {
   if (provider === "instagram") return normalizeInstagram(value);
   if (provider === "instapay") return /^[a-z0-9._-]{2,64}@[a-z0-9._-]{2,64}$/i.test(value.trim()) ? value.trim() : "";
   if (provider === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) ? value.trim() : "";
-  if (["facebook","tiktok","youtube","snapchat","x","linkedin","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider)) return normalizeSafeUrl(value);
+  if (["facebook","tiktok","youtube","snapchat","x","linkedin","github","behance","artstation","dribbble","medium","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider)) return normalizeSafeUrl(value);
   return value.trim().slice(0, 500);
 }
-export const providerLabels: Record<ProviderId,string> = { whatsapp:"WhatsApp", facebook:"Facebook", instagram:"Instagram", tiktok:"TikTok", youtube:"YouTube", snapchat:"Snapchat", x:"X", linkedin:"LinkedIn", telegram:"Telegram", website:"Website", maps:"Google Maps", reviews:"Google Reviews", booking:"Booking", order:"Order", location:"Location", call:"Call", instapay:"InstaPay", vodafone:"Vodafone Cash", etisalat:"Etisalat Cash", orange:"Orange Cash (Mobinil)", phone:"Phone", email:"Email", menu:"Menu", custom:"Custom URL", bank:"Bank instructions" };
+export const providerLabels: Record<ProviderId,string> = { whatsapp:"WhatsApp", facebook:"Facebook", instagram:"Instagram", tiktok:"TikTok", youtube:"YouTube", snapchat:"Snapchat", x:"X", linkedin:"LinkedIn", github:"GitHub", behance:"Behance", artstation:"ArtStation", dribbble:"Dribbble", medium:"Medium", telegram:"Telegram", website:"Website", maps:"Google Maps", reviews:"Google Reviews", booking:"Booking", order:"Ordering / Online Orders", location:"Location", call:"Call", instapay:"InstaPay", vodafone:"Vodafone Cash", etisalat:"Etisalat Cash", orange:"Orange Cash (Mobinil)", phone:"Phone", email:"Email", menu:"Menu", custom:"Custom URL", bank:"Bank instructions" };
