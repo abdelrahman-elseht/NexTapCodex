@@ -42,5 +42,8 @@ export async function GET(
   const state = !error && ["unassigned", "inactive"].includes(data?.state)
     ? data.state
     : "invalid";
-  return redirectToPath("/card/unavailable?state=" + state);
+  const serial = state === "unassigned" && typeof data?.serial === "string" && /^NT-[0-9]{8}-[0-9]{6}$/.test(data.serial)
+    ? "&serial=" + encodeURIComponent(data.serial)
+    : "";
+  return redirectToPath("/card/unavailable?state=" + state + serial);
 }

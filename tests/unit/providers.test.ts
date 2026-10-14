@@ -44,6 +44,15 @@ describe("provider metadata and destinations", () => {
       expect(normalizeProviderValue(provider, "12345")).toBe("");
     }
   });
+
+  it("supports professional provider URLs and the ordering label", () => {
+    for (const provider of ["github", "behance", "artstation", "dribbble", "medium"] as const) {
+      expect(normalizeProviderValue(provider, `https://${provider}.com/artist`)).toMatch(/^https:\/\//);
+      expect(getProviderMetadata(provider)?.defaultDestinationStrategy).toBe("external_url");
+    }
+    expect(getProviderMetadata("order")?.label).toBe("Ordering / Online Orders");
+    expect(getProviderMetadata("email")?.icon).toBe("email");
+  });
 });
 
 describe("provider profile inheritance", () => {
