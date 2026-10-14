@@ -1,9 +1,12 @@
+import { InventorySelection, CardSelection, SelectedCardDeletion, DeleteInventory } from "./_components/inventory-controls";
+import Link from "next/link";
+import { MutationForm, FilterForm } from "@/components/admin/mutation-form";
 import { requireOwner } from "@/lib/auth/owner";
 import { headers } from "next/headers";
 import { cardUrls, getCardOrigin } from "@/lib/cards/card-manufacturing";
 import { CopyNfcUrl } from "@/components/admin/copy-nfc-url";
-import { createBatch } from "../businesses/actions";
-import { randomUUID } from "node:crypto";
+
+
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { CardHistory } from "./_components/card-history";
@@ -36,7 +39,7 @@ export default async function Cards({
   const direction = query.direction === "previous" ? "previous" : "next";
   const cursor = decodePageCursor(query.cursor);
 
-  let batchQuery = supabase.from("card_batches").select("id,name,quantity,batch_code,created_at")
+  let batchQuery = supabase.from("card_batches").select("id,name,quantity,batch_code,created_at,cards(count)")
     .order("created_at", { ascending: batchDirection === "previous" }).order("id", { ascending: batchDirection === "previous" }).limit(ADMIN_PAGE_SIZE + 1);
   if (batchCursor) batchQuery = batchQuery.or(cursorFilter(batchCursor, batchDirection));
   const [{ data: batches }, { data: pages }] = await Promise.all([
@@ -48,7 +51,7 @@ export default async function Cards({
   if (batchesHasMore) batchRows = batchRows.slice(0, ADMIN_PAGE_SIZE);
   if (batchDirection === "previous") batchRows.reverse();
   if (batchId && !batchRows.some((batch: any) => batch.id === batchId)) {
-    const { data: selectedBatch } = await supabase.from("card_batches").select("id,name,quantity,batch_code,created_at").eq("id", batchId).maybeSingle();
+    const { data: selectedBatch } = await supabase.from("card_batches").select("id,name,quantity,batch_code,created_at,cards(count)").eq("id", batchId).maybeSingle();
     if (selectedBatch) batchRows = [selectedBatch, ...batchRows];
   }
   const firstBatch = batchRows[0];
@@ -105,7 +108,7 @@ export default async function Cards({
   };
 
   return (
-    <>
+    <InventorySelection>
       <div className="admin-title"><h1>البطاقات</h1></div>
       {query.error && <div className="alert" role="alert">{errorMessages[query.error] || "تعذر تنفيذ العملية. حاول مرة أخرى."}</div>}
       {query.assigned && <div className="alert success" role="status">تم تحديث تعيين البطاقة.</div>}
@@ -125,8 +128,8 @@ export default async function Cards({
 
       <section id="production" className="form-card">
         <h2>دفعات الإنتاج</h2>
-        <form action={createBatch} className="form-grid batch-create-form">
-          <input type="hidden" name="idempotency_key" value={randomUUID()} />
+        <MutationForm action="/api/admin/operations" className="form-grid batch-create-form">
+          <input type="hidden" name="mode" value="batch" />
           <label className="field">اسم الدفعة
             <input className="control" name="name" placeholder="مثال: دفعة المطبعة الأولى" minLength={1} maxLength={100} required />
           </label>
@@ -139,27 +142,28 @@ export default async function Cards({
             <span>كل بطاقة تبدأ بحالة غير معيّنة، مع رقم تسلسلي ثابت ورابطين دائمين.</span>
           </div>
           <SubmitButton className="button gold" pendingText="جارٍ التنفيذ...">إنشاء دفعة</SubmitButton>
-        </form>
+        </MutationForm>
       </section>
 
       <section className="production-batches" aria-label="دفعات الإنتاج">
         {(batchRows as any[]).map((batch: any) => (
           <article className="form-card batch-summary" key={batch.id}>
-            <div><strong>{batch.name}</strong><div className="muted" dir="ltr">{batch.batch_code} · {new Date(batch.created_at).toLocaleDateString("ar-EG")} · {batch.quantity} بطاقة</div></div>
+            <div><strong>{batch.name}</strong><div className="muted">{batch.batch_code} · {new Date(batch.created_at).toLocaleDateString("ar-EG")} · متبقٍ {batch.cards?.[0]?.count ?? 0} من {batch.quantity} بطاقة أصلية</div></div>
             <div className="inline">
-              <a className="button gold" href={`/admin/cards/batches/${batch.id}`}>تفاصيل وتنزيل ZIP</a>
-              <a className="button secondary" href={`/admin/cards/export?batch=${batch.id}`}>تنزيل CSV</a>
-              <a className="button secondary" href={`/admin/cards/batches/${batch.id}#preview`}>معاينة QR</a>
+              <DeleteInventory batchId={batch.id} />
+              <Link scroll={false} className="button gold" href={`/admin/cards/batches/${batch.id}`}>تفاصيل وتنزيل ZIP</Link>
+              {batch.cards?.[0]?.count > 0 ? <><a className="button secondary" href={`/admin/cards/export?batch=${batch.id}`}>تنزيل CSV</a>
+              <Link scroll={false} className="button secondary" href={`/admin/cards/batches/${batch.id}#preview`}>معاينة QR</Link></> : <button className="button secondary" disabled>الدفعة فارغة</button>}
             </div>
           </article>
         ))}
         {batchRows.length === 0 && <p className="notice">لا توجد دفعات إنتاج بعد.</p>}
-        {(nextBatchesHref || previousBatchesHref || batchCursor) && <nav className="pagination" aria-label="تنقل دفعات الإنتاج"><a className={previousBatchesHref ? "button secondary" : "button secondary disabled"} aria-disabled={!previousBatchesHref} href={previousBatchesHref || "/admin/cards"}>السابق</a><a className="button secondary" href="/admin/cards">الأولى</a><a className={nextBatchesHref ? "button secondary" : "button secondary disabled"} aria-disabled={!nextBatchesHref} href={nextBatchesHref || "/admin/cards"}>التالي</a></nav>}
+        {(nextBatchesHref || previousBatchesHref || batchCursor) && <nav className="pagination" aria-label="تنقل دفعات الإنتاج"><Link scroll={false} className={previousBatchesHref ? "button secondary" : "button secondary disabled"} aria-disabled={!previousBatchesHref} href={previousBatchesHref || "/admin/cards"}>السابق</Link><Link scroll={false} className="button secondary" href="/admin/cards">الأولى</Link><Link scroll={false} className={nextBatchesHref ? "button secondary" : "button secondary disabled"} aria-disabled={!nextBatchesHref} href={nextBatchesHref || "/admin/cards"}>التالي</Link></nav>}
       </section>
 
       <section id="inventory" className="form-card" aria-labelledby="card-filters-title">
         <h2 id="card-filters-title">البحث والتصفية</h2>
-        <form method="get" action="/admin/cards" className="form-grid">
+        <FilterForm action="/admin/cards" className="form-grid">
           <label className="field">
             الرقم التسلسلي أو الرمز
             <input
@@ -186,7 +190,7 @@ export default async function Cards({
             <select name="batch" defaultValue={batchId}>
               <option value="">كل الدفعات</option>
               {(batchRows as any[]).map((batch: any) => (
-                <option key={batch.id} value={batch.id}>{batch.name} · {batch.quantity}</option>
+                <option key={batch.id} value={batch.id}>{batch.name} · متبقٍ {batch.cards?.[0]?.count ?? 0} / {batch.quantity}</option>
               ))}
             </select>
           </label>
@@ -205,9 +209,9 @@ export default async function Cards({
           </label>
           <div className="inline">
             <button className="button">تطبيق التصفية</button>
-            <a className="button secondary" href="/admin/cards">مسح التصفية</a>
+            <Link scroll={false} className="button secondary" href="/admin/cards">مسح التصفية</Link>
           </div>
-        </form>
+        </FilterForm>
         {!searchIsSafe && (
           <p className="notice" role="alert">استخدم أحرفاً إنجليزية أو أرقاماً أو شرطة فقط في البحث.</p>
         )}
@@ -217,6 +221,7 @@ export default async function Cards({
       {eligiblePages.length === 0 && (
         <p className="notice" role="status">لا توجد صفحة منشورة ونشطة. انشر صفحة من لوحة النشاط قبل تفعيل البطاقات.</p>
       )}
+      <SelectedCardDeletion />
       <div className="table-wrap">
         <table>
           <thead>
@@ -243,20 +248,21 @@ export default async function Cards({
                 : assignedPage?.businesses;
 
               return (
-                <tr key={card.id}>
+                <tr key={card.id} data-card-id={card.id}>
                   <td dir="ltr">
+                    <CardSelection id={card.id} serial={card.serial} />
                     <strong>{card.serial}</strong>
                     <div className="muted" dir="ltr">{card.token.slice(0, 8)}…</div>
                     <CardHistory cardId={card.id} />
                   </td>
-                  <td>{card.status}</td>
+                  <td data-card-status>{card.status}</td>
                   <td>{assignedPage
                     ? `${assignedBusiness?.name || ""} / ${assignedPage.slug}${(!assignedPage.is_active || !assignedPage.published_snapshot_id || assignedBusiness?.status !== "active") ? " (غير متاح)" : ""}`
                     : "—"}</td>
                   <td dir="ltr"><a className="encoded-url" href={cardUrls(card.token, requestOrigin).qrUrl} target="_blank" rel="noreferrer">{cardUrls(card.token, requestOrigin).qrUrl}</a></td>
                   <td><CopyNfcUrl token={card.token} /></td>
                   <td>
-                    <form id={`assign-card-${card.id}`} action="/api/admin/cards/assignment" method="post" className="inline card-assignment-form">
+                    <MutationForm resourceKeys={[`card:${card.id}`]} id={`assign-card-${card.id}`} action="/api/admin/cards/assignment" method="post" className="inline card-assignment-form">
                       <input type="hidden" name="card_id" value={card.id} />
                       <input type="hidden" name="confirm" value="on" />
                       <select
@@ -273,13 +279,14 @@ export default async function Cards({
                         ))}
                       </select>
                       <ConfirmSubmitButton targetForm={`assign-card-${card.id}`} disabled={eligiblePages.length === 0} className="button" title="تأكيد تعيين البطاقة" message={`سيتم تفعيل البطاقة ${card.serial} وربطها بالصفحة المختارة.`} confirmLabel="تأكيد التعيين" cancelLabel="إلغاء" dialogLabel="تأكيد" pendingText="جارٍ تحديث البطاقة...">تفعيل / نقل</ConfirmSubmitButton>
-                    </form>
-                    <form id={`disable-card-${card.id}`} action="/api/admin/cards/assignment" method="post" className="inline card-disable-form">
+                    </MutationForm>
+                    <DeleteInventory cardIds={[card.id]} />
+                    <MutationForm resourceKeys={[`card:${card.id}`]} id={`disable-card-${card.id}`} action="/api/admin/cards/assignment" method="post" className="inline card-disable-form">
                       <input type="hidden" name="card_id" value={card.id} />
                       <input type="hidden" name="mode" value="disable" />
                       <input type="hidden" name="confirm" value="on" />
                       <ConfirmSubmitButton targetForm={`disable-card-${card.id}`} className="small-button danger" title="تعطيل البطاقة" message={`سيتم تعطيل البطاقة ${card.serial}. يمكنك إعادة تفعيلها من لوحة البطاقات.`} confirmLabel="تعطيل البطاقة" cancelLabel="إلغاء" dialogLabel="تأكيد" pendingText="جارٍ التعطيل...">تعطيل</ConfirmSubmitButton>
-                    </form>
+                    </MutationForm>
                   </td>
                 </tr>
               );
@@ -291,10 +298,10 @@ export default async function Cards({
         </table>
       </div>
       {(nextCardsHref || previousCardsHref || cursor) && <nav className="pagination" aria-label="تنقل المخزون">
-        <a className={previousCardsHref ? "button secondary" : "button secondary disabled"} aria-disabled={!previousCardsHref} href={previousCardsHref || "/admin/cards"}>السابق</a>
-        <a className="button secondary" href={pageUrl("/admin/cards", cardFilters)}>الأولى</a>
-        <a className={nextCardsHref ? "button secondary" : "button secondary disabled"} aria-disabled={!nextCardsHref} href={nextCardsHref || pageUrl("/admin/cards", cardFilters)}>التالي</a>
+        <Link scroll={false} className={previousCardsHref ? "button secondary" : "button secondary disabled"} aria-disabled={!previousCardsHref} href={previousCardsHref || "/admin/cards"}>السابق</Link>
+        <Link scroll={false} className="button secondary" href={pageUrl("/admin/cards", cardFilters)}>الأولى</Link>
+        <Link scroll={false} className={nextCardsHref ? "button secondary" : "button secondary disabled"} aria-disabled={!nextCardsHref} href={nextCardsHref || pageUrl("/admin/cards", cardFilters)}>التالي</Link>
       </nav>}
-    </>
+    </InventorySelection>
   );
 }

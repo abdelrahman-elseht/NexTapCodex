@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Event = { id: string; old_status: string; new_status: string; reason: string; created_at: string };
 
@@ -11,6 +11,14 @@ export function CardHistory({ cardId, count }: { cardId: string; count?: number 
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const details = useRef<HTMLDetailsElement>(null);
+  const reload = useRef<() => void>(() => {});
+  useEffect(() => { reload.current = () => { if (details.current?.open) void load(true); else setLoaded(false); }; });
+  useEffect(() => {
+    const changed = (event: globalThis.Event) => { if ((event as CustomEvent).detail?.cardId === cardId) reload.current(); };
+    window.addEventListener("admin:mutation", changed);
+    return () => window.removeEventListener("admin:mutation", changed);
+  }, [cardId]);
   async function load(reset = false) {
     if (loading) return;
     setLoading(true); setError("");
@@ -23,7 +31,7 @@ export function CardHistory({ cardId, count }: { cardId: string; count?: number 
     } catch (e) { setError(e instanceof Error ? e.message : "تعذر تحميل السجل."); }
     finally { setLoading(false); }
   }
-  return <details className="card-audit-history" onToggle={(event) => { if (event.currentTarget.open && !loaded) void load(true); }}>
+  return <details ref={details} className="card-audit-history" onToggle={(event) => { if (event.currentTarget.open && !loaded) void load(true); }}>
     <summary>سجل التغييرات ({count ?? "…"})</summary>
     {loading && <p role="status">جار تحميل السجل…</p>}
     {error && <div role="alert"><p>{error}</p><button type="button" className="small-button" onClick={() => void load(!loaded)}>إعادة المحاولة</button></div>}

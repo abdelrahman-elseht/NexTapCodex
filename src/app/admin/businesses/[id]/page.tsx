@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireOwner } from "@/lib/auth/owner";
-import { setPageActive, createBranch } from "../actions";
+import { MutationForm } from "@/components/admin/mutation-form";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { BusinessEditor } from "../_components/business-editor";
 
@@ -77,23 +77,23 @@ export default async function EditBusiness({
 
       <section className="editor-panel compact-panel">
         <div><span className="panel-kicker">الظهور للزوار</span><h2>حالة الصفحة</h2><p>{page.is_active ? "الصفحة نشطة ومتاحة للزوار." : "الصفحة متوقفة ولن تظهر للزوار."}</p></div>
-        <form action={setPageActive} className="inline">
+        <MutationForm action="/api/admin/operations" className="inline"><input type="hidden" name="mode" value="page-state" />
           <input type="hidden" name="business_id" value={id} /><input type="hidden" name="page_id" value={page.id} /><input type="hidden" name="active" value={page.is_active ? "false" : "true"} />
           <span className={"pill " + (page.is_active ? "green" : "red")}>{page.is_active ? "نشطة" : "متوقفة"}</span><SubmitButton className="button secondary" pendingText="جارٍ التنفيذ...">{page.is_active ? "إيقاف الصفحة" : "تفعيل الصفحة"}</SubmitButton>
-        </form>
+        </MutationForm>
       </section>
 
       <section className="editor-panel compact-panel branch-panel">
         <div><span className="panel-kicker">التوسع</span><h2>الفروع</h2><p>أنشئ صفحة مستقلة لكل فرع ضمن النشاط.</p></div>
         <div className="branch-list">
-          <form action={createBranch} className="branch-form">
+          <MutationForm action="/api/admin/operations" className="branch-form"><input type="hidden" name="mode" value="branch" />
             <input type="hidden" name="business_id" value={id} /><input type="hidden" name="parent_page_id" value={page.id} />
             <div className="form-grid">
               <label className="field">اسم الفرع<input name="branch_name" required maxLength={100} /></label>
               <label className="field">رابط الفرع<input name="slug" required dir="ltr" autoCapitalize="none" pattern="[a-z0-9][a-z0-9-]{1,58}[a-z0-9]" /></label>
             </div>
             <SubmitButton className="button secondary" pendingText="جارٍ التنفيذ...">إنشاء صفحة الفرع</SubmitButton>
-          </form>
+          </MutationForm>
           {(pages || []).filter((item: any) => item.page_type === "branch").map((item: any) => (
             <p key={item.id}><Link href={"/admin/businesses/" + id + "/preview?page=" + item.id}>{item.branch_name || item.slug} · /b/{item.slug}</Link></p>
           ))}

@@ -1,0 +1,44 @@
+import { test } from "@e2e-dev/web";
+import { credentials, expect } from "e2e";
+import fs from "node:fs/promises";
+import { markDocument, expectSameDocument } from "./_helpers/document";
+
+test("delivery destinations survive save, preview, publication and override", async ({ app, screen, browser }) => {
+  test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true" || !process.env.E2E_FIXTURE_PATH, "Requires authorized namespaced fixture");
+  const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH!, "utf8"));
+  await app.open("/login?lang=en");
+  await screen.getByLabel("Email address").fill(credentials.user("owner").username);
+  await screen.getByLabel("Password").fill(credentials.user("owner").password);
+  await screen.getByRole("button", "Sign in securely").tap();
+  await expect(browser).toHaveURL(/\/admin(?:\?.*)?$/);
+  await app.open(`/admin/businesses/${fixture.businessId}`);
+  await browser.locator(".navigator-item").filter({ hasText: "Quick Actions" }).tap();
+  await screen.getByRole("button", "Ordering & delivery", { exact: true }).tap();
+  await screen.getByRole("button", "Add Talabat", { exact: true }).tap();
+  const rows = browser.locator(".editor-form-pane > .live-items-editor > .live-item-row");
+  const talabat = rows.last();
+  await talabat.getByLabel("Button label", { exact: true }).fill("Talabat destination");
+  const destination = "https://www.talabat.com/egypt/taboon-zamalek?source=nextap%2Fqa#menu";
+  await talabat.getByLabel("Destination URL").fill(destination);
+  await screen.getByRole("button", "Add Fast App", { exact: true }).tap();
+  await rows.last().getByLabel("Button label", { exact: true }).fill("Fast restaurant page");
+  // A synthetic public-page destination verifies exact persistence and transport;
+  // it is not evidence of a provider-supported customer URL or device handoff.
+  const fastDestination = "https://merchant.example.test/restaurant?share=a%2Fb#menu";
+  await rows.last().getByLabel("Destination URL").fill(fastDestination);
+  const before = await markDocument(browser);
+  await screen.getByRole("button", "Save draft", { exact: true }).tap();
+  await expect(screen.getByRole("status")).toContainText("Draft saved");
+  await expectSameDocument(browser, before);
+  await screen.getByRole("button", "Publish", { exact: true }).tap();
+  await expect(screen.getByRole("status")).toContainText("Published");
+  await expectSameDocument(browser, before);
+  await app.open(`/admin/businesses/${fixture.businessId}/preview?page=${fixture.pageId}`);
+  await expect(browser.locator('a[aria-label="Talabat destination"]')).toHaveAttribute("href", destination);
+  await expect(browser.locator('a[aria-label="Fast restaurant page"]')).toHaveAttribute("href", fastDestination);
+  expect(await browser.locator('a[aria-label="Fast restaurant page"]').getAttribute("target")).not.toBe("_blank");
+  await app.open(`/b/${fixture.slug}`);
+  await expect(browser.locator('a[aria-label="Talabat destination"]')).toHaveAttribute("href", destination);
+  await expect(browser.locator('img[src="/icons/social/fast.png"]')).toBeVisible();
+  await expect(browser.locator('a[aria-label="Fast restaurant page"]')).toHaveAttribute("href", fastDestination);
+});

@@ -1,6 +1,6 @@
 import { safeUrl } from "./content";
 
-export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"linkedin"|"telegram"|"github"|"behance"|"artstation"|"dribbble"|"medium"|"website"|"maps"|"reviews"|"booking"|"order"|"location"|"call"|"instapay"|"vodafone"|"etisalat"|"orange"|"phone"|"email"|"menu"|"custom"|"bank";
+export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"linkedin"|"telegram"|"github"|"behance"|"artstation"|"dribbble"|"medium"|"website"|"maps"|"reviews"|"booking"|"order"|"talabat"|"fast"|"location"|"call"|"instapay"|"vodafone"|"etisalat"|"orange"|"phone"|"email"|"menu"|"custom"|"bank";
 export type LocalWalletProvider = "instapay"|"vodafone"|"etisalat"|"orange";
 export type MobileWalletProvider = "vodafone"|"etisalat"|"orange";
 
@@ -40,6 +40,8 @@ export const providerMetadata: Record<ProviderId, ProviderMetadata> = {
   reviews: { id: "reviews", label: "Google Reviews", icon: "google", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   booking: { id: "booking", label: "Booking", icon: "calendar", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   order: { id: "order", label: "Ordering / Online Orders", icon: "link", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
+  talabat: { id: "talabat", label: "Talabat", icon: "talabat", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false, officialHelpUrl: "https://www.talabat.com/egypt" },
+  fast: { id: "fast", label: "Fast App", icon: "fast", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   location: { id: "location", label: "Location", icon: "pin", valueKind: "url", sensitive: false, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   call: { id: "call", label: "Call", icon: "phone", valueKind: "phone", sensitive: true, defaultDestinationStrategy: "external_url", verifiedDeepLink: false },
   instapay: { id: "instapay", label: "InstaPay", icon: "instapay", valueKind: "identifier", sensitive: true, defaultDestinationStrategy: "copy_identifier", verifiedDeepLink: false, officialHelpUrl: "https://www.instapay.eg/?page_id=348&lang=en" },
@@ -107,6 +109,12 @@ export function isMobileWalletProvider(provider: string | undefined): provider i
   return Boolean(provider && mobileWalletProviders.has(provider as MobileWalletProvider));
 }
 
+export function isDeliveryProvider(provider: string | undefined) { return provider === "talabat" || provider === "fast"; }
+export function deliveryLinkHref(provider: string | undefined, value: string | undefined) {
+  if (!isDeliveryProvider(provider) || (value?.length || 0) > 2048 || /[\u0000-\u001f\u007f]/.test(value || "")) return "";
+  return paymentLinkHref(value);
+}
+export function providerIconPath(provider: string) { return `/icons/social/${provider}.${provider === "fast" ? "png" : "svg"}`; }
 export function isPaymentProvider(provider: string | undefined) {
   return isLocalWalletProvider(provider) || provider === "bank";
 }
@@ -144,6 +152,7 @@ export function normalizeInstagram(value: string) {
 }
 export function normalizeSafeUrl(value: string) { const input = value.trim(); return safeUrl(input) && /^https?:$/i.test(new URL(input).protocol) ? input : ""; }
 export function normalizeProviderValue(provider: ProviderId, value: string) {
+  if (isDeliveryProvider(provider)) return deliveryLinkHref(provider, value);
   if (provider === "whatsapp" || isMobileWalletProvider(provider) || provider === "phone") return normalizeEgyptianPhone(value);
   if (provider === "instagram") return normalizeInstagram(value);
   if (provider === "instapay") return /^[a-z0-9._-]{2,64}@[a-z0-9._-]{2,64}$/i.test(value.trim()) ? value.trim() : "";
@@ -151,4 +160,4 @@ export function normalizeProviderValue(provider: ProviderId, value: string) {
   if (["facebook","tiktok","youtube","snapchat","x","linkedin","github","behance","artstation","dribbble","medium","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider)) return normalizeSafeUrl(value);
   return value.trim().slice(0, 500);
 }
-export const providerLabels: Record<ProviderId,string> = { whatsapp:"WhatsApp", facebook:"Facebook", instagram:"Instagram", tiktok:"TikTok", youtube:"YouTube", snapchat:"Snapchat", x:"X", linkedin:"LinkedIn", github:"GitHub", behance:"Behance", artstation:"ArtStation", dribbble:"Dribbble", medium:"Medium", telegram:"Telegram", website:"Website", maps:"Google Maps", reviews:"Google Reviews", booking:"Booking", order:"Ordering / Online Orders", location:"Location", call:"Call", instapay:"InstaPay", vodafone:"Vodafone Cash", etisalat:"Etisalat Cash", orange:"Orange Cash (Mobinil)", phone:"Phone", email:"Email", menu:"Menu", custom:"Custom URL", bank:"Bank instructions" };
+export const providerLabels: Record<ProviderId,string> = { whatsapp:"WhatsApp", facebook:"Facebook", instagram:"Instagram", tiktok:"TikTok", youtube:"YouTube", snapchat:"Snapchat", x:"X", linkedin:"LinkedIn", github:"GitHub", behance:"Behance", artstation:"ArtStation", dribbble:"Dribbble", medium:"Medium", telegram:"Telegram", website:"Website", maps:"Google Maps", reviews:"Google Reviews", booking:"Booking", order:"Ordering / Online Orders", talabat:"Talabat", fast:"Fast App", location:"Location", call:"Call", instapay:"InstaPay", vodafone:"Vodafone Cash", etisalat:"Etisalat Cash", orange:"Orange Cash (Mobinil)", phone:"Phone", email:"Email", menu:"Menu", custom:"Custom URL", bank:"Bank instructions" };

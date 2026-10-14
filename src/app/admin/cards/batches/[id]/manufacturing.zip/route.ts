@@ -1,3 +1,4 @@
+import { readBatchSnapshot } from "@/lib/cards/batch-snapshot";
 import { requireOwner } from "@/lib/auth/owner";
 import { getCardOrigin, manufacturingZip } from "@/lib/cards/card-manufacturing";
 
@@ -9,14 +10,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response("Invalid batch", { status: 400 });
 
   const { supabase } = await requireOwner();
-  const [{ data: batch, error: batchError }, { data: cards, error: cardsError }] = await Promise.all([
-    supabase.from("card_batches").select("id,batch_code,quantity").eq("id", id).maybeSingle(),
-    supabase.from("cards").select("serial,token,status").eq("batch_id", id)
-      .order("serial", { ascending: true }).limit(1000),
-  ]);
-  if (batchError || cardsError || !batch || !cards || cards.length !== batch.quantity) {
-    return new Response("Not found", { status: 404 });
-  }
+  const snapshot = await readBatchSnapshot(supabase, id);
+  if (!snapshot) return new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } });
+  const { batch, cards } = snapshot;
+  if (!cards.length) return new Response("Empty inventory", { status: 409, headers: { "Cache-Control": "private, no-store" } });
 
   const archive = await manufacturingZip(cards, batch.batch_code, getCardOrigin(undefined, request.headers));
   return new Response(Buffer.from(archive), {

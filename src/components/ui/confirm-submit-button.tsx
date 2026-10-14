@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { ButtonHTMLAttributes } from "react";
+import { useMutationState } from "@/components/admin/mutation-form";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -27,6 +28,10 @@ export function ConfirmSubmitButton({
   disabled,
   ...buttonProps
 }: Props) {
+  const mutation = useMutationState();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const lastCompleted = useRef(0);
+  useEffect(() => { if (mutation && mutation.completed > lastCompleted.current) { lastCompleted.current = mutation.completed; setOpen(false); triggerRef.current?.focus(); } }, [mutation]);
   const [open, setOpen] = useState(false);
   const dialogId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -49,7 +54,7 @@ export function ConfirmSubmitButton({
         {...buttonProps}
         type="button"
         className={className}
-        disabled={disabled}
+        disabled={disabled || mutation?.pending} ref={triggerRef}
         onClick={() => setOpen(true)}
       >
         {children}
@@ -61,15 +66,16 @@ export function ConfirmSubmitButton({
         aria-describedby={`${dialogId}-message`}
         onCancel={(event) => {
           event.preventDefault();
-          setOpen(false);
+          if (!mutation?.pending) { setOpen(false); triggerRef.current?.focus(); }
         }}
         onClose={() => setOpen(false)}
       >
         <span className="panel-kicker">NexTap · {dialogLabel}</span>
         <h2 id={`${dialogId}-title`}>{title}</h2>
         <p id={`${dialogId}-message`}>{message}</p>
+        {mutation?.error && <p role="alert">{mutation.error}</p>}
         <div className="confirm-dialog-actions">
-          <button ref={cancelRef} type="button" className="button secondary" onClick={() => setOpen(false)}>
+          <button ref={cancelRef} type="button" className="button secondary" disabled={mutation?.pending} onClick={() => { setOpen(false); triggerRef.current?.focus(); }}>
             {cancelLabel}
           </button>
           <SubmitButton form={targetForm} className="button danger-confirm" pendingText={pendingText}>

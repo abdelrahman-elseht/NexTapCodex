@@ -1,6 +1,9 @@
 import { safeUrl } from "@/lib/business/content";
 
 const brands = [
+  { id: "github", hosts: ["github.com"], label: "GitHub" },
+  { id: "behance", hosts: ["behance.net"], label: "Behance" },
+  { id: "artstation", hosts: ["artstation.com"], label: "ArtStation" },
   { id: "whatsapp", hosts: ["whatsapp.com", "wa.me"], label: "WhatsApp" },
   { id: "facebook", hosts: ["facebook.com", "fb.com"], label: "Facebook" },
   { id: "instagram", hosts: ["instagram.com"], label: "Instagram" },

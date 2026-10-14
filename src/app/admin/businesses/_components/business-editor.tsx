@@ -6,7 +6,7 @@ import { ImageField, type UploadTracker } from "./image-field";
 import { needsExitWarning, saveCompletionMessage } from "@/lib/business/editor-save";
 import { sectionText } from "@/lib/business/section-text";
 import { sectionKinds, templatePresets } from "@/lib/business/content";
-import { buildProviderProfiles, isLocalWalletProvider, providerLabels, resolveProviderItem, type ProviderId, type ProviderProfile } from "@/lib/business/providers";
+import { providerIconPath, buildProviderProfiles, isLocalWalletProvider, providerLabels, resolveProviderItem, type ProviderId, type ProviderProfile } from "@/lib/business/providers";
 import { ItemEditor as ProviderAwareItemEditor } from "./item-editor";
 
 import { createEditorItem, normalizeEditorItems, resolveSectionItems, type EditorItem as Item } from "@/lib/business/editor-items";
@@ -17,6 +17,7 @@ type ProviderGroup={id:string;label:string;providers:ProviderId[]};
 const providerGroups:Record<string,ProviderGroup[]>={
  quick_actions:[
   {id:"common",label:"Popular",providers:["call","whatsapp","menu","location"]},
+  {id:"delivery",label:"Ordering & delivery",providers:["order","talabat","fast"]},
   {id:"booking",label:"Booking & reviews",providers:["booking","reviews"]},
   {id:"social",label:"Social",providers:["instagram","facebook","tiktok","youtube"]},
   {id:"more-social",label:"More social",providers:["snapchat","x","linkedin","telegram","github","behance","artstation","dribbble","medium"]},
@@ -33,6 +34,7 @@ const providerGroups:Record<string,ProviderGroup[]>={
   {id:"other",label:"Other methods",providers:["bank","custom"]},
  ],
  links:[
+  {id:"delivery",label:"Ordering & delivery",providers:["order","talabat","fast"]},
   {id:"common",label:"Common",providers:["maps","reviews","menu","phone"]},
   {id:"other",label:"Other links",providers:["email","website","booking","custom"]},
  ],
@@ -106,11 +108,11 @@ function ProviderPicker({section,onSelect}:{section:Section;onSelect:(p:Provider
  const groups=providerGroups[section.kind]||[];
  const[activeGroup,setActiveGroup]=useState(groups[0]?.id||"");
  const active=groups.find(group=>group.id===activeGroup)||groups[0];
- const assets=new Set(["whatsapp","facebook","instagram","tiktok","youtube","snapchat","x","linkedin","telegram","github","behance","artstation","dribbble","medium","instapay","vodafone"]);
+ const assets=new Set(["whatsapp","facebook","instagram","tiktok","youtube","snapchat","x","linkedin","telegram","github","behance","artstation","dribbble","medium","instapay","vodafone","talabat","fast"]);
  return <div className="provider-picker" aria-label="Add an item">
   <div className="provider-picker-heading"><strong>Choose what to add</strong><span>Select a type, then enter its destination.</span></div>
   {groups.length>1&&<div className="provider-picker-filters" role="group" aria-label="Provider category">{groups.map(group=><button type="button" key={group.id} className={active?.id===group.id?"active":""} aria-pressed={active?.id===group.id} onClick={()=>setActiveGroup(group.id)}>{group.label}</button>)}</div>}
-  <div className="provider-picker-grid">{(active?.providers||[]).map(provider=><button type="button" key={provider} aria-label={`Add ${providerLabels[provider]}`} onClick={()=>onSelect(provider)}><span className={`provider-mark provider-${provider}`}>{isLocalWalletProvider(provider)?<PaymentLogo provider={provider}/>:assets.has(provider)?<img src={`/icons/social/${provider}.svg`} alt="" width={27} height={27}/>:<ProviderGlyph provider={provider}/>}</span><span>{providerLabels[provider]}</span></button>)}</div>
+  <div className="provider-picker-grid">{(active?.providers||[]).map(provider=><button type="button" key={provider} aria-label={`Add ${providerLabels[provider]}`} onClick={()=>onSelect(provider)}><span className={`provider-mark provider-${provider}`}>{isLocalWalletProvider(provider)?<PaymentLogo provider={provider}/>:assets.has(provider)?<img src={providerIconPath(provider)} alt="" width={27} height={27}/>:<ProviderGlyph provider={provider}/>}</span><span>{providerLabels[provider]}</span></button>)}</div>
  </div>
 }
 function ProviderGlyph({provider}:{provider:ProviderId}){const path:Record<string,React.ReactNode>={phone:<><path d="M6 3.8 9 3l2 4.5-2.1 1.7a13 13 0 0 0 5.9 5.9l1.7-2.1 4.5 2-.8 3a2.3 2.3 0 0 1-2.6 1.7C10 18.8 5.2 14 4.3 6.4A2.3 2.3 0 0 1 6 3.8Z"/></>,maps:<><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>,reviews:<><path d="m12 3 2.7 5.6 6.2.9-4.5 4.4 1.1 6.2-5.5-2.9-5.5 2.9 1.1-6.2-4.5-4.4 6.2-.9L12 3Z"/></>,email:<><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></>,menu:<><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></>,booking:<><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h2m3 0h2m-7 3h2"/></>,link:<><path d="m10 13 4-4m-6 7H6a4 4 0 0 1 0-8h4m4 0h4a4 4 0 0 1 0 8h-4"/></>};const name=provider==="call"?"phone":provider==="location"?"maps":provider==="order"||provider==="custom"||provider==="website"?"link":provider==="reviews"?"reviews":provider==="booking"?"booking":provider==="email"?"email":provider==="menu"?"menu":"link";return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{path[name]}</svg>}

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/business/content";
-import { destinationStrategyFor, isMobileWalletProvider, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
+import { isDeliveryProvider, deliveryLinkHref, destinationStrategyFor, isMobileWalletProvider, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
 import { z } from "zod";
 import { normalizeEditorItems } from "@/lib/business/editor-items";
 import { captureOperationError } from "@/lib/observability/operations";
@@ -77,6 +77,9 @@ function parseDraft(fd: FormData) {
    parseSectionContent(JSON.stringify(content), section.kind);
    return { key, kind: section.kind, title: String(section.title ?? section.kind).trim().slice(0, 80), position: index, enabled: Boolean(section.enabled), content };
  });
+ for (const [provider, profile] of Object.entries(parsed.providerProfiles || {})) {
+  if (isDeliveryProvider(provider) && profile?.url && !deliveryLinkHref(provider, profile.url)) throw new Error("Delivery destinations must be safe HTTPS URLs.");
+ }
  const providerProfiles = Object.fromEntries(Object.entries(parsed.providerProfiles || {}).slice(0, 40).map(([provider, profile]) => [provider.slice(0, 40), {
    value: String(profile?.value || "").trim().slice(0, 500) || undefined,
    url: String(profile?.url || "").trim().slice(0, 2048) || undefined,
@@ -101,6 +104,7 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
    const label = String(item.label || "").trim().slice(0, 80);
    const valueText = String(item.value || "").trim().slice(0, 500);
    const url = String(item.url || "").trim().slice(0, 2048);
+   if (isDeliveryProvider(provider) && item.url && !deliveryLinkHref(provider, String(item.url))) throw new Error("Delivery destinations must be complete HTTPS URLs without credentials or control characters.");
    if (provider === "call" || provider === "phone") {
     if (valueText && !normalizeEgyptianPhone(valueText)) throw new Error("Use a valid Egyptian phone number for this action.");
    } else if (provider === "whatsapp") {
