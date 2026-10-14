@@ -1,33 +1,45 @@
 # NexTap staging validation and production release handoff
 
-Updated: October 13, 2026, approximately 13:26 Africa/Cairo (UTC+03:00).
-Workspace: `F:\Abdelrahman\projects\NexTap\NexTapCodex`.
+Updated: October 14, 2026, Africa/Cairo (UTC+03:00).
+Workspace: `F:\projects\NexTabCodex-integration-preprod`.
 Branch: `chore/hosted-staging-validation`.
-Current source commit: `814b5892ad2778079434f52232b713b51edc0083`
-(`fix: use nextap services domain`).
+Current source commit: `645768a32aae61a32578a886acc6569c2e7f26ef`.
 
 This is the current operational handoff. It supersedes the DNS, deployment,
 branch-binding, and next-action statements in the older deployment handovers.
 The correct domain spelling is `nextap.services`.
 
+### Release update (October 14, 2026)
+
+PR #1 is merged into protected `staging`; remote `staging` and `main` both
+point to `87e60eb6d97e93e0bf7a7a7c2304099c2305b66f`, and `main` is the GitHub
+default branch. Production migrations are applied through Supabase MCP, Vercel
+Production Sentry variables are configured without exposing values, and
+`www.nextap.services` is verified with a permanent `308` redirect to
+`nextap.services`. Vercel Production Branch remains `beta01` until the owner
+sets it to `main` in the dashboard. Production Auth/owner setup, the first
+Production deployment approval, and final smoke checks remain pending.
+
 ## 1. Objective and current result
 
 Finish hosted validation against isolated Supabase Staging, prepare a concrete
-production release from validated source, and activate production when launch
-is authorized. This documentation task does not perform or authorize a
-production deployment, merge, database change, or new DNS change.
+production release from validated source, and activate Production through the
+protected release flow.
 
 DNS and HTTPS are working for apex, admin, and staging. Vercel reports all three
-domains as verified with valid DNS configuration. Staging serves a Ready
-Preview when accessed through the authenticated Vercel CLI.
+domains as verified with valid DNS configuration. Staging serves the Ready
+Preview deployment `dpl_8LThxa7vtTVF5HKfJjYFfTcvPGtR` from the candidate branch
+when accessed through the authenticated Vercel CLI.
 
 Main/admin return Vercel's `404 DEPLOYMENT_NOT_FOUND`: their DNS and certificates
 work, but they do not yet serve an assigned production application. Staging's
 unauthenticated Vercel-login redirect is Deployment Protection.
 
-Complete hosted application validation remains pending. A `200` homepage
-response proves reachability, not successful login, publishing, cards, or
-monitoring.
+Hosted application validation passed on the candidate SHA: 63 passed, 0 failed,
+2 controlled Sentry diagnostics skipped, and one desktop media-upload retry
+marked flaky. The sanitized summary verified the deployment and isolated
+Staging project after the run. A zero-flake result and direct Phase 6 RPC
+correlation remain optional follow-up gates.
 
 ## 2. Resources and environment separation
 
@@ -38,19 +50,23 @@ monitoring.
 | Team slug / ID | `abdelrahman-867e` / `team_j1AHLbF49M6Ob2sm2QBz7sA5` |
 | Connected repository | `abdelrahman-elseht/NexTapCodex` |
 | Vercel Production Branch currently configured | `beta01`; legacy setting, rejected by the owner as the release source |
-| Staging hostname branch | `chore/hosted-staging-validation`, freshly inspected |
-| Ready Preview deployment | `dpl_CCGxHYZ9hGgeRZRz9cSfNPQo7W3r` |
+| Staging hostname branch | protected `staging`, freshly inspected |
+| Ready Preview deployment | `dpl_8LThxa7vtTVF5HKfJjYFfTcvPGtR` |
 | Deployment target | `preview`, freshly inspected |
-| Preview URL | `https://nextap-m6quxxab7-abdelrahman-867e.vercel.app` |
+| Preview URL | `https://nextap-ndwsa1hux-abdelrahman-867e.vercel.app` |
 | Stable staging URL | `https://staging.nextap.services` |
 | Staging Supabase | `flkakuysakgwfoemgbwn` (`NexTabCodex`) |
 | Production Supabase | `jezpobjlfvihikplxrta` (`NexTapProduction`) |
 | Sentry identifiers in source | Organization `abdelrahman-0n`, project `nextap` |
-| Earlier draft PR | `https://github.com/abdelrahman-elseht/NexTapCodex/pull/1`; checks not re-inspected here |
+| PR #1 | merged into `staging`; 4 required checks passed before merge |
 
 Inspection of `staging.nextap.services` resolves to the Ready deployment above.
-The hostname binding changed from `staging` to
-`chore/hosted-staging-validation` during the earlier continuation.
+The hostname is bound to protected `staging`.
+
+The release flow is `feature/* -> staging -> main -> Production`. Remote
+`staging` and `main` both point to the accepted merge SHA. Vercel's Production
+Branch remains legacy `beta01`; it must stay unused until `main` is explicitly
+selected.
 
 Public URL values and target metadata were re-inspected without decrypting
 encrypted or sensitive keys:
@@ -81,13 +97,14 @@ A fresh `git ls-remote --heads origin` and local worktree inventory confirmed:
 
 | Branch or workspace | Role and current state |
 | --- | --- |
-| `chore/hosted-staging-validation` | Current candidate source at `814b589`; hosted validation remains pending |
+| `chore/hosted-staging-validation` | Current accepted candidate at `645768a`; hosted validation passed |
 | `origin/integration/preprod` | Existing consolidation/release-preparation branch at `1a24315` |
 | `origin/chore/production-setup` | Historical infrastructure-preparation branch at `a431c07`; not the complete current app |
-| `main` | Absent locally and remotely; proposed final release branch, not an established choice |
-| Current registered worktree | `F:\Abdelrahman\projects\NexTap\NexTapCodex`, on the validation branch |
-| Historical production-setup folder | `F:\projects\NexTabCodex-production-setup`; this path no longer exists |
-| Separate production worktree | None registered in this repository |
+| `main` | Remote branch created from the accepted Staging merge; GitHub default branch |
+| Current validation worktree | `F:\projects\NexTabCodex-integration-preprod`, on `chore/hosted-staging-validation` |
+| Historical production-setup worktree | `F:\projects\NexTabCodex-production-setup`, on `chore/production-setup` at `a431c07`; not the complete current app or an authorized release source |
+| Other registered worktrees | `F:\projects\NexTabCodex`, `F:\projects\feature\ui-overhaul`, `F:\projects\NexTabCodex-observability-audit`, `F:\projects\NexTabCodex-redesign`, and `F:\projects\nextap-paper-experiment`; do not mutate them for release work |
+| Dedicated `main` release worktree | None; a path such as `F:\projects\NexTabCodex-release` has not been created |
 
 `origin/integration/preprod` is an ancestor of the current candidate. It is
 14 commits behind, with no unique commits on its side, at this inspection.
@@ -96,10 +113,10 @@ a release branch. Do not release the older preproduction tip unchanged.
 
 Recommended final arrangement is a dedicated `main` branch derived from the
 accepted preproduction source, with a sibling release worktree such as
-`F:\Abdelrahman\projects\NexTap\NexTapCodex-release`. That branch and folder have
-not been created. Confirm the final branch name as part of release preparation,
-then align Vercel's Production Branch with it before launch. No Vercel branch
-setting was changed by this documentation correction.
+`F:\projects\NexTabCodex-release`. That branch and folder have not been created.
+Confirm the final branch name as part of release preparation, then align
+Vercel's Production Branch with it before launch. No Vercel branch setting was
+changed by this documentation correction.
 
 See [integration history](INTEGRATION_HANDOFF.md) for the original combination
 of the application and infrastructure branches. Its `F:\projects\...` worktree
@@ -142,12 +159,11 @@ Certificate `cert_wRAm2yiZA8zhvDsw2doYcDFe` covers both hosts with
 | `staging.nextap.services` | Unauthenticated `302` to Vercel SSO | Deployment Protection |
 | `staging.nextap.services` | Authenticated CLI `200`, HTML | Preview is reachable |
 | Generated Preview hostname | Earlier unauthenticated check redirected to Vercel login | Protected Preview |
-| `www.nextap.services` | Certificate-name validation failure | DNS exists; `www` is absent from inspected Vercel project domains |
+| `www.nextap.services` | Verified Vercel domain; HTTP 308 redirect to `nextap.services` | Canonical redirect is configured |
 
-If `www` should be supported, add it to the existing Vercel project with a
-redirect to `https://nextap.services`, then verify its certificate and redirect.
-This is a pending Vercel decision; do not change working apex records to fix it.
-It was not performed in this task.
+The documented `www` decision is implemented: Vercel owns the verified project
+domain and returns a permanent `308` redirect to `nextap.services`. Hostinger's
+existing `www` CNAME remains unchanged.
 
 Cloudflare is not authoritative for this domain. Earlier resources using
 `nextab.services` are historical context, not current DNS instructions.
@@ -155,8 +171,9 @@ Cloudflare is not authoritative for this domain. Earlier resources using
 ## 4. Working provider access and verification commands
 
 Vercel MCP returned team-scope `403`, including its protected-deployment fetch.
-The separately authenticated CLI works through `npx.cmd`; bare `vercel` was
-not found on PATH. Observed CLI version: `63.1.2`.
+After device authentication, the separately authenticated `npx.cmd` CLI works;
+the observed CLI version is `64.0.2`. Bare `vercel` is not on PATH. Do not
+print or decrypt environment values.
 
 Do not ask the owner to authenticate again while CLI access works. If it loses
 authentication, run `npx.cmd --yes vercel login` and let the owner complete the
@@ -197,9 +214,10 @@ for both. Keep bypass secrets in ignored configuration/provider secret storage.
 
 ### Supabase Auth
 
-Inspect Staging Auth URL configuration before changing it. The previous MCP
-surface did not expose an Auth configuration write; configuration and readback
-are pending, not confirmed complete.
+Inspect Staging Auth URL configuration before changing it. The current MCP
+surface does not expose Auth configuration readback or writes; the hosted
+login/session journeys pass, while the exact dashboard readback remains an
+operator-only check.
 
 Intended hosted Site URL:
 
@@ -211,7 +229,7 @@ Required callback allowlist:
 
 ```text
 https://staging.nextap.services/auth/callback
-https://nextap-m6quxxab7-abdelrahman-867e.vercel.app/auth/callback
+https://nextap-ndwsa1hux-abdelrahman-867e.vercel.app/auth/callback
 ```
 
 Retain explicitly needed local callbacks after inspection. Add exact new
@@ -231,9 +249,12 @@ UI journey.
 
 ### Hosted Sentry
 
-Current Vercel project environment metadata contains only six Supabase/site
-variables. No Sentry variables were present. Runtime capture in source requires
-a DSN. Prior empty searches cannot prove hosted monitoring works.
+The current Vercel Preview metadata contains the server and browser Sentry DSN
+variables plus `staging` environment variables. Values remain encrypted or
+secret in provider storage and are intentionally omitted here. The latest
+read-only search found no staging errors or warning logs and did find staging
+traces. The controlled diagnostic cases were skipped, so no diagnostic event
+receipt is claimed.
 
 Configure supported Preview variables using existing names:
 
@@ -249,36 +270,23 @@ Configure supported Preview variables using existing names:
 | `SENTRY_ORG` / `SENTRY_PROJECT` | `abdelrahman-0n` / `nextap`, if explicitly supplied |
 | `SENTRY_AUTH_TOKEN` | Optional private build token for source-map upload; never browser-exposed |
 
-Inspect the actual Sentry connection/project first. Rebuild Preview after
-environment changes; verify its target and Supabase mapping. Record replacement
-deployment ID/URL/commit. Public browser variables must be included in the build.
+The accepted Preview deployment has the expected target and Supabase mapping.
+For a future Sentry variable change, rebuild Preview and record the replacement
+deployment ID/URL/commit. Public browser variables must be included in the
+build.
 
 If controlled diagnostics are used, restrict them to Staging, verify event
 receipt/redaction, then disable and rebuild before final acceptance. Production
 diagnostics stay disabled. Source-map upload is a separate private build concern.
 
-## 6. Hosted E2E setup
+## 6. Hosted E2E setup and result
 
-`e2e.config.ts` targets `http://127.0.0.1:3137` and starts local Next.js.
-`E2E_SERVER_MODE=production` selects local `next start`; it does not deploy
-production or test a hosted URL. No hosted base-URL override exists currently.
-Running `npm.cmd run test:e2e` now cannot count as hosted validation.
-
-The next implementation should:
-
-1. Add hosted configuration/mode following existing `e2e` / `@e2e-dev/web`
-   patterns and the environment guard.
-2. Use the verified hosted URL and omit the local server command.
-3. Preserve desktop `1440x960` and mobile `390x844` targets; add smaller
-   viewports where stories require them.
-4. Establish Vercel protection access in browsers and direct HTTP requests.
-   Keep application login separate from Vercel access.
-5. Supply isolated credentials and fixtures through ignored configuration.
-   Explicitly report missing prerequisites and skipped coverage.
-6. Audit local-only assumptions, direct `fetch` calls, fixture paths,
-   diagnostics requirements, and hardcoded URLs.
-7. Capture pass/fail/skip/unselected counts in dated output. A zero exit
-   code can include skips.
+`e2e.config.ts` still targets `http://127.0.0.1:3137` for local runs.
+`e2e.hosted.config.ts` targets only the stable Staging origin, omits a local
+server command, preserves desktop `1440x960` and mobile `390x844`, and applies
+the Staging environment guard. The hosted browser helper establishes protected
+Vercel access separately from application login and restricts direct requests
+to the exact Staging hostname.
 
 Existing test inputs:
 
@@ -295,15 +303,19 @@ creates uniquely named synthetic data on approved non-production Supabase and
 writes a fixture file. It requires an existing owner Auth account/allowlist
 entry; it does not provision them. Clean up only the run's own records.
 
-After implementing `e2e.hosted.config.ts`, this planned command would run hosted
-tests. That file does not exist yet; this is not a currently runnable check:
+The accepted workflow command was:
 
 ```powershell
-npx.cmd e2e run --config e2e.hosted.config.ts --target desktop,mobile --output artifacts/hosted-staging-20261013
+npm.cmd run test:e2e:hosted -- --output artifacts/hosted-staging
 ```
 
-Start with public smoke checks, then authenticated/mutation journeys. Test the
-stable and generated origins, distinguishing callbacks and canonical card URLs.
+GitHub run `38476685140` selected 66 hosted checks, executed 64, passed 63,
+failed 0, skipped 2 controlled Sentry diagnostics, and left 0 unselected. The
+desktop `media-upload` result was flaky on its first attempt and passed on the
+runner retry. Its sanitized summary verified the deployment identity and
+Staging mapping after the tests. The two Sentry diagnostic cases were skipped;
+normal hosted Sentry searches found no staging errors or warning logs and did
+find staging traces.
 
 ## 7. Hosted acceptance and evidence
 
@@ -329,10 +341,11 @@ viewport cannot prove an NFC tap or installed payment-app behavior.
 ### Phase 6 publication path
 
 Earlier Staging inspection confirmed the pointer/snapshot functions and grants.
-Hosted use remains unproven. Load a synthetic published `/b/<slug>` and correlate
-server-side evidence with `get_publication_pointer` and
-`get_publication_snapshot` calls. Browser requests alone cannot show server
-RPCs; cached reads need not invoke the snapshot RPC every time.
+The hosted journeys exercised published pages, but the sanitized run summary
+does not identify which cached reader executed. Hosted use therefore remains an
+optional evidence follow-up: load a synthetic published `/b/<slug>` and
+correlate server-side evidence with `get_publication_pointer` and
+`get_publication_snapshot` calls.
 
 Use provider logs or temporary redacted instrumentation to distinguish this
 path from the five-second compatibility fallback. RPC existence, direct SQL
@@ -360,58 +373,58 @@ for this documentation change:
 - GitHub `quality` after forwarding `CI=true` to the E2E app process.
 - `git diff --check`.
 
-Current CI builds with placeholder Supabase settings and runs public smoke
-checks; it does not prove authenticated hosted journeys. Re-inspect checks for
-the final release commit.
+The current CI checks use placeholders for local public smoke tests, while the
+protected Hosted Staging workflow uses the isolated Staging project and
+environment credentials. Re-inspect checks for every future release commit.
 
 Earlier Staging evidence reported 21 remote history entries, all 11 application
 tables with RLS, pointer/snapshot grants, anonymous denial for `assign_card`,
-restricted `rls_auto_enable`, and corrected alias-table grants. See
+restricted `rls_auto_enable`, and corrected alias-table grants. The current
+read-only inspection confirms the same 21 migration entries. See
 [schema reconciliation](STAGING_SCHEMA_RECONCILIATION_HANDOFF.md).
 Historical local/remote timestamps differ; do not blindly run `supabase db push`
 or force history equality.
 
-Earlier advisors reported authenticated security-definer `create_card_batch`
-access, disabled leaked-password protection, and six unused-index informational
-findings. Recheck before release and record decisions. Low Staging traffic
-alone is not evidence to remove indexes.
+The current advisors report authenticated security-definer `create_card_batch`
+access, disabled leaked-password protection, and five unused-index informational
+findings. Record decisions before release. Low Staging traffic alone is not
+evidence to remove indexes.
 
-Empty historical Sentry searches do not prove hosted capture, especially with
-the absent Vercel DSNs.
+The current Preview project has Sentry DSN and `staging` environment metadata in
+provider storage. Values are intentionally omitted from this document. The
+latest read-only Sentry search found no staging errors or warning logs and did
+find staging traces; the controlled diagnostic cases remain skipped.
 
-Production schema, Auth/owner setup, Storage, backups, plan suitability,
-rate limits, and monitoring were not revalidated in this continuation. An
-older setup handoff recorded only 11 Production migrations; source contains
-later changes. Inspect parity and prepare reviewed migrations before release.
+Production Auth/owner setup, Storage, backups, plan suitability, rate limits,
+and monitoring remain operator checks. Current read-only checks show 20
+Production migrations, all 11 application tables empty with RLS, one intentional
+`create_card_batch` security-definer warning, and 22 unused-index informational
+findings. The nine missing source migrations were applied through Supabase MCP.
 
 ## 9. Production preparation and activation
 
-After hosted Staging passes:
+After hosted Staging passes (complete through the current handoff):
 
 1. Identify the tested SHA. `beta01` is explicitly excluded as the release
    source even though Vercel currently points there.
-2. Inspect current CI/PR checks and integrate accepted work into
-   `integration/preprod`. Create the agreed final release branch from that
-   validated source; `main` is the recommendation and does not yet exist.
-   Prepare a separate release worktree if useful, then align Vercel's
-   Production Branch during the reviewed release process. A preproduction
-   merge is distinct from production activation.
-3. Inspect Production schema/history and prepare missing forward-compatible
-   migrations, grants, RPCs, and Storage configuration. Preserve data/history.
-   Establish backup/restore readiness before risky database work. Use Supabase
-   and Postgres skills before database changes.
+2. PR #1 is merged into protected `staging`; remote `main` was created from the
+   accepted SHA and is protected with the required `quality` check. Vercel's
+   Production Branch still needs to be set explicitly to `main`.
+3. Production schema parity is applied through Supabase MCP: nine missing
+   forward-compatible migrations, grants, RPCs, indexes and security ACLs.
+   Production data remains empty and isolated.
 4. Configure Production Auth Site URL, exact callbacks, disabled public signup,
-   owner Auth account, and owner allowlist. Include the admin-origin callback
-   if login will occur there.
+   owner Auth account, and owner allowlist in the Supabase dashboard.
 5. Confirm Production maps to `jezpobjlfvihikplxrta` and
-   `https://nextap.services`. Configure Production Sentry separately.
+   `https://nextap.services`. Production Sentry variables are configured; verify
+   them on the first Production deployment without printing values.
 6. Verify QR/NFC URLs use production origin; do not manufacture customer cards
    from staging exports.
 7. Record monitoring, abuse/rate-limit controls, current provider plan
    suitability, backups, restore procedure, and launch smoke checks.
-8. Prepare exact commit, checks, migration plan, domain assignments, and
-   rollback as reviewable work before requesting first public-launch
-   authorization.
+8. The GitHub Production Environment now requires the single available account
+   to approve deployments, with admin bypass disabled. Record the first Ready
+   Production deployment and smoke-test evidence before public launch.
 
 Build validated source with Production settings. The current Preview artifact
 was built against Staging; do not assign it directly to main/admin as a shortcut.
@@ -474,18 +487,25 @@ work needs stronger isolation.
 ## 11. Next agent instructions
 
 1. Read `AGENTS.md`, architecture, documentation index, and this handoff.
-2. Inspect the worktree. Preserve the pre-existing `next-env.d.ts` change.
-   Documentation edits are intentionally uncommitted unless later committed.
+2. Inspect the worktree and keep provider credentials out of output. Commit
+   documentation through the protected PR flow when source-of-truth text changes.
 3. Reuse known Vercel scope and authenticated CLI; inspect state before changes.
    Treat its `beta01` Production Branch as legacy configuration, not the
    authorized release source. Use the branch/worktree inventory in section 2.
-4. Finish Staging Auth, hosted monitoring, and hosted E2E setup.
-5. Run public/authenticated/mutation/Phase 6 journeys; fix failures and capture
-   sanitized evidence.
-6. Record actual pass/fail/skip counts and final deployment IDs here.
-   Recommend the preproduction merge only after acceptance.
-7. Prepare a reviewable production release. Request first public-launch
-   authorization only after preparation and explain the remaining action.
+4. Review the accepted hosted run, provider readbacks, and the operator-only
+   Staging Auth dashboard check recorded above. Do not repeat passed local or
+   hosted suites unless a new source/provider change requires it.
+5. Treat zero-flake media-upload and Phase 6 RPC correlation as optional gates
+   unless the release owner makes either requirement explicit.
+6. Record new deployment IDs and sanitized counts here. Keep the release flow
+   `feature/* -> staging -> main -> Production` and leave `beta01` unused.
+7. Finish Vercel Production Branch selection, Production Auth/owner setup,
+   environment approval, first Ready deployment verification, and controlled
+   Production smoke checks.
+
+The copy/paste continuation prompt is maintained in the root
+`HOSTED_STAGING_VALIDATION_HANDOFF.md` under **Continuation prompt**. Keep that
+prompt synchronized with this runbook if provider state changes.
 
 The owner authorizes autonomous continuation and will complete interactive
 login when needed. Use working access before requesting help. Do not ask them

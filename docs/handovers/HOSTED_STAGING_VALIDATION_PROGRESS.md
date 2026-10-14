@@ -1,11 +1,20 @@
 # Hosted Staging validation progress
 
-Updated: October 14, 2026 (Cairo). This is progress evidence, not Staging acceptance.
+Updated: October 14, 2026 (Cairo). This records the accepted hosted Staging
+validation run and completed protected release preparation.
+
+Current state supersedes older pending-release wording below: PR #1 was merged
+into `staging`, remote `main` was created from merge SHA
+`87e60eb6d97e93e0bf7a7a7c2304099c2305b66f`, Production migrations were applied
+through Supabase MCP, and `www.nextap.services` is a verified Vercel `308`
+redirect to `nextap.services`. Remaining blockers are Vercel Production Branch
+selection (`main`), Production Auth setup/owner creation, and first Production
+deployment approval.
 
 ## Reviewed implementation
 
-The candidate branch is `chore/hosted-staging-validation`; PR #1 targets
-`staging` and remains draft and unmerged. Public landing navigation has no
+The candidate branch is `chore/hosted-staging-validation`; PR #1 targeted
+`staging` and is now merged. Public landing navigation has no
 owner entry points. The regression now checks normalized navigation URLs in
 Arabic and English, including absolute URLs, query strings and trailing slashes.
 Direct login, owner dashboard and session-refresh journeys remain separate.
@@ -26,25 +35,40 @@ final verification marks the sanitized summary as failed, even when browser
 assertions pass. Full runner output, cookies, card URLs and failure traces are
 kept out of uploaded hosted artifacts.
 
-## Validation before the hosted identity deployment
+## Current hosted acceptance
 
-- Typecheck and lint passed; lint retains 11 pre-existing warnings, no errors.
-- Unit suite passed 103 tests; the final focused deployment/summary regression
-  passed 3 tests, adding one further test to the suite.
-- A fresh production build passed.
-- Local landing suite passed 12 desktop/mobile checks.
-- Protected hosted landing and observability selection passed 16 checks against
-  the earlier candidate deployment. This validates cookie access and login, but
-  does not accept the new source SHA.
-- Earlier full hosted read-only coverage passed 41, failed 1 and skipped 20.
-  The failure was an owner login exceeding a five-second assertion timeout;
-  the focused rerun passed with a bounded 30-second assertion.
+PR #1 had four passing required checks (`quality`, hosted E2E, Vercel and
+Vercel Preview Comments) before merge. The accepted hosted
+run is [38476685140](https://github.com/abdelrahman-elseht/NexTapCodex/actions/runs/38476685140)
+on commit `645768a32aae61a32578a886acc6569c2e7f26ef`:
+
+- Ready Preview deployment `dpl_8LThxa7vtTVF5HKfJjYFfTcvPGtR` served
+  `https://staging.nextap.services` with `target: preview`, the candidate
+  branch, and Supabase project `flkakuysakgwfoemgbwn` before and after tests.
+- Desktop and mobile hosted journeys discovered and selected 66 checks;
+  64 executed, 63 passed, 0 failed, 2 skipped, 0 unselected.
+- The two skips are the controlled Sentry diagnostic cases. The one flaky
+  result was the desktop `media-upload` journey; its retry passed. The suite
+  therefore passed, but zero flaky results are not yet a release requirement.
+- Mutation acceptance used a fresh namespaced synthetic fixture. The sanitized
+  summary is the only uploaded artifact; credentials, cookies, card URLs and
+  runner traces were not published.
+
+The preceding local checks remain historical evidence: typecheck, lint (11
+pre-existing warnings), unit tests, database contracts, production build,
+`git diff --check`, and focused local browser coverage all passed before this
+hosted run. They were not repeated because the accepted hosted run changed no
+source.
+
+The ignored local `.e2e/report.json` is an interrupted pre-acceptance run from
+the previous checkout and contains protected-login failures; it is not used as
+acceptance evidence. GitHub run `38476685140` is the authoritative hosted result.
 
 ## Provider state and isolation
 
 Vercel project `nextap` belongs to team `abdelrahman-867e`. The Staging alias
-still follows the candidate branch; Production Branch remains legacy `beta01`.
-Production `main` has not been created/configured. Preview and Production
+now follows protected branch `staging`; Production Branch remains legacy
+`beta01`. Remote `main` exists and points to the accepted Staging merge. Preview and Production
 Supabase URLs reference separate projects. The old automation bypass was
 revoked and replaced directly by the operator; never retrieve or print raw
 project protection configuration.
@@ -58,36 +82,24 @@ remove that temporary trigger and deployment-branch exception after acceptance.
 Staging Supabase `flkakuysakgwfoemgbwn` has 21 migrations, owner/Auth fixtures
 and synthetic media data. Signup is disabled. Site URL and callback allowlist
 are restricted to `https://staging.nextap.services` and its `/auth/callback`.
-Production `jezpobjlfvihikplxrta` has 11 migrations and empty application, Auth
-and Storage data. All 11 application tables in each project have RLS enabled.
-Neither project was linked for migration work in this continuation; no schema
-migrations were applied. Never link/mutate Production from a local shell.
+Production `jezpobjlfvihikplxrta` has 20 migrations after nine reviewed forward
+migrations were applied through Supabase MCP. Its application tables remain
+empty and all 11 application tables in each project have RLS enabled. Never
+link/mutate Production from a local shell.
 
-Sentry access to `abdelrahman-0n/nextap` works. Hosted DSN/environment setup and
-capture evidence remain pending under the post-acceptance provider steps.
+Sentry access to `abdelrahman-0n/nextap` works. Vercel Preview metadata now
+contains the DSN and public DSN plus `staging` environment variables; values
+remain in provider secret storage. A read-only Sentry check for the hosted run
+found no staging errors or warning logs and did find staging traces. No
+controlled diagnostic events were run because those two cases were skipped.
 
-## Protected hosted results and follow-up
+## Earlier hosted failures and follow-up
 
-Candidate `c1fc2e5c26d19de6c5d721411074f1f70b724712` was pushed and its Ready
-deployment is `dpl_6Uc4RzByxw3TSDEmisiqcMSzWR7D`, hosted at
-`nextap-f18cnbq2y-abdelrahman-867e.vercel.app`. The stable Staging alias served
-that exact commit before and after both protected GitHub runs.
-
-- [Read-only run 38464692426](https://github.com/abdelrahman-elseht/NexTapCodex/actions/runs/38464692426)
-  passed 44 checks, failed 0 and skipped 20 (18 mutation cases and 2 controlled
-  Sentry diagnostics). Nothing was unselected.
-- [Mutation run 38464934917](https://github.com/abdelrahman-elseht/NexTapCodex/actions/runs/38464934917)
-  passed 57, failed 4, was flaky in 1 case and skipped 2 Sentry diagnostics.
-  It is a failed acceptance run, despite its successful identity verification.
-- The editor-actions failures reproduced a stale assertion: the test sets a
-  custom bank label to `Bank transfer` and incorrectly expects the default
-  `Bank instructions`. The expectation now preserves the custom label.
-- The card journey read an unpublished page before publishing and then opened
-  the cached negative response immediately after publishing. Its assertion
-  cannot refresh that rendered response. A bounded HTTP content poll now waits
-  for the publication before navigating, as other publishing journeys do.
-- Hosted owner login occasionally exceeds the runner's default five-second
-  assertion. Login URL checks now allow 30 seconds; failures still fail the run.
+The earlier failed mutation run `38475906843` stopped in preflight because its
+owner credential could not authenticate; it produced no E2E report and is not
+the accepted result. The accepted run supersedes it after the protected owner
+fixture was refreshed. The bounded 30-second login assertion and publication
+polling fixes are included in the accepted commit.
 
 A synthetic Staging-only non-owner was provisioned with generated credentials
 stored directly in GitHub Environment secrets `E2E_USER_NON_OWNER_USERNAME` and
@@ -100,22 +112,21 @@ owners, businesses or Storage objects at the isolation readback.
 
 ## Remaining acceptance and release gates
 
-1. Push the reviewed candidate and verify the new Ready deployment identity.
-2. Approve the protected GitHub hosted job and inspect its sanitized summary.
-3. Dispatch mutation acceptance explicitly with `allow_mutations=true`, approve
-   the environment gate and seed a fresh uniquely namespaced synthetic fixture.
-4. Verify automated non-owner denial and corrected mutation journeys on the new
-   deployed SHA; retain publication/RPC evidence and document monitoring skips.
-5. Only after acceptance, obtain release/merge authorization before advancing
-   `staging`, binding its domain, creating `main` or changing Production Branch.
-   The user's standing instruction remains: do not merge anything.
-6. Provision protected Production releases, Auth allowlists, schema parity and
-   recovery evidence, hosted Sentry variables and the explicit `www` decision.
-   Recommended canonical behavior is `www` redirecting to `nextap.services`;
-   no DNS or domain change is authorized by this recommendation.
-
-The operator approves hosted jobs at GitHub Actions → the candidate run →
-Review deployments → `staging` → Approve and deploy. The agent must not
+1. Decide whether the single retried desktop media-upload result must be
+   eliminated. The current suite passes with one flaky result and CI does not
+   require zero flakes.
+2. Correlate the hosted publication journey with the Phase 6 pointer/snapshot
+   RPC path if that evidence is required; the browser run alone does not prove
+   which cached reader executed.
+3. Preserve the release flow `feature/* -> staging -> main -> Production` and
+   leave legacy `beta01` unused.
+4. Set Vercel Production Branch to `main` in the dashboard, configure
+   Production Auth and the real owner account, approve the protected
+   Production deployment, then run controlled Production smoke checks.
+5. The documented `www` decision is complete: Vercel redirects
+   `www.nextap.services` to `nextap.services` with status `308`.
+The operator approves hosted jobs at GitHub Actions â†’ the candidate run â†’
+Review deployments â†’ `staging` â†’ Approve and deploy. The agent must not
 self-approve this gate. Credentials belong in GitHub/Vercel secret storage,
 never chat, committed files or test artifacts.
 
