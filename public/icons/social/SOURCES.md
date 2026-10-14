@@ -9,3 +9,5 @@ Payment asset sources and licensing:
 - `instapay.png`: downloaded from the official InstaPay Egypt website media asset at https://www.instapay.eg/wp-content/uploads/2022/03/logo.png on 2026-10-09. It is used only as a provider identifier; NexTap does not imply endorsement or process payments. The source site did not expose a separate asset license, so the original URL is retained for review and replacement if its terms change.
 - `vodafone.png`: rasterized locally from the official Vodafone Egypt logo geometry embedded in the public Vodafone Cash page at https://web.vodafone.com.eg/en/vodafone-cash on 2026-10-09. It is used only as a provider identifier; NexTap does not imply endorsement or process payments. The local SVG fallback remains under the same directory.
 - `linkedin.svg`: monochrome local adaptation of the LinkedIn mark, based on the Simple Icons project (CC0 1.0) and normalized to black for consistency with the social icon set.
+
+- github.svg, behance.svg, artstation.svg, dribbble.svg, medium.svg: local monochrome wordmark placeholders created for NexTap provider identification; no remote dependency.

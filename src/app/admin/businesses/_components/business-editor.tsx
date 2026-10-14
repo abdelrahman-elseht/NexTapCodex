@@ -19,13 +19,13 @@ const providerGroups:Record<string,ProviderGroup[]>={
   {id:"common",label:"Popular",providers:["call","whatsapp","menu","location"]},
   {id:"booking",label:"Booking & reviews",providers:["booking","reviews"]},
   {id:"social",label:"Social",providers:["instagram","facebook","tiktok","youtube"]},
-  {id:"more-social",label:"More social",providers:["snapchat","x","linkedin","telegram"]},
+  {id:"more-social",label:"More social",providers:["snapchat","x","linkedin","telegram","github","behance","artstation","dribbble","medium"]},
   {id:"payments",label:"Payments",providers:["instapay","vodafone","etisalat","orange","bank"]},
   {id:"other",label:"Other links",providers:["email","website","custom"]},
  ],
  social:[
   {id:"social",label:"Social",providers:["instagram","facebook","tiktok","youtube"]},
-  {id:"more-social",label:"More social",providers:["snapchat","x","linkedin","telegram"]},
+  {id:"more-social",label:"More social",providers:["snapchat","x","linkedin","telegram","github","behance","artstation","dribbble","medium"]},
   {id:"messaging",label:"Messaging & web",providers:["whatsapp","website","custom"]},
  ],
  payments:[
@@ -106,7 +106,7 @@ function ProviderPicker({section,onSelect}:{section:Section;onSelect:(p:Provider
  const groups=providerGroups[section.kind]||[];
  const[activeGroup,setActiveGroup]=useState(groups[0]?.id||"");
  const active=groups.find(group=>group.id===activeGroup)||groups[0];
- const assets=new Set(["whatsapp","facebook","instagram","tiktok","youtube","snapchat","x","linkedin","telegram","instapay","vodafone"]);
+ const assets=new Set(["whatsapp","facebook","instagram","tiktok","youtube","snapchat","x","linkedin","telegram","github","behance","artstation","dribbble","medium","instapay","vodafone"]);
  return <div className="provider-picker" aria-label="Add an item">
   <div className="provider-picker-heading"><strong>Choose what to add</strong><span>Select a type, then enter its destination.</span></div>
   {groups.length>1&&<div className="provider-picker-filters" role="group" aria-label="Provider category">{groups.map(group=><button type="button" key={group.id} className={active?.id===group.id?"active":""} aria-pressed={active?.id===group.id} onClick={()=>setActiveGroup(group.id)}>{group.label}</button>)}</div>}

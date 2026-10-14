@@ -107,7 +107,7 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
     if (valueText && !normalizeEgyptianPhone(valueText) && !normalizeSafeUrl(url)) throw new Error("Use a valid WhatsApp number or destination URL.");
    } else if (provider === "instagram") {
     if (valueText && !normalizeInstagram(valueText)) throw new Error("Use a valid Instagram handle or URL.");
-   } else if (["facebook","tiktok","youtube","snapchat","x","linkedin","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider || "")) {
+   } else if (["facebook","tiktok","youtube","snapchat","x","linkedin","github","behance","artstation","dribbble","medium","telegram","website","maps","reviews","booking","order","location","menu","custom"].includes(provider || "")) {
     if (url && !normalizeSafeUrl(url) && !(provider === "custom" && url.startsWith("/") && !url.startsWith("//") && !url.includes(".."))) throw new Error("Use a complete https:// destination URL.");
    } else if (provider === "instapay" && valueText && !normalizeProviderValue("instapay" as ProviderId, valueText)) {
     throw new Error("Use an InstaPay ID such as name@provider.");
