@@ -11,14 +11,16 @@ The correct domain spelling is `nextap.services`.
 
 ### Release update (October 14, 2026)
 
-PR #1 is merged into protected `staging`; remote `staging` and `main` both
-point to `87e60eb6d97e93e0bf7a7a7c2304099c2305b66f`, and `main` is the GitHub
-default branch. Production migrations are applied through Supabase MCP, Vercel
-Production Sentry variables are configured without exposing values, and
-`www.nextap.services` is verified with a permanent `308` redirect to
-`nextap.services`. Vercel Production Branch remains `beta01` until the owner
-sets it to `main` in the dashboard. Production Auth/owner setup, the first
-Production deployment approval, and final smoke checks remain pending.
+PR #1 is merged into protected `staging`. The accepted release SHA is
+`856bbd42d59fb3c6f92a6ad5eacd7f12c4923f31` on protected `main`, which is the
+GitHub default branch and Vercel Production Branch. Protected `staging` has
+since advanced with documentation-only commits. Production migrations are
+applied through Supabase MCP, Vercel Production Sentry variables are
+configured without exposing values, and `www.nextap.services` is verified with
+a permanent `308` redirect to `nextap.services`. The first Production
+deployment `dpl_6u6SXJEnWqQRDLmGcZopJ4sbhoMY` is READY/PROMOTED. Only Production
+Auth owner setup and an authenticated owner smoke remain operator-only.
+
 
 ## 1. Objective and current result
 
@@ -31,9 +33,9 @@ domains as verified with valid DNS configuration. Staging serves the Ready
 Preview deployment `dpl_8LThxa7vtTVF5HKfJjYFfTcvPGtR` from the candidate branch
 when accessed through the authenticated Vercel CLI.
 
-Main/admin return Vercel's `404 DEPLOYMENT_NOT_FOUND`: their DNS and certificates
-work, but they do not yet serve an assigned production application. Staging's
-unauthenticated Vercel-login redirect is Deployment Protection.
+Production apex returns HTTP `200`; `/admin` returns `307` to `/login`, and
+an invalid Auth callback returns `307` to `/login?notice=invalid`. Staging's
+unauthenticated Vercel-login redirect remains Deployment Protection.
 
 Hosted application validation passed on the candidate SHA: 63 passed, 0 failed,
 2 controlled Sentry diagnostics skipped, and one desktop media-upload retry
@@ -49,7 +51,7 @@ correlation remain optional follow-up gates.
 | Project ID | `prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ` |
 | Team slug / ID | `abdelrahman-867e` / `team_j1AHLbF49M6Ob2sm2QBz7sA5` |
 | Connected repository | `abdelrahman-elseht/NexTapCodex` |
-| Vercel Production Branch currently configured | `beta01`; legacy setting, rejected by the owner as the release source |
+| Vercel Production Branch currently configured | `main`; `beta01` remains unused |
 | Staging hostname branch | protected `staging`, freshly inspected |
 | Ready Preview deployment | `dpl_8LThxa7vtTVF5HKfJjYFfTcvPGtR` |
 | Deployment target | `preview`, freshly inspected |
@@ -63,10 +65,10 @@ correlation remain optional follow-up gates.
 Inspection of `staging.nextap.services` resolves to the Ready deployment above.
 The hostname is bound to protected `staging`.
 
-The release flow is `feature/* -> staging -> main -> Production`. Remote
-`staging` and `main` both point to the accepted merge SHA. Vercel's Production
-Branch remains legacy `beta01`; it must stay unused until `main` is explicitly
-selected.
+The release flow is `feature/* -> staging -> main -> Production`. The accepted
+Production SHA is `856bbd42d59fb3c6f92a6ad5eacd7f12c4923f31` on `main`.
+Protected `staging` has since advanced with documentation-only commits.
+Vercel Production Branch is `main`; `beta01` remains unused.
 
 Public URL values and target metadata were re-inspected without decrypting
 encrypted or sensitive keys:
@@ -154,8 +156,8 @@ Certificate `cert_wRAm2yiZA8zhvDsw2doYcDFe` covers both hosts with
 
 | Host | Observed HTTP/access result | Meaning |
 | --- | --- | --- |
-| `nextap.services` | HTTPS `404`, `X-Vercel-Error: DEPLOYMENT_NOT_FOUND` | DNS/TLS work; production assignment is pending |
-| `admin.nextap.services` | HTTPS `404`, same error | DNS/TLS work; production assignment is pending |
+| `nextap.services` | HTTPS `200` | Production apex served by READY/PROMOTED deployment |
+| `admin.nextap.services` | HTTPS `307` to `/login` | Production admin route is protected by owner login |
 | `staging.nextap.services` | Unauthenticated `302` to Vercel SSO | Deployment Protection |
 | `staging.nextap.services` | Authenticated CLI `200`, HTML | Preview is reachable |
 | Generated Preview hostname | Earlier unauthenticated check redirected to Vercel login | Protected Preview |

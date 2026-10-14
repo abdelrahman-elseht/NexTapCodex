@@ -3,13 +3,14 @@
 Updated: October 14, 2026 (Cairo). This records the accepted hosted Staging
 validation run and completed protected release preparation.
 
-Current state supersedes older pending-release wording below: PR #1 was merged
-into `staging`, remote `main` was created from merge SHA
-`87e60eb6d97e93e0bf7a7a7c2304099c2305b66f`, Production migrations were applied
-through Supabase MCP, and `www.nextap.services` is a verified Vercel `308`
-redirect to `nextap.services`. Remaining blockers are Vercel Production Branch
-selection (`main`), Production Auth setup/owner creation, and first Production
-deployment approval.
+Current state supersedes older pending-release wording below: PR #1 is merged
+into `staging`; protected `main` is the GitHub default and Vercel Production
+Branch at accepted SHA `856bbd42d59fb3c6f92a6ad5eacd7f12c4923f31`; Vercel
+deployment `dpl_6u6SXJEnWqQRDLmGcZopJ4sbhoMY` is READY/PROMOTED; Production
+migrations were applied through Supabase MCP; and `www.nextap.services` is a
+verified Vercel `308` redirect to `nextap.services`. Only Production Auth
+owner setup and an authenticated owner smoke remain operator-only follow-up.
+
 
 ## Reviewed implementation
 
@@ -67,8 +68,9 @@ acceptance evidence. GitHub run `38476685140` is the authoritative hosted result
 ## Provider state and isolation
 
 Vercel project `nextap` belongs to team `abdelrahman-867e`. The Staging alias
-now follows protected branch `staging`; Production Branch remains legacy
-`beta01`. Remote `main` exists and points to the accepted Staging merge. Preview and Production
+now follows protected branch `staging`; Vercel Production Branch is protected
+`main`, and `beta01` remains unused. Remote `main` points to the accepted
+release SHA. Preview and Production
 Supabase URLs reference separate projects. The old automation bypass was
 revoked and replaced directly by the operator; never retrieve or print raw
 project protection configuration.

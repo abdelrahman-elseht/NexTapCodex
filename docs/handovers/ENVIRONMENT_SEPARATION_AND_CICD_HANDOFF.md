@@ -3,14 +3,17 @@
 Updated: October 13, 2026.
 
 Current provider state (October 14, 2026) supersedes the dated **Starting
-state** below: PR #1 is merged, `staging` and `main` both point to
-`87e60eb6d97e93e0bf7a7a7c2304099c2305b66f`, `staging.nextap.services` follows
-protected `staging`, Production migrations are applied through Supabase MCP,
-the GitHub Production Environment requires the single available account's
-approval, and `www.nextap.services` is a verified Vercel `308` redirect to
-`nextap.services`. Vercel Production Branch remains `beta01` until explicitly
-changed to `main`; Production Auth/owner setup and the first Production
-deployment remain pending.
+state** below: PR #1 is merged, protected `main` is the GitHub default branch
+and Vercel Production Branch, and its accepted release SHA is
+`856bbd42d59fb3c6f92a6ad5eacd7f12c4923f31`. Protected `staging` has since
+advanced with documentation-only commits. `staging.nextap.services` follows
+protected `staging`; Production migrations are applied through Supabase MCP;
+the GitHub Production Environment requires approval by the single available
+account; and `www.nextap.services` is a verified Vercel `308` redirect to
+`nextap.services`. The first Production deployment is
+`dpl_6u6SXJEnWqQRDLmGcZopJ4sbhoMY` and is READY/PROMOTED. The only remaining
+operator work is Production Auth owner setup and an authenticated owner smoke.
+
 
 ## Goal
 

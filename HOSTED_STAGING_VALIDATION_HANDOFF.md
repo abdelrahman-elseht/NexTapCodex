@@ -58,12 +58,12 @@ Project `abdelrahman-867e/nextap`, ID `prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ`.
 | Item | State |
 | --- | --- |
 | Connected repository | `abdelrahman-elseht/NexTapCodex` |
-| Production Branch | **Still `beta01`**; this is the remaining release blocker |
+| Production Branch | `main`; `beta01` remains unused as the legacy branch |
 | Staging domain | `staging.nextap.services` → Git branch `staging`, verified |
 | Apex/admin | `nextap.services` and `admin.nextap.services`, verified |
 | `www` | Verified project domain, `308` redirect to `nextap.services` |
 | Production environment | Dedicated Production Supabase values already present; Sentry production values now present |
-| Production deployment | Not created yet; changing Production Branch to `main` must happen first |
+| Production deployment | Ready and promoted from `main` SHA `856bbd42d59fb3c6f92a6ad5eacd7f12c4923f31`; Vercel deployment `dpl_6u6SXJEnWqQRDLmGcZopJ4sbhoMY` |
 
 The authenticated CLI works with `npx.cmd --yes vercel`. Vercel MCP returns a
 team-scope `403`, so the CLI is the fallback. The CLI's public project/link
@@ -100,8 +100,9 @@ one.
 Sentry organization/project identifiers are `abdelrahman-0n` / `nextap`.
 Preview read-only searches found no Staging errors or warning logs and did find
 Staging traces. The hosted diagnostic journeys were intentionally skipped.
-Production DSN and environment variables are configured in Vercel; no
-Production deployment has run yet.
+Production DSN and environment variables are configured in Vercel. The first
+Production deployment is Ready and promoted from the accepted `main` SHA as
+`dpl_6u6SXJEnWqQRDLmGcZopJ4sbhoMY`.
 
 ### Hosted E2E
 
@@ -128,7 +129,7 @@ npx.cmd --yes gh-axi api /repos/abdelrahman-elseht/NexTapCodex/branches/main/pro
 # conversation resolution; force pushes/deletions disabled
 
 npx.cmd --yes vercel api /v9/projects/prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ
-# link.productionBranch=beta01 (must be changed to main in the dashboard)
+# link.productionBranch=main; beta01 remains unused
 
 npx.cmd --yes vercel api /v9/projects/prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ/domains
 # staging branch=staging; www redirect=nextap.services, status=308; all verified
@@ -136,6 +137,19 @@ npx.cmd --yes vercel api /v9/projects/prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ/domains
 npx.cmd --yes vercel env list production --scope abdelrahman-867e
 # Production Supabase variables, Sentry DSNs, production Sentry environments,
 # and SENTRY_TEST_ERRORS_ENABLED are present; values were not printed
+
+npx.cmd --yes vercel api /v6/deployments?projectId=prj_XZKEV6TOqxSy9Hqiw43gZtdz5dZQ --scope abdelrahman-867e
+# dpl_6u6SXJEnWqQRDLmGcZopJ4sbhoMY: READY/PROMOTED, target=production,
+# main SHA=856bbd42d59fb3c6f92a6ad5eacd7f12c4923f31
+
+Invoke-WebRequest https://nextap.services/ -MaximumRedirection 0
+# 200
+Invoke-WebRequest https://www.nextap.services/ -MaximumRedirection 0
+# 308 Location: https://nextap.services/
+Invoke-WebRequest https://nextap.services/admin -MaximumRedirection 0
+# 307 Location: /login
+Invoke-WebRequest 'https://nextap.services/auth/callback?code=invalid' -MaximumRedirection 0
+# 307 Location: https://nextap.services/login?notice=invalid
 ```
 
 The accepted hosted suite and prior local quality/build/unit/database checks
@@ -143,23 +157,23 @@ were not rerun because no application source changed after acceptance.
 
 ## Remaining blockers and exact user actions
 
-1. **Vercel Production Branch.** Sign in to Vercel, open
-   `abdelrahman-867e/nextap` → Settings → Git, set **Production Branch** to
-   `main`, and save. Reply when complete so the resulting Ready Production
-   deployment can be verified.
-2. **Production Supabase Auth.** In the Production Supabase project, set Site
-   URL to `https://nextap.services`, add
-   `https://nextap.services/auth/callback` to the redirect allowlist, keep
-   public signup disabled, and create/confirm the real owner account. Add only
-   that account's UUID to `public.owner_users` using the reviewed dashboard or
-   SQL Editor path. Do not add Staging URLs to Production.
-3. **Production deployment approval.** Once `main` is selected and a deployment
-   is created, approve the pending GitHub `Production` environment deployment
-   from the same account, then report the deployment run/URL.
-4. **Production smoke test.** After approval, run the public homepage, login,
-   owner mutation, logout/session-refresh, published page, and `www` redirect
-   checks against `https://nextap.services`. Keep fixture data isolated and
-   remove only the run's own records.
+The protected release path is complete through the first Ready Production
+deployment. Vercel Production Branch is `main`; `beta01` remains unused. The
+apex, admin, login-redirect, invalid-callback, and `www` canonical redirect
+smoke checks pass. No release action is blocked on a second account.
+
+1. **Production Auth owner setup (operator-only).** In the Production Supabase
+   dashboard, set Site URL to `https://nextap.services`, add
+   `https://nextap.services/auth/callback` to the redirect allowlist, keep public
+   signup disabled, and create/confirm the real owner account. Add only that
+   account UUID to `public.owner_users`. Do not add Staging URLs to
+   Production. Never paste or print the owner password in this repository or
+   chat.
+2. **Authenticated owner smoke (operator-only).** Using the real owner account,
+   run the login, session-refresh, owner mutation, publish/readback, and logout
+   journey against `https://nextap.services`. Keep any fixture data isolated and
+   remove only records created by that run. The credentials are intentionally not
+   requested or recorded here.
 
 ## Continuation prompt
 
@@ -167,26 +181,29 @@ were not rerun because no application source changed after acceptance.
 Continue F:\projects\NexTabCodex-integration-preprod from this handoff.
 Read AGENTS.md, docs/ARCHITECTURE.md, docs/README.md, and this file first.
 
-Release flow is feature/* -> staging -> main -> Production. PR #1 is merged;
-staging and main both point to 87e60eb6d97e93e0bf7a7a7c2304099c2305b66f and
-main is the GitHub default branch. beta01 is legacy and must remain unused.
+Release flow is feature/* -> staging -> main -> Production. PR #1 is merged.
+The accepted release SHA is 856bbd42d59fb3c6f92a6ad5eacd7f12c4923f31 on
+protected `main`, which is the GitHub default branch and Vercel Production
+Branch. Protected `staging` has since advanced with documentation-only commits
+to 54a87f4c1e87d1d7f8deac6e51babb90c5316d3b; this does not change the accepted
+Production artifact. beta01 is legacy and must remain unused.
 
 Hosted acceptance run 38476685140 passed 63/63 executed checks with two
 controlled Sentry diagnostic skips and one successful media-upload retry. Do
 not repeat passed suites unless source or provider state changes.
 
-Production Supabase is jezpobjlfvihikplxrta, isolated and empty; its reviewed
-source migrations are applied through Supabase MCP. Production Vercel values
-are configured without printing secrets, including Sentry production values.
-www.nextap.services is verified and permanently redirects to nextap.services.
+Production Supabase is jezpobjlfvihikplxrta, isolated with empty application
+tables; its reviewed source migrations are applied through Supabase MCP.
+Production Vercel values are configured without printing secrets, including
+Sentry production values. Production deployment
+dpl_6u6SXJEnWqQRDLmGcZopJ4sbhoMY is READY/PROMOTED from the accepted `main`
+SHA. `www.nextap.services` is verified and permanently redirects to
+`https://nextap.services/`.
 
-The remaining gates are: set Vercel Production Branch to main in the dashboard;
-configure Production Auth Site URL/redirect and create the real owner; approve
-the protected Production environment deployment; verify the Ready deployment;
-run controlled Production smoke checks; and record the final deployment ID.
-
-Never print secrets. Never link or mutate Production Supabase from a local
-shell. Before any future Staging migration, run:
+The only remaining operator action is Production Auth owner setup followed by
+an authenticated owner smoke journey. Do not request or print the real owner
+password. Never link or mutate Production Supabase from a local shell. Before
+any future Staging migration, run:
 npx.cmd --yes supabase link --project-ref flkakuysakgwfoemgbwn
 and stop if a database password is requested.
 ```
