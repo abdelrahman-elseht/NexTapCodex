@@ -26,7 +26,7 @@ test("the only eligible published page is selected for card activation", async (
   // URL changes can precede the streamed table; wait for the filtered rows.
   await expect(browser.locator('.table-wrap tbody tr').first().getByText("active", { exact: true })).toBeVisible();
   const shownStatuses = await browser.evaluate(() =>
-    Array.from(document.querySelectorAll(".table-wrap tbody tr"), row => row.children[1]?.textContent?.trim() || ""),
+    Array.from(document.querySelectorAll(".table-wrap tbody tr"), row => row.querySelector("[data-card-status]")?.textContent?.trim() || ""),
   );
   test.skip(shownStatuses.length === 0, "No active cards exist in the configured Supabase project; login and filter navigation were verified.");
   expect(shownStatuses.length).toBeGreaterThan(0);

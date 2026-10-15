@@ -5,7 +5,7 @@ import { vi } from "vitest";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -53,12 +53,36 @@ describe("hosted acceptance deployment identity", () => {
         [true, "2026-10-13T20:01:00.000Z", "passed"],
       ]) {
         await fs.writeFile(path.join(output, "deployment.json"), JSON.stringify({ ...identity, verifiedAfterRun, verifiedAt }));
-        execFileSync(process.execPath, ["scripts/ci/summarize-hosted-e2e.mjs", output]);
+        const run = spawnSync(process.execPath, ["scripts/ci/summarize-hosted-e2e.mjs", output], { env: { ...process.env, E2E_ALLOW_MUTATIONS: "false" } });
+        expect(run.status).toBe(expected === "passed" ? 0 : 1);
         const summary = JSON.parse(await fs.readFile(path.join(output, "summary.json"), "utf8"));
         expect(summary.status).toBe(expected);
       }
     } finally {
       await fs.rm(output, { recursive: true, force: true });
     }
+  });
+
+  it("rejects skipped, unselected or missing acceptance journeys", async () => {
+    const output = await fs.mkdtemp(path.join(os.tmpdir(), "nextap-summary-"));
+    try {
+      const files = ["admin-no-reload", "card-deletion", "provider-links", "card-state", "owner-card-journey", "card-manufacturing", "editor-reliability"];
+      const results = files.flatMap(file => ["desktop", "mobile"].map(targetId => ({ file: `tests/e2e/${file}.e2e.ts`, targetId, status: "passed" })));
+      await fs.writeFile(path.join(output, "fixture.json"), JSON.stringify({ slug: "preprod-media-unit" }));
+      await fs.writeFile(path.join(output, "deployment.json"), JSON.stringify({ ...identity, verifiedAfterRun: true, verifiedAt: "2026-10-13T20:01:00Z" }));
+      for (const scenario of ["complete", "skipped", "missing", "unselected"]) {
+        const rows = results.map(row => ({ ...row }));
+        if (scenario === "skipped") rows[0].status = "skipped";
+        if (scenario === "missing") rows.pop();
+        await fs.writeFile(path.join(output, "report.json"), JSON.stringify({ run: {
+          id: "synthetic", status: "passed", exitCode: 0, finishedAt: "2026-10-13T20:00:00Z",
+          vcs: { commit: identity.commit }, targets: [], summary: { discovered: 14, selected: scenario === "unselected" ? 13 : 14 }, results: rows,
+        } }));
+        const run = spawnSync(process.execPath, ["scripts/ci/summarize-hosted-e2e.mjs", output], { env: { ...process.env, E2E_ALLOW_MUTATIONS: "true" } });
+        expect(run.status).toBe(scenario === "complete" ? 0 : 1);
+        const summary = JSON.parse(await fs.readFile(path.join(output, "summary.json"), "utf8"));
+        expect(summary.accepted).toBe(scenario === "complete");
+      }
+    } finally { await fs.rm(output, { recursive: true, force: true }); }
   });
 });

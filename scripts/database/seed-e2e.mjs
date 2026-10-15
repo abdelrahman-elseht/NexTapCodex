@@ -31,9 +31,15 @@ try {
     batch_name: `Preprod fixture ${slug}`, card_quantity: 1,
     request_key: randomUUID(), card_tokens: [randomBytes(24).toString("base64url")],
   }));
+  const unassignedToken = randomBytes(24).toString("base64url");
+  const unassignedBatch = check(await client.rpc("create_card_batch", {
+    batch_name: `Unassigned fixture ${slug}`, card_quantity: 1,
+    request_key: randomUUID(), card_tokens: [unassignedToken],
+  }));
+  const unassignedCard = check(await client.from("cards").select("id,serial").eq("batch_id", unassignedBatch.id).single());
   const output = process.env.E2E_FIXTURE_PATH || "artifacts/preprod-fixture.json";
   await fs.mkdir(path.dirname(output), { recursive: true });
-  await fs.writeFile(output, JSON.stringify({ businessId: business.id, pageId: page.id, batchId: batch.id, slug }));
+  await fs.writeFile(output, JSON.stringify({ businessId: business.id, pageId: page.id, batchId: batch.id, slug, unassignedBatchId: unassignedBatch.id, unassignedCardId: unassignedCard.id, unassignedToken, unassignedSerial: unassignedCard.serial }));
   console.log(`Created non-production fixture: ${output}`);
 } finally {
   await client.auth.signOut({ scope: "local" });

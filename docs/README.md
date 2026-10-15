@@ -11,10 +11,12 @@
 - [Staging schema reconciliation handoff](handovers/STAGING_SCHEMA_RECONCILIATION_HANDOFF.md): Staging migration history, rollout evidence, and hosted validation gates.
 - [Staging validation and production release handoff](handovers/STAGING_VALIDATION_AND_PRODUCTION_RELEASE_HANDOFF.md): current DNS/TLS and Preview state, remaining Auth and hosted tests, first release, rollback, and ongoing staging workflow.
 - [Environment separation and CI/CD handoff](handovers/ENVIRONMENT_SEPARATION_AND_CICD_HANDOFF.md): branch, code, data, Auth, Storage, migration, CI/CD, release, and rollback guardrails for isolated Staging and Production.
+- [GitHub PR and release workflow](handovers/GITHUB_PR_AND_RELEASE_WORKFLOW.md): single-owner PR #6 merge path, branch protection choices, Staging acceptance, and future `staging` → `main` releases.
 - [Hosted Staging validation progress](handovers/HOSTED_STAGING_VALIDATION_PROGRESS.md): protected hosted workflow, deployment identity evidence, credential confinement and remaining acceptance gates.
 - [Hosted Staging validation handoff](../HOSTED_STAGING_VALIDATION_HANDOFF.md): current accepted run, provider access matrix, release gates and copy/paste continuation prompt.
 - [Optimization handover](handovers/optimization-experience-handoff.md): optimization phases and follow-up verification.
 - [Business Editor reliability handover](handovers/BUSINESS_EDITOR_RELIABILITY_HANDOFF.md): phases 1–3, payment-link limitations, regression results, and browser evidence.
+- [Admin UX, card deletion, provider links and mobile email handoff](handovers/ADMIN_UX_CARD_DELETION_PROVIDER_EMAIL_HANDOFF.md): feature scope, acceptance criteria, database/browser guardrails, and promotion sequence.
 - [Implementation reports](implementation/): detailed reports for completed changes.
 - [Research](research/): provider documentation and technical findings.
 
