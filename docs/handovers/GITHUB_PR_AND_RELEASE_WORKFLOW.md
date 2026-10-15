@@ -144,6 +144,11 @@ This is a governance change: it trades independent approval for an auditable
 self-review. Record the decision in the release PR and complete the checklist
 below. Do not silently weaken checks or push directly to `main`.
 
+Do not reduce the required approval count to zero merely to make the button
+available. If a fully solo repository is a deliberate choice, retain the
+quality, conversation, linear-history, and pull-request gates and use the
+explicit administrator bypass with a recorded self-review.
+
 The equivalent protection readback should show `enforce_admins.enabled: false`:
 
 ```powershell
