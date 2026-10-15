@@ -496,3 +496,14 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.24}
 .payment-logo-image{display:block;width:34px;height:34px;object-fit:contain}.provider-mark .payment-logo-image,.provider-inline-icon .payment-logo-image{width:27px;height:27px}.quick-action .payment-logo-image{width:28px;height:28px}
 .payment-logo-wordmark{display:grid;place-items:center;width:34px;height:34px;font-family:'DM Sans',sans-serif;font-weight:800;line-height:1}.payment-logo-wordmark-etisalat{color:currentColor;font-size:18px}.provider-mark .payment-logo-wordmark,.provider-inline-icon .payment-logo-wordmark{width:27px;height:27px;font-size:15px}.quick-action .payment-logo-wordmark{width:28px;height:28px;font-size:15px}
 .payment-logo-fallback-orange{background:#ff7900;color:#fff}.provider-inline-icon.provider-etisalat,.provider-inline-icon.provider-orange{background:transparent}
+
+/* Inventory intent and feedback use the established admin controls. */
+.inventory-selection { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-block: 16px; }
+.card-selection, .deletion-ack { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.card-selection input, .deletion-ack input { width: 20px; height: 20px; flex: 0 0 auto; }
+.inventory-delete-dialog { max-height: 90dvh; overflow: auto; }
+.deletion-card-list { max-height: 180px; overflow: auto; padding-inline-start: 24px; }
+.mutation-result { margin: 4px 0; color: var(--text, #242424); font-size: .875rem; }
+.app-download-page { max-width: 680px; padding: 40px 24px; margin-inline: auto; }
+.app-download-page p { line-height: 1.7; margin-block: 24px; }
+.provider-talabat img, .provider-fast img { object-fit: contain; }

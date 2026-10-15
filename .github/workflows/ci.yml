@@ -49,6 +49,9 @@ jobs:
       - name: Migration and RLS contracts (disposable PostgreSQL)
         run: npm run test:db
 
+      - name: Real PostgreSQL concurrency and rollback
+        run: npm run test:db:concurrency
+
       - name: Production build
         run: npm run build
 

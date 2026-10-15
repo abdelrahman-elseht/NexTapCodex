@@ -79,6 +79,8 @@ jobs:
 
       - name: Summarize hosted E2E without session data
         if: always()
+        env:
+          E2E_ALLOW_MUTATIONS: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_mutations && 'true' || 'false' }}
         run: node scripts/ci/summarize-hosted-e2e.mjs
 
       - name: Preserve sanitized hosted E2E summary

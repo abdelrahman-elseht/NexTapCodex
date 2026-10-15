@@ -1,0 +1,51 @@
+name: Self-review
+
+on:
+  # This workflow deliberately runs from the base branch's trusted copy. It
+  # inspects the PR through the read-only GitHub API and never executes PR code.
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: self-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  self-review:
+    name: self-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out trusted base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Evaluate self-review and write release manifest
+        id: evaluate
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SELF_REVIEW_OUTPUT: self-review
+        run: node scripts/ci/self-review.mjs
+
+      - name: Preserve self-review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: self-review-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: self-review
+          if-no-files-found: error
+          retention-days: 90

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createBusiness } from "../actions";
+import { MutationForm } from "@/components/admin/mutation-form";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { templatePresets } from "@/lib/business/content";
 
@@ -17,7 +17,8 @@ export default async function NewBusiness({ searchParams }: { searchParams: Prom
         {error === "slug" ? "هذا الرابط مستخدم بالفعل. اختر رابطاً آخر." : "تعذر إنشاء النشاط. راجع الحقول المطلوبة وحاول مرة أخرى."}
       </div>}
 
-      <form action={createBusiness} className="editor-panel create-business-form">
+      <MutationForm action="/api/admin/operations" className="editor-panel create-business-form">
+        <input type="hidden" name="mode" value="business" />
         <div className="panel-heading">
           <div><h2>بيانات النشاط</h2><p>تظهر هذه المعلومات في صفحة النشاط وعلى لوحة الإدارة.</p></div>
         </div>
@@ -48,7 +49,7 @@ export default async function NewBusiness({ searchParams }: { searchParams: Prom
           <p className="form-help">يمكنك معاينة المسودة قبل النشر. لن تظهر الصفحة للزوار قبل تفعيلها ونشرها.</p>
           <SubmitButton className="button gold" pendingText="جارٍ التنفيذ...">إنشاء النشاط والصفحة</SubmitButton>
         </div>
-      </form>
+      </MutationForm>
     </>
   );
 }

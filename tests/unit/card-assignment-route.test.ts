@@ -1,4 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 const mocks = vi.hoisted(() => ({ claims: vi.fn(), owner: vi.fn(), rpc: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({
   auth: { getClaims: mocks.claims }, rpc: mocks.rpc,
@@ -57,4 +58,19 @@ it("does not mutate malformed or unconfirmed requests", async () => {
 it("reports an RPC rejection without a false success", async () => {
   mocks.rpc.mockResolvedValue({ error: { message: "Rejected" } });
   expect((await POST(request())).headers.get("location")).toContain("error=assignment");
+});
+it("negotiates JSON without a redirect and preserves the operation key", async () => {
+  const req = request({ request_key: card }); req.headers.set("accept", "application/json");
+  mocks.rpc.mockResolvedValue({ data: { card: { id: card, status: "active" } }, error: null });
+  const response = await POST(req);
+  expect(response.status).toBe(200);
+  expect(response.headers.get("location")).toBeNull();
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(await response.json()).toEqual({ ok: true, card: { id: card, status: "active" } });
+  expect(mocks.rpc).toHaveBeenCalledWith("assign_card_once", expect.objectContaining({ request_key: card }));
+});
+it("rejects JSON assignment without an idempotency key", async () => {
+  const req = request(); req.headers.set("accept", "application/json");
+  expect((await POST(req)).status).toBe(422);
+  expect(mocks.rpc).not.toHaveBeenCalled();
 });

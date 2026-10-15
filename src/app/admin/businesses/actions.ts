@@ -4,18 +4,14 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/business/content";
-import { destinationStrategyFor, isMobileWalletProvider, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
+import { isDeliveryProvider, deliveryLinkHref, destinationStrategyFor, isMobileWalletProvider, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
 import { z } from "zod";
 import { normalizeEditorItems } from "@/lib/business/editor-items";
 import { captureOperationError } from "@/lib/observability/operations";
 
 const slugSchema=z.string().trim().toLowerCase().regex(/^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?[a-z0-9]$/,"استخدم أحرفاً صغيرة وأرقاماً وشرطات فقط.");
 function val(fd:FormData,key:string,max=200){return String(fd.get(key)||"").trim().slice(0,max)}
-const defaults:Record<string,unknown>={
- hero:{tagline:"",description:"",coverUrl:"",logoUrl:"",color:"#7a2028",language:"en",ctaLabel:"",ctaUrl:""},
- about:{description:""},hours:{items:[]},contact:{phone:"",whatsapp:"",email:"",address:"",mapsUrl:""},
- quick_actions:{items:[]},social:{items:[]},payments:{items:[]},links:{items:[]},services:{items:[]},gallery:{items:[]},reviews:{url:""},branch:{items:[]}
-};
+import { sectionDefaults as defaults, sectionTitles } from "@/lib/business/section-defaults";
 export async function createBusiness(fd:FormData){
  const {supabase}=await requireOwner();
  const name=val(fd,"name",120),category=val(fd,"category",80),slug=val(fd,"slug",60).toLowerCase(),template=val(fd,"template",20);
@@ -27,7 +23,7 @@ export async function createBusiness(fd:FormData){
  const presetOrder = presetSections(template);
  const orderedKinds = [...presetOrder, ...Object.keys(defaults).filter(kind => !presetOrder.includes(kind))];
  const enabledKinds = new Set(presetOrder);
- const seeds=orderedKinds.map((kind,position)=>({page_id:p.id,section_key:kind,title:kind==="hero"?"الرئيسية":kind==="about"?"عن النشاط":kind==="hours"?"مواعيد العمل":kind==="contact"?"تواصل معنا":kind==="quick_actions"?"الإجراءات السريعة":kind==="social"?"تابعنا":kind==="payments"?"طرق الدفع":kind==="links"?"روابط مهمة":kind==="services"?"الخدمات":kind==="gallery"?"معرض الصور":kind==="reviews"?"آراء العملاء":"الفروع",position,kind,content:defaults[kind],enabled:enabledKinds.has(kind)}));
+ const seeds=orderedKinds.map((kind,position)=>({page_id:p.id,section_key:kind,title:sectionTitles[kind],position,kind,content:defaults[kind],enabled:enabledKinds.has(kind)}));
  const { error: sectionsError } = await supabase.from("page_sections").insert(seeds);
  if (sectionsError) {
   // Older isolated projects may still have the pre-Quick Actions CHECK
@@ -77,6 +73,9 @@ function parseDraft(fd: FormData) {
    parseSectionContent(JSON.stringify(content), section.kind);
    return { key, kind: section.kind, title: String(section.title ?? section.kind).trim().slice(0, 80), position: index, enabled: Boolean(section.enabled), content };
  });
+ for (const [provider, profile] of Object.entries(parsed.providerProfiles || {})) {
+  if (isDeliveryProvider(provider) && profile?.url && !deliveryLinkHref(provider, profile.url)) throw new Error("Delivery destinations must be safe HTTPS URLs.");
+ }
  const providerProfiles = Object.fromEntries(Object.entries(parsed.providerProfiles || {}).slice(0, 40).map(([provider, profile]) => [provider.slice(0, 40), {
    value: String(profile?.value || "").trim().slice(0, 500) || undefined,
    url: String(profile?.url || "").trim().slice(0, 2048) || undefined,
@@ -101,6 +100,7 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
    const label = String(item.label || "").trim().slice(0, 80);
    const valueText = String(item.value || "").trim().slice(0, 500);
    const url = String(item.url || "").trim().slice(0, 2048);
+   if (isDeliveryProvider(provider) && item.url && !deliveryLinkHref(provider, String(item.url))) throw new Error("Delivery destinations must be complete HTTPS URLs without credentials or control characters.");
    if (provider === "call" || provider === "phone") {
     if (valueText && !normalizeEgyptianPhone(valueText)) throw new Error("Use a valid Egyptian phone number for this action.");
    } else if (provider === "whatsapp") {

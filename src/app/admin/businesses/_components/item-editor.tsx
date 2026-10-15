@@ -3,7 +3,7 @@
 import { ImageField, type UploadTracker } from "./image-field";
 import type { ReactNode } from "react";
 import { PaymentLogo } from "@/components/business/payment-logo";
-import { isLocalWalletProvider, isMobileWalletProvider, isPaymentProvider, paymentLinkHref, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/business/providers";
+import { providerIconPath, deliveryLinkHref, isDeliveryProvider, isLocalWalletProvider, isMobileWalletProvider, isPaymentProvider, paymentLinkHref, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/business/providers";
 
 import { createEditorItem, type EditorItem } from "@/lib/business/editor-items";
 export type { EditorItem } from "@/lib/business/editor-items";
@@ -15,11 +15,11 @@ const valueLabels: Partial<Record<ProviderId, string>> = {
   email: "Email address", instagram: "Instagram handle or URL",
 };
 const valueProviders = new Set<ProviderId>(["call", "phone", "whatsapp", "instapay", "vodafone", "etisalat", "orange", "bank", "email", "instagram"]);
-const brandIcons = new Set(["whatsapp", "facebook", "instagram", "tiktok", "youtube", "snapchat", "x", "linkedin", "telegram", "instapay", "vodafone"]);
+const brandIcons = new Set(["whatsapp", "facebook", "instagram", "tiktok", "youtube", "snapchat", "x", "linkedin", "telegram", "instapay", "vodafone", "github", "behance", "artstation", "dribbble", "medium", "talabat", "fast"]);
 
 function providerIcon(provider: ProviderId): ReactNode {
   if (isLocalWalletProvider(provider)) return <PaymentLogo provider={provider} />;
-  if (brandIcons.has(provider)) return <img src={`/icons/social/${provider}.svg`} alt="" width={24} height={24} />;
+  if (brandIcons.has(provider)) return <img src={providerIconPath(provider)} alt="" width={24} height={24} />;
   const paths: Record<string, ReactNode> = {
     call: <path d="M6 3.8 9 3l2 4.5-2.1 1.7a13 13 0 0 0 5.9 5.9l1.7-2.1 4.5 2-.8 3a2.3 2.3 0 0 1-2.6 1.7C10 18.8 5.2 14 4.3 6.4A2.3 2.3 0 0 1 6 3.8Z" />,
     maps: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
@@ -44,7 +44,7 @@ function itemValidationError(item: EditorItem) {
   if (provider === "instagram" && item.value.trim() && !normalizeInstagram(item.value)) return "Use an Instagram handle or https://instagram.com/ URL.";
   if (provider === "instapay" && item.value.trim() && !normalizeProviderValue("instapay", item.value)) return "Use an InstaPay IPA such as name@instapay.";
   if (provider === "email" && item.value.trim() && !normalizeProviderValue("email", item.value)) return "Use a valid email address.";
-  if (item.url.trim() && !(isPaymentProvider(provider) ? paymentLinkHref(item.url) : normalizeSafeUrl(item.url.trim()))) return "Use a complete https:// destination URL.";
+  if (item.url.trim() && !(isDeliveryProvider(provider) ? deliveryLinkHref(provider, item.url) : isPaymentProvider(provider) ? paymentLinkHref(item.url) : normalizeSafeUrl(item.url.trim()))) return "Use a complete https:// destination URL.";
   return "";
 }
 
@@ -82,7 +82,9 @@ export function ItemEditor({ section, items, onChange, businessId, track, mutati
       return <div className="live-item-row" key={item.id} data-item-id={item.id}>
         <span className="item-drag" aria-hidden="true">:::</span>
         <div className="live-item-fields">
-          {(isAction || isSocial || isPayment) && <span className={`provider-inline-icon provider-${provider}`}>{providerIcon(provider)}</span>}
+          {(isAction || isSocial || isPayment || isDeliveryProvider(provider)) && <span className={`provider-inline-icon provider-${provider}`}>{providerIcon(provider)}</span>}
+          {provider === "fast" && <p className="field-hint">Paste the public Fast page or share URL for this business or restaurant. Open it to check the business identity before publishing.</p>}
+          {isAction && <label className="field">Provider<select aria-label="Action provider" value={provider} onChange={event => set(item.id, { provider: event.target.value, icon: undefined, url: "", value: "", profileOverride: true })}>{Object.entries(providerLabels).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>}
           <label className="field"><span>{isAction ? "Button label" : "Label"}</span><input id={`item-${section.id}-${item.id}-label`} name={`${section.id}.${item.id}.label`} value={item.label} placeholder={isHours ? "Day or period" : providerLabels[provider]} onChange={event => set(item.id, { label: event.target.value })} /></label>
           {needsValue && <label className="field"><span>{valueLabel}</span><input name={`${section.id}.${item.id}.value`} dir={provider === "bank" ? "auto" : "ltr"} inputMode={provider === "call" || provider === "phone" || provider === "whatsapp" || isMobileWalletProvider(provider) ? "tel" : undefined} value={item.value} placeholder={valuePlaceholder} onChange={event => {
             const value = event.target.value;
