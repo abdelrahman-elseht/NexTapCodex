@@ -3,12 +3,7 @@ import { revalidatePath } from "next/cache";
 import { authorizeMutation, databaseFailure, mutationResponse, uuidPattern, boundedForm } from "@/lib/admin/mutation";
 import { isTemplate, presetSections } from "@/lib/business/content";
 
-const defaults: Record<string, object> = {
-  hero: { tagline: "", description: "", coverUrl: "", logoUrl: "", color: "#7a2028", language: "en", ctaLabel: "", ctaUrl: "" },
-  about: { description: "" }, hours: { items: [] }, contact: { phone: "", whatsapp: "", email: "", address: "", mapsUrl: "" },
-  quick_actions: { items: [] }, social: { items: [] }, payments: { items: [] }, links: { items: [] }, services: { items: [] }, gallery: { items: [] }, reviews: { url: "" }, branch: { items: [] },
-};
-const titles: Record<string, string> = { hero: "الرئيسية", about: "عن النشاط", hours: "مواعيد العمل", contact: "تواصل معنا", quick_actions: "الإجراءات السريعة", social: "تابعنا", payments: "طرق الدفع", links: "روابط مهمة", services: "الخدمات", gallery: "معرض الصور", reviews: "آراء العملاء", branch: "الفروع" };
+import { sectionDefaults as defaults, sectionTitles as titles } from "@/lib/business/section-defaults";
 export async function POST(request: Request) {
   const auth = await authorizeMutation(request); if (auth.response) return auth.response;
   if (Number(request.headers.get("content-length")) > 16384) return mutationResponse({ ok: false, error: "Request too large" }, 413);

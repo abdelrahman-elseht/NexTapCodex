@@ -1,7 +1,8 @@
 "use client";
 import { createContext, useContext, useId, useRef, useState, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { acquireMutation, useMutationLocks } from "@/lib/admin/mutation-locks";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { acquireMutation, useMutationLocks } from "@/components/admin/mutation-locks";
+import { useAdminFeedback } from "@/components/admin/feedback";
 
 type Selection = { ids: string[]; toggle: (id: string) => void; remove: (ids: string[]) => void };
 const SelectionContext = createContext<Selection | null>(null);
@@ -21,9 +22,11 @@ export function SelectedCardDeletion() {
 type Preview = { operationId: string; batchId: string | null; batchCode: string | null; count: number; assignedCount: number; activeCount: number; expiresAt: string; cards: { id: string; serial: string; status: string; assigned: boolean }[] };
 export function DeleteInventory({ cardIds, batchId }: { cardIds?: string[]; batchId?: string }) {
   const selection = useContext(SelectionContext), router = useRouter(), pathname = usePathname();
+  const announce = useAdminFeedback();
+  const query = useSearchParams();
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), cancel = useRef<HTMLButtonElement>(null), busy = useRef(false);
   const titleId = useId();
-  const [preview, setPreview] = useState<Preview | null>(null), [pending, setPending] = useState(false), [error, setError] = useState(""), [message, setMessage] = useState("");
+  const [preview, setPreview] = useState<Preview | null>(null), [pending, setPending] = useState(false), [error, setError] = useState("");
   const [ack, setAck] = useState(false), [impact, setImpact] = useState(false), [code, setCode] = useState("");
   const keys = (preview?.cards.map(card => card.id) || cardIds || []).map(id => `card:${id}`);
   const resourceBusy = useMutationLocks(keys);
@@ -31,13 +34,13 @@ export function DeleteInventory({ cardIds, batchId }: { cardIds?: string[]; batc
     const response = await fetch("/api/admin/cards/deletion", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), redirect: "error" });
     const result = await response.json();
     if (!response.ok || result.ok !== true) {
-      if (response.status === 409) setPreview(null);
+      if (response.status === 409 || response.status === 404) setPreview(null);
       throw new Error(result.error || "تعذر الحذف. لم يتم تأكيد النتيجة؛ أعد المحاولة.");
     }
     return result;
   }
   async function loadPreview() {
-    if (busy.current) return; busy.current = true; setPending(true); setError(""); setMessage(""); setPreview(null); setAck(false); setImpact(false); setCode("");
+    if (busy.current) return; busy.current = true; setPending(true); setError(""); setPreview(null); setAck(false); setImpact(false); setCode("");
     dialog.current?.showModal(); cancel.current?.focus();
     try { setPreview(await request({ mode: "preview", cardIds, batchId })); }
     catch (e) { setError(e instanceof Error ? e.message : "تعذر الاتصال. أعد المحاولة."); }
@@ -51,16 +54,20 @@ export function DeleteInventory({ cardIds, batchId }: { cardIds?: string[]; batc
     try {
       const result = await request({ mode: "commit", operationId: preview.operationId, acknowledged: ack, impactAcknowledged: impact, batchCode: code || null });
       selection?.remove(preview.cards.map(card => card.id));
-      setMessage(`تم حذف ${result.deletedCards} بطاقة نهائياً.`);
-      dialog.current?.close(); trigger.current?.focus();
+      dialog.current?.close();
+      announce(`تم حذف ${result.deletedCards} بطاقة نهائياً.`);
       if (result.deletedBatchId && pathname.includes(`/batches/${result.deletedBatchId}`)) router.push("/admin/cards", { scroll: false });
+      else if (result.deletedBatchId && query.get("batch") === result.deletedBatchId) {
+        const next = new URLSearchParams(query.toString());
+        for (const key of ["batch", "cursor", "direction"]) next.delete(key);
+        router.replace(`${pathname}?${next}`, { scroll: false });
+      }
       else router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "تعذر الاتصال. أعد المحاولة للتحقق من نفس العملية."); }
     finally { busy.current = false; setPending(false); release(); }
   }
   return <>
     <button ref={trigger} type="button" className="small-button danger" disabled={pending || resourceBusy} onClick={() => void loadPreview()}>{batchId ? "حذف الدفعة نهائياً" : cardIds?.length === 1 ? "حذف البطاقة نهائياً" : "حذف المحدد نهائياً"}</button>
-    {message && <p role="status">{message}</p>}
     <dialog ref={dialog} className="confirm-dialog inventory-delete-dialog" aria-labelledby={titleId} onCancel={event => { event.preventDefault(); close(); }}>
       <h2 id={titleId}>تأكيد الحذف النهائي</h2>
       <p>ستتوقف روابط QR وNFC لهذه البطاقات. لن تُحذف صفحات النشاط. تخلّص من البطاقات المطبوعة والملفات القديمة؛ لا يمكن سحب النسخ التي سبق تنزيلها.</p>

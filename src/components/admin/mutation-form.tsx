@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useRef, useState, useTransition, type FormHTMLAttributes, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { acquireMutation, useMutationLocks } from "@/lib/admin/mutation-locks";
+import { acquireMutation, useMutationLocks } from "@/components/admin/mutation-locks";
 
 type MutationState = { pending: boolean; completed: number; error: string };
 const Context = createContext<MutationState | null>(null);
