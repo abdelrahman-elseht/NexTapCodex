@@ -168,9 +168,10 @@ mutation into a release script.
 
    ```powershell
    git fetch origin --prune
-   git rev-parse origin/main
+   $mainSha = git rev-parse origin/main
+   $mainSha
    npx.cmd -y gh-axi run list --workflow ci.yml --branch main --limit 5
-   npx.cmd -y gh-axi api /repos/abdelrahman-elseht/NexTapCodex/commits/<main-sha>/check-runs --full
+   npx.cmd -y gh-axi api "/repos/abdelrahman-elseht/NexTapCodex/commits/$mainSha/check-runs" --full
    ```
 
 4. Confirm Vercel is building the `main` branch with Production variables and
