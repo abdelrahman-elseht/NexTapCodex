@@ -7,6 +7,12 @@ This runbook describes the single-owner workflow for promoting code through
 `feature/*` → `staging` → `main`. Re-read the live branch rules before each
 release; GitHub settings and check names are provider state, not source code.
 
+The automated gate is documented in [Self-review and release gates](SELF_REVIEW_RELEASE_GATES.md).
+That gate is the normal owner path: it requires the author-owned checklist,
+the exact changed-file/risk manifest, and release evidence before an
+administrator bypass is used. This file remains the short GitHub operation
+reference; it does not replace the gate.
+
 ## Current repository state
 
 The live GitHub inspection for PR #6 found:
@@ -131,14 +137,15 @@ check on Production changes.
 
 ### Allow a documented owner bypass
 
-If this is intentionally a single-owner repository, edit the `main` branch
-rule in **Repository settings → Branches → main → Edit** and turn off the
-administrator-enforcement/bypass-blocking option (the UI wording varies between
-classic branch protection and rulesets). Keep the pull-request requirement,
-strict `quality`, conversation resolution, and linear history enabled. You may
-retain the one-approval requirement as a signal for normal collaboration; the
-owner will still use **Merge without waiting for required reviews** for a solo
-release.
+If this is intentionally a single-owner repository, use the checked-in
+self-review gate and edit the `main` branch rule in **Repository settings →
+Branches → main → Edit** to turn off the administrator-enforcement/bypass-
+blocking option (the UI wording varies between classic branch protection and
+rulesets). Keep the pull-request requirement, strict `quality`, required
+`self-review`, conversation resolution, and linear history enabled. Retain the
+one-approval requirement for normal collaboration; the owner will still use
+**Merge without waiting for required reviews** for a solo release only after
+the automated gate passes.
 
 This is a governance change: it trades independent approval for an auditable
 self-review. Record the decision in the release PR and complete the checklist

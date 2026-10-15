@@ -11,6 +11,7 @@
 - [Staging schema reconciliation handoff](handovers/STAGING_SCHEMA_RECONCILIATION_HANDOFF.md): Staging migration history, rollout evidence, and hosted validation gates.
 - [Staging validation and production release handoff](handovers/STAGING_VALIDATION_AND_PRODUCTION_RELEASE_HANDOFF.md): current DNS/TLS and Preview state, remaining Auth and hosted tests, first release, rollback, and ongoing staging workflow.
 - [Environment separation and CI/CD handoff](handovers/ENVIRONMENT_SEPARATION_AND_CICD_HANDOFF.md): branch, code, data, Auth, Storage, migration, CI/CD, release, and rollback guardrails for isolated Staging and Production.
+- [Self-review and release gates](handovers/SELF_REVIEW_RELEASE_GATES.md): automated author-owned diff/risk/evidence checks, bootstrap order, and one-owner `staging` → `main` releases.
 - [GitHub PR and release workflow](handovers/GITHUB_PR_AND_RELEASE_WORKFLOW.md): single-owner PR #6 merge path, branch protection choices, Staging acceptance, and future `staging` → `main` releases.
 - [Hosted Staging validation progress](handovers/HOSTED_STAGING_VALIDATION_PROGRESS.md): protected hosted workflow, deployment identity evidence, credential confinement and remaining acceptance gates.
 - [Hosted Staging validation handoff](../HOSTED_STAGING_VALIDATION_HANDOFF.md): current accepted run, provider access matrix, release gates and copy/paste continuation prompt.
