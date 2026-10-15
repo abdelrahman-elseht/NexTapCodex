@@ -15,6 +15,7 @@
 - [GitHub PR and release workflow](handovers/GITHUB_PR_AND_RELEASE_WORKFLOW.md): single-owner PR #6 merge path, branch protection choices, Staging acceptance, and future `staging` → `main` releases.
 - [Hosted Staging validation progress](handovers/HOSTED_STAGING_VALIDATION_PROGRESS.md): protected hosted workflow, deployment identity evidence, credential confinement and remaining acceptance gates.
 - [Hosted Staging validation handoff](../HOSTED_STAGING_VALIDATION_HANDOFF.md): current accepted run, provider access matrix, release gates and copy/paste continuation prompt.
+- [Staging admin business creation incident](handovers/STAGING_ADMIN_BUSINESS_CREATION_INCIDENT.md): missing-RPC diagnosis, migration resolution, verification, and prevention guard.
 - [Optimization handover](handovers/optimization-experience-handoff.md): optimization phases and follow-up verification.
 - [Business Editor reliability handover](handovers/BUSINESS_EDITOR_RELIABILITY_HANDOFF.md): phases 1–3, payment-link limitations, regression results, and browser evidence.
 - [Admin UX, card deletion, provider links and mobile email handoff](handovers/ADMIN_UX_CARD_DELETION_PROVIDER_EMAIL_HANDOFF.md): feature scope, acceptance criteria, database/browser guardrails, and promotion sequence.
