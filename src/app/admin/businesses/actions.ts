@@ -7,6 +7,7 @@ import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@
 import { isDeliveryProvider, deliveryLinkHref, destinationStrategyFor, isMobileWalletProvider, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
 import { z } from "zod";
 import { contactConfigSchema, compileContact } from "@/lib/business/contact";
+import { resolveContactPhoto } from "@/lib/media/resolve-contact-photo";
 import { normalizeEditorItems } from "@/lib/business/editor-items";
 import { captureOperationError } from "@/lib/observability/operations";
 
@@ -127,6 +128,7 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
 async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["supabase"], draft: ReturnType<typeof parseDraft>, publish = false) {
  if (!Number.isSafeInteger(draft.expectedPageRevision) || !Number.isSafeInteger(draft.expectedBusinessRevision)) throw new Error("Reload the editor before saving. Your local edits are preserved.");
  // The database resolves bindings again and freezes its own public allowlist.
+ if (draft.contact?.enabled) await resolveContactPhoto(supabase, draft.businessId, draft.contact, draft.sections);
  const { data, error } = await supabase.rpc("save_contact_draft", { draft, expected_page_revision: draft.expectedPageRevision, expected_business_revision: draft.expectedBusinessRevision, publish });
  if (error) throw new Error(error.code === "40001" ? "This draft changed in another session. Your local edits are preserved; reload in another tab to compare." : "Could not save. Check contact fields and retry.");
  if (!data?.ok || !Number.isSafeInteger(data.pageRevision) || !Number.isSafeInteger(data.businessRevision)) throw new Error("The draft was not committed. Your edits are preserved.");

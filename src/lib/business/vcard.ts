@@ -1,4 +1,4 @@
-import { contactPhone, contactWeb, contactConfigSchema, type ContactProjection } from "./contact";
+import { contactPhone, contactWeb, contactNote, contactConfigSchema, type ContactProjection } from "./contact";
 const escape = (value: string) => value.replace(/\\/g, "\\\\").replace(/\r\n|\r|\n/g, "\\n").replace(/;/g, "\\;").replace(/,/g, "\\,");
 /** Fold by UTF-8 octets, including the continuation space, without splitting code points. */
 export function foldVCardLine(value: string) {
@@ -16,16 +16,20 @@ export function serializeVCard(contact: ContactProjection, photo?: Uint8Array) {
   contactConfigSchema.parse({ enabled: true, displayName: contact.displayName, organization: contact.organization, primaryPhone: contact.primaryPhone, fields: contact.fields.map((field, i) => ({ ...field, id: String(i), enabled: true })) });
   const lines = ["BEGIN:VCARD", "VERSION:3.0", `FN:${escape(contact.displayName)}`, "N:;;;;", `ORG:${escape(contact.organization || contact.displayName)}`, `TEL;TYPE=WORK,VOICE:${contactPhone(contact.primaryPhone)}`];
   const notes: string[] = [];
+  const urls = new Set<string>();
   for (const field of contact.fields) {
     if (/[\u0000-\u0008\u000b-\u001f\u007f]/.test(field.value)) throw new Error("Invalid contact text.");
     if (field.kind === "phone") { const phone = contactPhone(field.value); if (!phone) throw new Error("Invalid phone."); lines.push(`TEL;TYPE=WORK,VOICE:${phone}`); }
     else if (field.kind === "email") { if (field.value.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) throw new Error("Invalid email."); lines.push(`EMAIL;TYPE=INTERNET:${escape(field.value)}`); }
-    else if (field.kind === "website") { if (!contactWeb(field.value)) throw new Error("Invalid URL."); lines.push(urlLine(field)); }
+    else if (["website", "social", "whatsapp"].includes(field.kind) || (["custom", "notes", "hours"].includes(field.kind) && contactWeb(field.value))) {
+      if (!contactWeb(field.value)) throw new Error("Invalid URL.");
+      if (!urls.has(field.value)) { lines.push(urlLine(field)); urls.add(field.value); }
+    }
     else if (field.kind === "address") lines.push(`ADR;TYPE=WORK:;;${escape(field.value)};;;;`);
-    else if (["social", "whatsapp", "hours", "notes", "custom"].includes(field.kind)) {
-      if (["social", "whatsapp"].includes(field.kind) && !contactWeb(field.value)) throw new Error("Invalid URL.");
-      if (["social", "whatsapp", "custom"].includes(field.kind) && contactWeb(field.value)) lines.push(urlLine(field));
-      notes.push(`${field.label || field.kind}: ${field.value}`);
+    else if (["hours", "notes", "custom"].includes(field.kind)) {
+      const note = contactNote(field.value);
+      for (const value of note.urls) if (!urls.has(value)) { lines.push(urlLine({ label: field.label, value })); urls.add(value); }
+      if (note.text) notes.push(`${field.label || field.kind}: ${note.text}`);
     }
     else throw new Error("Unsupported contact property.");
   }

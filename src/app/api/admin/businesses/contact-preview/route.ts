@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { compileContact, contactConfigSchema } from "@/lib/business/contact";
 import { contactError, contactResponse } from "@/lib/business/contact-download";
+import { resolveContactPhoto } from "@/lib/media/resolve-contact-photo";
 export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
-  if (request.headers.get("origin") !== new URL(request.url).origin) return contactError(404);
+  const requestUrl = new URL(request.url);
+  const expectedOrigin = `${requestUrl.protocol}//${request.headers.get("host") || requestUrl.host}`;
+  if (request.headers.get("origin") !== expectedOrigin) return contactError(404);
   try {
     const client = await createClient();
     const { data: claims, error } = await client.auth.getClaims();
@@ -29,11 +32,7 @@ export async function POST(request: Request) {
     const config = contactConfigSchema.parse(draft.contact);
     const contact = compileContact(config, { business: { name: draft.name }, page: { branchName: page.branch_name }, sections: draft.sections });
     if (!contact) return contactError(404);
-    if (config.photoAssetId) {
-      const { data: photo } = await client.from("media_assets").select("contact_photo_path").eq("id", config.photoAssetId).eq("business_id", draft.businessId).maybeSingle();
-      if (!photo) return contactError(404);
-      contact.photoPath = photo.contact_photo_path;
-    }
+    contact.photoPath = await resolveContactPhoto(client, draft.businessId, config, draft.sections || []);
     return await contactResponse(contact);
   } catch { return new Response("Check the contact fields and try again.", { status: 400, headers: { "Cache-Control": "private, no-store" } }); }
 }

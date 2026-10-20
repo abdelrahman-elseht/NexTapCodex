@@ -1,6 +1,8 @@
 "use client";
-import { contactKinds, compileContact, type ContactConfig } from "@/lib/business/contact";
+import { contactKinds, compileContact, contactBindingAllowed, type ContactConfig } from "@/lib/business/contact";
 import { ImageField, type UploadTracker } from "./image-field";
+import { contactPhotoUrl } from "@/lib/business/contact-crop";
+import { ContactPhotoEditor } from "./contact-photo-editor";
 
 type Section = { section_key?: string; key?: string; kind: string; enabled: boolean; content: Record<string, unknown> };
 export function ContactCardEditor({ config, onChange, name, branchName, sections, businessId, track, onDownload }: {
@@ -15,14 +17,15 @@ export function ContactCardEditor({ config, onChange, name, branchName, sections
     catch (error) { const message = error instanceof Error ? error.message : "Check this field."; return /Display name:|Primary phone:/.test(message) ? "" : message; }
   };
   const patch = (value: Partial<ContactConfig>) => onChange({ ...config, ...value });
+  const photoUrl = contactPhotoUrl(config, sections);
   const updateField = (id: string, value: Partial<ContactConfig["fields"][number]>) => patch({ fields: config.fields.map(field => field.id === id ? { ...field, ...value } : field) });
-  const bindings = sections.filter(section => section.enabled && !["payments", "gallery"].includes(section.kind)).flatMap(section => {
+  const bindings = sections.filter(section => section.enabled && section.kind !== "gallery").flatMap(section => {
     const sectionKey = section.section_key || section.key || "";
     const candidates: { label: string; binding: NonNullable<ContactConfig["fields"][number]["binding"]> }[] = [];
-    for (const property of ["phone", "email", "address"] as const) if (typeof section.content[property] === "string" && section.content[property]) candidates.push({ label: `${sectionKey}: ${property}`, binding: { sectionKey, property } });
+    for (const property of ["phone", "email", "address"] as const) if (section.kind !== "payments" && typeof section.content[property] === "string" && section.content[property]) candidates.push({ label: `${sectionKey}: ${property}`, binding: { sectionKey, property } });
     if (Array.isArray(section.content.items)) for (const item of section.content.items) {
-      if (!item.id || item.enabled === false || ["instapay", "vodafone", "etisalat", "orange", "bank"].includes(item.provider)) continue;
-      for (const property of ["value", "url"] as const) if (item[property]) candidates.push({ label: `${sectionKey}: ${item.label || item.provider || item.id} (${property})`, binding: { sectionKey, itemId: item.id, property } });
+      if (!item.id || item.enabled === false) continue;
+      for (const property of ["value", "url"] as const) if (item[property] && contactBindingAllowed(item, property) && (section.kind !== "payments" || item.provider === "instapay")) candidates.push({ label: `${sectionKey}: ${item.label || item.provider || item.id} (${property})`, binding: { sectionKey, itemId: item.id, property } });
     }
     return candidates;
   });
@@ -30,13 +33,16 @@ export function ContactCardEditor({ config, onChange, name, branchName, sections
     <summary><strong>Add to Contacts</strong></summary>
     <p>Choose the details visitors can import. Only Publish changes the public contact card.</p>
     <label className="toggle-control"><input type="checkbox" checked={config.enabled} onChange={event => patch({ enabled: event.target.checked })} />Enable contact download</label>
+    <label className="toggle-control"><input type="checkbox" checked={config.showDownloadLink !== false} onChange={event => patch({ showDownloadLink: event.target.checked })} />Show Download Contact Link</label>
     <div className="form-grid">
       <label className="field">Display name<input maxLength={2000} value={config.displayName} disabled={config.nameFromPage} onChange={event => patch({ displayName: event.target.value })} /></label>
       <label className="toggle-control"><input type="checkbox" checked={config.nameFromPage} onChange={event => patch({ nameFromPage: event.target.checked })} />Use this page’s name ({branchName || name})</label>
       <label className="field">Organization<input maxLength={2000} value={config.organization} onChange={event => patch({ organization: event.target.value })} /></label>
       <label className="field">Primary phone<input dir="ltr" inputMode="tel" maxLength={100} value={config.primaryPhone} disabled={config.phoneFromPage} onChange={event => patch({ primaryPhone: event.target.value })} /></label>
       <label className="toggle-control"><input type="checkbox" checked={config.phoneFromPage} onChange={event => patch({ phoneFromPage: event.target.checked })} />Use this page’s Find us phone</label>
-      <ImageField businessId={businessId} label="Business logo used as contact photo" role="logo" value={config.photoUrl} alt="Business logo" onAltChange={() => {}} onChange={photoUrl => patch({ photoUrl, photoAssetId: undefined })} onAsset={(photoUrl, photoAssetId) => patch({ photoUrl, photoAssetId })} track={track} />
+      <p className="field-wide">{config.photoUrl || config.photoAssetId ? "Using a custom Contact Photo. Remove it to restore the Business Logo." : "The Business Logo is used automatically. No second upload is needed."} Only managed images from this business can be included in a contact file; other images produce a text-only contact.</p>
+      <ImageField businessId={businessId} label="Custom Contact Photo" role="logo" value={config.photoUrl} alt="Contact photo" onAltChange={() => {}} onChange={photoUrl => patch({ photoUrl, photoAssetId: undefined, photoCrop: undefined })} onAsset={(photoUrl, photoAssetId) => patch({ photoUrl, photoAssetId, photoCrop: undefined })} track={track} />
+      {photoUrl && <ContactPhotoEditor key={photoUrl} src={photoUrl} crop={config.photoCrop} onApply={photoCrop => patch({ photoCrop })} />}
     </div>
     <div className="contact-field-list">{config.fields.map((field, index) => <fieldset key={field.id} className="contact-field-row">
       <legend>Contact field {index + 1}</legend>

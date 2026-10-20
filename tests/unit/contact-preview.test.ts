@@ -22,12 +22,20 @@ it("rejects a page outside the selected business and foreign media", async () =>
   lookup.mockImplementation(table => Promise.resolve({ data: table === "owner_users" ? { user_id: "owner" } : null }));
   expect((await POST(request())).status).toBe(404);
   lookup.mockImplementation(table => Promise.resolve({ data: table === "owner_users" ? { user_id: "owner" } : table === "business_pages" ? { id: "page" } : null }));
-  expect((await POST(request({ ...draft, contact: { ...draft.contact, photoAssetId: "00000000-0000-4000-8000-000000000001" } }))).status).toBe(404);
+  expect((await POST(request({ ...draft, contact: { ...draft.contact, photoAssetId: "00000000-0000-4000-8000-000000000001" } }))).status).toBe(400);
 });
 it("privately previews unsaved branch values without a publication write", async () => {
   const response = await POST(request({ ...draft, contact: { ...draft.contact, nameFromPage: true } }));
   expect(response.status).toBe(200); expect(await response.text()).toContain("FN:Branch");
   expect(response.headers.get("cache-control")).toBe("private, no-store, max-age=0");
+});
+it("accepts the browser Host origin when Next reconstructs a localhost URL", async () => {
+  const original = request();
+  original.headers.set("host", "127.0.0.1:3137");
+  const proxied = new Request("http://localhost:3137/api/admin/businesses/contact-preview", original);
+  expect((await POST(proxied)).status).toBe(200);
+  proxied.headers.set("origin", "https://attacker.test");
+  expect((await POST(proxied)).status).toBe(404);
 });
 it("bounds the actual body even without a content-length header", async () => {
   expect((await POST(request({ padding: "x".repeat(257 * 1024) }))).status).toBe(404);

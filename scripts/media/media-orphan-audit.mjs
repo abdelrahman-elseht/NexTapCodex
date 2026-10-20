@@ -17,7 +17,7 @@ const referenced = new Set();
 function visit(value) {
   if (typeof value === "string") {
     const marker = "/storage/v1/object/public/business-media/";
-    if (/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.contact\.jpg$/i.test(value)) referenced.add(value);
+    if (/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}(?:\.crop-\d{1,4}-\d{1,4}-\d{4})?\.contact\.jpg$/i.test(value)) referenced.add(value);
     if (value.includes(marker)) { try { referenced.add(decodeURIComponent(value.split(marker)[1].split("?")[0])); } catch { throw new Error("Audit incomplete: malformed media reference."); } }
   } else if (value && typeof value === "object") Object.values(value).forEach(visit);
 }

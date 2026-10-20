@@ -11,7 +11,7 @@ export function contactError(status: number, head = false) {
 }
 /** Only immutable precomputed objects from this application's bucket, with a byte/time budget. */
 export async function readContactPhoto(path?: string): Promise<Uint8Array | undefined> {
-  if (!path || !/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.contact\.jpg$/i.test(path)) return;
+  if (!path || !/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}(?:\.crop-\d{1,4}-\d{1,4}-\d{4})?\.contact\.jpg$/i.test(path)) return;
   try {
     const origin = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const response = await fetch(`${origin}/storage/v1/object/public/business-media/${path}`, { cache: "no-store", signal: AbortSignal.timeout(3000), redirect: "error" });

@@ -60,7 +60,7 @@ describe("vCard wire format", () => {
     expect(parsed.version[0].value).toBe("3.0"); expect(parsed.fn[0].value).toBe("مقهى ☕");
     expect(parsed.n[0].value).toHaveLength(5); expect(parsed.tel.map(row => row.value)).toEqual(["+201012345678", "+442071234567", "+442071234568"]);
     expect(parsed.url.map(row => row.value)).toEqual(["https://one.test", "https://two.test", "https://wa.me/201000000000", "https://instagram.com/example", "https://example.test/book"]);
-    expect(raw).toContain("URL;TYPE=Booking-page:"); expect(raw).toContain("WhatsApp: https://wa.me/201000000000");
+    expect(raw).toContain("URL;TYPE=Booking-page:"); expect(raw).not.toContain("WhatsApp: https://wa.me/201000000000");
     expect(parsed.adr[0].value).toHaveLength(7); expect(parsed.fn).toHaveLength(1);
     expect(raw.startsWith("BEGIN:VCARD\r\nVERSION:3.0\r\n")).toBe(true); expect(raw.endsWith("END:VCARD\r\n")).toBe(true);
     expect(raw).not.toContain("\ufeff"); expect(raw.replace(/\r\n/g, "")).not.toMatch(/[\r\n]/);
