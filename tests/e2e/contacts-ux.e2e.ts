@@ -66,8 +66,8 @@ test("Contacts UX crop, override, cached photo, visibility and publication isola
   await panel.getByRole("button", "Reset", { exact: true }).tap();
   await expect(panel.getByLabel("Zoom", { exact: true })).toHaveValue("1000");
   await panel.getByLabel("Zoom", { exact: true }).focus(); await browser.keyboard.press("End");
-  await browser.locator(".contact-crop-stage").scrollIntoView();
-  const rect = await browser.evaluate(() => { const r = document.querySelector(".contact-crop-stage")!.getBoundingClientRect(); return { x: r.x + 120, y: r.y + 120 }; });
+  await browser.locator(".contact-card-editor .contact-crop-stage").scrollIntoView();
+  const rect = await browser.evaluate(() => { const r = document.querySelector(".contact-card-editor .contact-crop-stage")!.getBoundingClientRect(); return { x: r.x + 120, y: r.y + 120 }; });
   await browser.mouse.move(rect.x, rect.y); await browser.mouse.down(); await browser.mouse.move(rect.x - 35, rect.y - 25); await browser.mouse.up();
   expect(await panel.getByLabel("Horizontal position").inputValue()).not.toBe("500");
   await panel.getByRole("button", "Apply crop").tap();
@@ -98,7 +98,7 @@ test("Contacts UX crop, override, cached photo, visibility and publication isola
   const dir = "artifacts/contacts-ux"; await mkdir(dir, { recursive: true });
   const capture = async (label: string) => { await copyFile(await artifactPath(await app.screenshot(label)), `${dir}/${width}-${label}.png`); };
   await expect(panel.getByRole("button", "Apply crop")).toBeEnabled();
-  await browser.locator(".contact-photo-editor").scrollIntoView(); await capture("crop-editor");
+  await browser.locator(".contact-card-editor .contact-photo-editor").scrollIntoView(); await capture("crop-editor");
   await app.open(`/b/${slug}`);
   await expect(browser.locator(".contact-download-fallback")).toHaveCount(0);
   const primary = await browser.waitForDownload(() => browser.locator(".contact-download-button").tap());

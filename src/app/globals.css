@@ -543,3 +543,7 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.24}
 .contact-avatar{position:relative;overflow:hidden;border-radius:50%;background:var(--paper);flex:none}
 .contact-simulator-avatar{display:grid;justify-items:center;gap:8px;padding:16px;background:var(--paper);color:var(--ink-soft)}
 .contact-simulator-avatar small{font-size:12px}
+
+.contact-crop-mask.rectangular{border-radius:0;box-shadow:none}
+.image-field .contact-photo-editor{margin-block:16px;text-align:start}
+.contact-crop-controls input[type=range]{direction:ltr}

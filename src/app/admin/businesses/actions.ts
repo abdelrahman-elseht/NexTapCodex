@@ -119,7 +119,7 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
     throw new Error("Use a valid Egyptian wallet number.");
    }
     const destinationStrategy = destinationStrategyFor(provider, typeof item.destinationStrategy === "string" ? item.destinationStrategy : undefined, url);
-    return { id: item.id, subtitle: typeof item.subtitle === "string" ? item.subtitle.trim().slice(0,500) : undefined, badge: typeof item.badge === "string" ? item.badge.trim().slice(0,80) : undefined, ...(Array.isArray(item.actions) ? {actions: cleanSectionContent({items:item.actions}, "quick_actions", String(item.id)).items} : {}), label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
+    return { id: item.id, ...(kind === "gallery" && item.imageEdit ? {imageEdit:item.imageEdit} : {}), subtitle: typeof item.subtitle === "string" ? item.subtitle.trim().slice(0,500) : undefined, badge: typeof item.badge === "string" ? item.badge.trim().slice(0,80) : undefined, ...(Array.isArray(item.actions) ? {actions: cleanSectionContent({items:item.actions}, "quick_actions", String(item.id)).items} : {}), label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
   });
  }
  return next;

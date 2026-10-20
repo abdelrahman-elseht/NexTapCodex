@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { imageEditSchema } from "@/lib/media/image-edit";
 
 export const safeUrl = (value: unknown): value is string => {
   if (typeof value !== "string" || value.length > 2048) return false;
@@ -25,6 +26,7 @@ const itemFields = {
   profileOverride: z.boolean().optional(),
   enabled: z.boolean().optional(),
   icon: z.string().trim().max(40).optional(),
+  imageEdit: imageEditSchema.optional(),
   alt: z.string().trim().max(200).optional(),
 };
 const actionSchema = z.object(itemFields).strict();
@@ -37,6 +39,7 @@ export const hoursItemSchema = itemSchema.refine(item => !item.provider && !item
 export const galleryItemSchema = itemSchema.refine(item => !item.provider && !item.actions, "Gallery images cannot inherit provider destinations.");
 export type HoursItem = z.infer<typeof hoursItemSchema>;
 export const sectionContentSchema = z.record(z.string(), z.unknown()).superRefine((content, ctx) => {
+  if (content.imageEdits !== undefined && !z.partialRecord(z.enum(["coverUrl", "logoUrl", "mapImageUrl", "backgroundUrl"]), imageEditSchema.optional()).safeParse(content.imageEdits).success) ctx.addIssue({ code: "custom", message: "Invalid image crop settings." });
   for (const [key, value] of Object.entries(content)) {
     if (/url|link|href/i.test(key) && typeof value === "string" && value && !safeContentUrl(value)) ctx.addIssue({ code: "custom", message: "Use a safe local path or complete http(s), mailto, or tel URL." });
     if (Array.isArray(value) && value.length > 100) ctx.addIssue({ code: "custom", message: "A section can contain at most 100 items." });
