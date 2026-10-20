@@ -1,6 +1,10 @@
+import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { fetchApp } from "./_helpers/http";
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
+
+const vcardParser = createRequire(import.meta.url)("vcard-parser");
 
 test("owners can configure provider-aware actions, social links, and payment links and fallbacks", async ({ app, screen, browser }) => {
   test.skip(
@@ -43,7 +47,18 @@ test("owners can configure provider-aware actions, social links, and payment lin
 
   await screen.getByRole("button", "Add Call").tap();
   await itemRow(2).getByRole("textbox").nth(0).fill("Call");
-  await itemRow(2).getByRole("textbox").nth(1).fill("01098765432");
+  await itemRow(2).getByRole("textbox").nth(1).fill("+44 (0)20-7123 4567");
+  await itemRow(2).getByLabel("Phone type").selectOption("landline");
+
+  const contactCard = browser.locator(".contact-card-editor");
+  await contactCard.getByRole("checkbox", "Enable contact download").check();
+  await contactCard.getByLabel("Display name").fill(`E2E Contact ${suffix}`);
+  await contactCard.getByLabel("Primary phone source").selectOption({ label: "quick_actions: Call (value)" });
+  await expect(contactCard.getByLabel("Primary phone")).toBeDisabled();
+  const landlinePreview = await browser.waitForDownload(() => contactCard.getByRole("button", "Test contact download").tap());
+  const landlineVcard = await readFile(landlinePreview.path, "utf8");
+  expect(landlineVcard).toContain("TEL;TYPE=WORK,VOICE:+4402071234567");
+  expect(vcardParser.parse(landlineVcard).tel).toHaveLength(1);
 
   await screen.getByRole("button", "Booking & reviews").tap();
   await screen.getByRole("button", "Add Google Reviews").tap();
@@ -60,7 +75,7 @@ test("owners can configure provider-aware actions, social links, and payment lin
   })).toBe(4);
   expect(liveActions.some(action => action.label === "Follow Us" && action.href === "https://instagram.com/nextapqa")).toBe(true);
   expect(liveActions.some(action => action.label === "Message us" && action.href === "https://wa.me/201012345678")).toBe(true);
-  expect(liveActions.some(action => action.label === "Call" && action.href === "tel:01098765432")).toBe(true);
+  expect(liveActions.some(action => action.label === "Call" && action.href === "tel:+4402071234567")).toBe(true);
   expect(liveActions.some(action => action.label === "Review Us" && action.href.startsWith("https://maps.google.com/"))).toBe(true);
 
   if (await browser.evaluate(() => innerWidth < 800)) await screen.getByRole("button", "Editor").tap();
@@ -90,7 +105,7 @@ test("owners can configure provider-aware actions, social links, and payment lin
   await itemRow(1).getByRole("textbox").nth(1).fill("01055556666");
   await screen.getByRole("button", "Add Etisalat Cash").tap();
   await itemRow(2).getByRole("textbox").nth(1).fill("not-a-phone");
-  await expect(itemRow(2).getByRole("alert")).toContainText("Use a valid Egyptian mobile number");
+  await expect(itemRow(2).getByRole("alert")).toContainText("Use digits");
   await itemRow(2).getByRole("textbox").nth(1).fill("01100000000");
   await expect(itemRow(2).getByRole("alert")).toHaveCount(0);
   await screen.getByRole("button", "Add Orange Cash (Mobinil)").tap();
@@ -148,6 +163,8 @@ test("owners can configure provider-aware actions, social links, and payment lin
   expect(unpublishedText.includes("Find us on LinkedIn")).toBe(false);
 
   await app.open(editorPath);
+  await expect(contactCard.getByLabel("Primary phone source")).toHaveValue(/.+/);
+  await expect(contactCard.getByLabel("Primary phone")).toBeDisabled();
   await quickSection().tap();
   const persistedActions = await browser.evaluate(() => Array.from(document.querySelectorAll<HTMLInputElement>(".editor-form-pane .live-item-row input")).filter(input => input.type === "text").map(input => input.value));
   expect(persistedActions).toContain("Follow Us");

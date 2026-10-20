@@ -44,6 +44,8 @@ try {
   await admin.query(await fs.readFile("supabase/tests/inventory-deletion.sql", "utf8"));
   const a = await connect(), b = await connect();
   await admin.query(await fs.readFile("supabase/tests/contacts.sql", "utf8"));
+  await admin.query(await fs.readFile("supabase/tests/phone-support.sql", "utf8"));
+  console.log("PASS real PostgreSQL: flexible phone publication and contact contracts");
   const contactBusiness = randomUUID(), contactPage = randomUUID();
   await a.query("insert into public.businesses(id,name,category) values($1,'Contact race','QA')", [contactBusiness]);
   await a.query("insert into public.business_pages(id,business_id,slug,template) values($1,$2,'contact-race','professional')", [contactPage,contactBusiness]);

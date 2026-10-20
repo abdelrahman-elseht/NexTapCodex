@@ -1,4 +1,5 @@
 "use server";
+import { dialablePhone, phoneTypes } from "@/lib/business/phone";
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -102,11 +103,12 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
    const item = raw as Record<string, unknown>;
    const provider = typeof item.provider === "string" ? item.provider.trim().slice(0, 40) : undefined;
    const label = String(item.label || "").trim().slice(0, 80);
-   const valueText = String(item.value || "").trim().slice(0, 500);
+   const rawValue = String(item.value || "");
+   const valueText = provider === "call" || provider === "phone" ? rawValue : rawValue.trim().slice(0, 500);
    const url = String(item.url || "").trim().slice(0, 2048);
    if (isDeliveryProvider(provider) && item.url && !deliveryLinkHref(provider, String(item.url))) throw new Error("Delivery destinations must be complete HTTPS URLs without credentials or control characters.");
    if (provider === "call" || provider === "phone") {
-    if (valueText && !normalizeEgyptianPhone(valueText)) throw new Error("Use a valid Egyptian phone number for this action.");
+    if (valueText && !dialablePhone(valueText)) throw new Error("Use digits, spaces, +, parentheses, hyphens, dots, * or # for phone numbers.");
    } else if (provider === "whatsapp") {
     if (valueText && !normalizeEgyptianPhone(valueText) && !normalizeSafeUrl(url)) throw new Error("Use a valid WhatsApp number or destination URL.");
    } else if (provider === "instagram") {
@@ -119,7 +121,7 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
     throw new Error("Use a valid Egyptian wallet number.");
    }
     const destinationStrategy = destinationStrategyFor(provider, typeof item.destinationStrategy === "string" ? item.destinationStrategy : undefined, url);
-    return { id: item.id, ...(kind === "gallery" && item.imageEdit ? {imageEdit:item.imageEdit} : {}), subtitle: typeof item.subtitle === "string" ? item.subtitle.trim().slice(0,500) : undefined, badge: typeof item.badge === "string" ? item.badge.trim().slice(0,80) : undefined, ...(Array.isArray(item.actions) ? {actions: cleanSectionContent({items:item.actions}, "quick_actions", String(item.id)).items} : {}), label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
+    return { id: item.id, phoneType: phoneTypes.includes(item.phoneType as typeof phoneTypes[number]) ? item.phoneType : undefined, ...(kind === "gallery" && item.imageEdit ? {imageEdit:item.imageEdit} : {}), subtitle: typeof item.subtitle === "string" ? item.subtitle.trim().slice(0,500) : undefined, badge: typeof item.badge === "string" ? item.badge.trim().slice(0,80) : undefined, ...(Array.isArray(item.actions) ? {actions: cleanSectionContent({items:item.actions}, "quick_actions", String(item.id)).items} : {}), label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
   });
  }
  return next;

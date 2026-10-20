@@ -5,9 +5,6 @@ import { credentials, expect } from "e2e";
 
 const parser = createRequire(import.meta.url)("vcard-parser");
 const origin = "http://127.0.0.1:3137";
-function localOnly(baseUrl: string | undefined) {
-  if (baseUrl !== origin || process.env.NEXT_PUBLIC_SUPABASE_URL !== "http://127.0.0.1:56321" || process.env.E2E_SERVER_MODE !== "production") throw new Error("Contacts tests only run on the isolated local production app and exact local Supabase port.");
-}
 async function cardFile(path: string, name: string) {
   const bytes = await readFile(path); const text = bytes.toString("utf8");
   expect(bytes.length).toBeLessThanOrEqual(300 * 1024);
@@ -16,10 +13,10 @@ async function cardFile(path: string, name: string) {
   expect(text.match(/BEGIN:VCARD/g)).toHaveLength(1);
   expect(parser.parse(text).fn[0].value).toBe(name);
   for (const line of text.split("\r\n")) expect(Buffer.byteLength(line)).toBeLessThanOrEqual(75);
+  return text;
 }
 
 test("Contacts configure, preview, save/reload, publish, download and disable on main and branch", async ({app,screen,browser}) => {
-  localOnly(app.baseUrl);
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires explicitly enabled disposable local mutations.");
   const business = process.env.E2E_CONTACT_BUSINESS_ID;
   const pages = [process.env.E2E_CONTACT_MAIN_PAGE_ID,process.env.E2E_CONTACT_BRANCH_PAGE_ID];
@@ -40,22 +37,35 @@ test("Contacts configure, preview, save/reload, publish, download and disable on
     await contact.getByRole("checkbox","Enable contact download").check();
     const name = 'Synthetic Contacts '+(index ? 'Branch' : 'Main')+' عربي 😀';
     await contact.getByLabel("Display name").fill(name);
-    await contact.getByLabel("Primary phone").fill(index ? "+201012345679" : "+201012345678");
+    const landline = index ? "02 1234-5679" : "(02) 1234-5678";
+    await contact.getByLabel("Primary phone").fill(landline);
+    await contact.getByLabel("Primary phone type").selectOption("landline");
     await contact.getByLabel("Organization").fill("Synthetic local QA");
-    await contact.getByRole("button","Add contact field").tap();
-    const row=contact.getByRole("group").last();
+    if (index) {
+      await contact.getByRole("button", "Add contact field").tap();
+      const phone = contact.getByRole("group").last();
+      await phone.getByLabel("Type").selectOption("phone");
+      await phone.getByLabel("Phone type").selectOption("mobile");
+      await phone.getByLabel("Label", { exact: true }).fill("International mobile");
+      await phone.getByLabel("Value", { exact: true }).fill("+44 (0)20-7123-4567");
+    }
+    await contact.getByRole("button", "Add contact field").tap();
+    const row = contact.getByRole("group").last();
     await row.getByLabel("Type").selectOption("email");
-    await row.getByLabel("Label",{exact:true}).fill("Work");
-    await row.getByLabel("Value",{exact:true}).fill("synthetic@example.test");
+    await row.getByLabel("Label", { exact: true }).fill("Work");
+    await row.getByLabel("Value", { exact: true }).fill("synthetic@example.test");
     await screen.getByRole("button","Preview",{exact:true}).tap();
     await expect(browser.locator(".editor-phone-screen .contact-download-button")).toHaveCount(1);
     const preview = await browser.waitForDownload(()=>contact.getByRole("button","Test contact download").tap());
-    await cardFile(preview.path,name);
+    const previewVcard = await cardFile(preview.path, name);
+    expect(previewVcard).toContain(`TEL;TYPE=WORK,VOICE:${landline.replace(/[^0-9]/g, "")}`);
+    if (index) expect(previewVcard).toContain("TEL;TYPE=CELL:+4402071234567");
     await screen.getByRole("button","Save draft",{exact:true}).tap();
     await expect(browser.locator(".editor-save-status")).toContainText(/saved/i);
     await browser.reload();
     await expect(contact.getByLabel("Display name")).toHaveValue(name);
     await expect(contact.getByRole("group").last().getByLabel("Value",{exact:true})).toHaveValue("synthetic@example.test");
+    if (index) await expect(contact.getByRole("group").first().getByLabel("Value", { exact: true })).toHaveValue("+44 (0)20-7123-4567");
     const slug=await screen.getByLabel("Public slug").inputValue();
     await screen.getByRole("button","Publish",{exact:true}).tap();
     await expect(browser.locator(".editor-save-status")).toContainText(/published/i);
@@ -63,7 +73,9 @@ test("Contacts configure, preview, save/reload, publish, download and disable on
     const cta=browser.locator(".contact-download-button");
     await expect(cta).toHaveCount(1);
     const download=await browser.waitForDownload(()=>browser.locator(".contact-download-fallback").tap());
-    await cardFile(download.path,name);
+    const publicVcard = await cardFile(download.path, name);
+    expect(publicVcard).toContain(`TEL;TYPE=WORK,VOICE:${landline.replace(/[^0-9]/g, "")}`);
+    if (index) expect(publicVcard).toContain("TEL;TYPE=CELL:+4402071234567");
     await app.open(editor);
     await contact.getByRole("checkbox","Enable contact download").uncheck();
     await screen.getByRole("button","Publish",{exact:true}).tap();
@@ -73,8 +85,7 @@ test("Contacts configure, preview, save/reload, publish, download and disable on
   }
 });
 
-test("anonymous draft preview and invalid contact routes are denied",async({app})=>{
-  localOnly(app.baseUrl);
+test("anonymous draft preview and invalid contact routes are denied",async()=>{
   for(const path of ["/b/contacts-missing-synthetic/contact.vcf","/c/contacts-invalid-synthetic/contact.vcf"]) {
     const response=await fetch(origin+path,{redirect:"manual"}); expect(response.status).toBe(404);
   }

@@ -17,7 +17,7 @@ try {
     insert into auth.users values ('00000000-0000-4000-8000-000000000001'),('00000000-0000-4000-8000-000000000002');
     insert into public.owner_users(user_id) values ('00000000-0000-4000-8000-000000000001');
   `);
-  for (const file of process.argv.includes("--cache-only") ? [] : ["phase123-contracts.sql", "phase5-incremental-saves.sql", "phase6-publication-cache.sql", "preprod-publication-security.sql", "launch-architecture-security.sql", "inventory-deletion.sql", "contacts.sql", "contacts-ux.sql"]) {
+  for (const file of process.argv.includes("--cache-only") ? [] : ["phase123-contracts.sql", "phase5-incremental-saves.sql", "phase6-publication-cache.sql", "preprod-publication-security.sql", "launch-architecture-security.sql", "inventory-deletion.sql", "contacts.sql", "contacts-ux.sql", "phone-support.sql"]) {
     const results = await db.exec(await fs.readFile(`supabase/tests/${file}`, "utf8"));
     for (const result of results) for (const row of result.rows) for (const [key, value] of Object.entries(row)) {
       if (typeof value === "boolean") assert.equal(value, true, `${file}: ${key}`);

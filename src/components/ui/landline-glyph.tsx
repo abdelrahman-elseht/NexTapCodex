@@ -1,0 +1,1 @@
+export function LandlineGlyph() { return <><path d="M5 9 3 19a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1L19 9M8 5h8M5 5a2 2 0 0 0-2 2v3h5V7h8v3h5V7a2 2 0 0 0-2-2Z"/><path d="M8 13h1m3 0h1m3 0h1m-9 3h1m3 0h1m3 0h1"/></>; }

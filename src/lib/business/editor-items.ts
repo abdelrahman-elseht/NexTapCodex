@@ -1,3 +1,4 @@
+import type { PhoneType } from "./phone";
 import { imageEditSchema, type ImageEdit } from "@/lib/media/image-edit";
 import { resolveProviderItem, type ProviderProfile } from "./providers";
 
@@ -13,13 +14,14 @@ export type EditorItem = {
   provider?: string;
   enabled?: boolean;
   icon?: string;
+  phoneType?: PhoneType;
   destinationStrategy?: string;
   profileOverride?: boolean;
   actions?: EditorItem[];
 };
 
 export function createEditorItem(provider?: string): EditorItem {
-  return { id: crypto.randomUUID(), label: "", value: "", url: "", enabled: true, ...(provider ? { provider } : {}) };
+  return { id: crypto.randomUUID(), label: "", value: "", url: "", enabled: true, ...(provider ? { provider } : {}), ...(["phone", "call"].includes(provider || "") ? { phoneType: "mobile" as const } : {}) };
 }
 
 // Upgrade legacy JSON once at the section boundary. IDs survive edits, moves and saves.
@@ -40,6 +42,7 @@ export function normalizeEditorItems(value: unknown, kind: string, scope: string
       ...(kind === "gallery" ? { imageEdit: imageEditSchema.safeParse(item.imageEdit).data } : {}),
       subtitle: text("subtitle"), badge: text("badge"), alt: text("alt"), enabled: item.enabled !== false,
       provider: local ? undefined : text("provider") || undefined,
+      phoneType: ["mobile", "landline", "work", "other"].includes(text("phoneType")) ? text("phoneType") as PhoneType : undefined,
       icon: local ? undefined : text("icon") || undefined,
       destinationStrategy: local ? undefined : text("destinationStrategy") || undefined,
       profileOverride: local || item.profileOverride === true,
