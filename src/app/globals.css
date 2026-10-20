@@ -496,3 +496,54 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.24}
 .payment-logo-image{display:block;width:34px;height:34px;object-fit:contain}.provider-mark .payment-logo-image,.provider-inline-icon .payment-logo-image{width:27px;height:27px}.quick-action .payment-logo-image{width:28px;height:28px}
 .payment-logo-wordmark{display:grid;place-items:center;width:34px;height:34px;font-family:'DM Sans',sans-serif;font-weight:800;line-height:1}.payment-logo-wordmark-etisalat{color:currentColor;font-size:18px}.provider-mark .payment-logo-wordmark,.provider-inline-icon .payment-logo-wordmark{width:27px;height:27px;font-size:15px}.quick-action .payment-logo-wordmark{width:28px;height:28px;font-size:15px}
 .payment-logo-fallback-orange{background:#ff7900;color:#fff}.provider-inline-icon.provider-etisalat,.provider-inline-icon.provider-orange{background:transparent}
+
+/* Inventory intent and feedback use the established admin controls. */
+.inventory-selection { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-block: 16px; }
+.card-selection, .deletion-ack { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.card-selection input, .deletion-ack input { width: 20px; height: 20px; flex: 0 0 auto; }
+.inventory-delete-dialog { max-height: 90dvh; overflow: auto; }
+.deletion-card-list { max-height: 180px; overflow: auto; padding-inline-start: 24px; }
+.mutation-result { margin: 4px 0; color: var(--text, #242424); font-size: .875rem; }
+.app-download-page { max-width: 680px; padding: 40px 24px; margin-inline: auto; }
+.app-download-page p { line-height: 1.7; margin-block: 24px; }
+.provider-talabat img, .provider-fast img { object-fit: contain; }
+
+/* Contact CTA belongs to the existing light Quick Actions panel. */
+:root{--contact-burgundy:#4b1f22}
+.contact-download{display:grid;gap:6px;margin-bottom:10px}
+.contact-download-button{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:44px;padding:10px 16px;border-radius:10px;background:var(--contact-burgundy);color:var(--card);font-size:14px;font-weight:600}
+.contact-download-button:hover{background:#632b30}
+.contact-download-fallback{justify-self:center;color:var(--ink-soft);font-size:12px;text-decoration:underline;text-underline-offset:2px}
+.contact-download-button[aria-disabled=true]{cursor:default}
+.contact-download-button svg{flex:none}
+[dir=rtl] .contact-download-button svg{transform:scaleX(-1)}
+.contact-download small{color:var(--ink-soft);font-size:11px;text-align:center;line-height:1.5}
+.configured-actions-section:has(.contact-download){padding:12px;background:var(--paper);border-radius:var(--radius)}
+.configured-actions-section:has(.contact-download) .quick-actions{margin:0}
+.contact-card-editor{margin-block:20px}
+.contact-card-editor summary{cursor:pointer;min-height:44px;padding-block:10px}
+.contact-card-editor .form-grid{margin-block:16px}
+.contact-field-row{min-width:0;border:1px solid var(--line);border-radius:12px;padding:16px;margin-block:16px}
+.contact-field-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.contact-field-actions .toggle-control{margin-inline-end:auto}
+.contact-card-editor input,.contact-card-editor select,.contact-card-editor textarea{min-height:44px;min-width:0;width:100%}
+.contact-card-editor input[type=checkbox]{width:20px;min-height:20px}
+@media(max-width:360px){.configured-actions-section:has(.contact-download) .quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+.contact-photo-editor{min-width:0;border:1px solid var(--line);border-radius:12px;padding:16px}
+.contact-photo-editor p{max-width:65ch}
+.contact-crop-stage{position:relative;width:240px;height:240px;max-width:100%;margin-block:16px;overflow:hidden;background:var(--paper);touch-action:none;cursor:grab}
+.contact-crop-stage:active{cursor:grabbing}
+.contact-crop-stage img,.contact-avatar img{position:absolute;max-width:none;max-height:none;user-select:none;pointer-events:none}
+.contact-crop-mask{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 60px #0009;outline:2px solid white;outline-offset:-2px;pointer-events:none}
+.contact-crop-controls{display:grid;gap:8px;max-width:360px}
+.contact-crop-controls input[type=range]{accent-color:var(--contact-burgundy)}
+.contact-avatar{position:relative;overflow:hidden;border-radius:50%;background:var(--paper);flex:none}
+.contact-simulator-avatar{display:grid;justify-items:center;gap:8px;padding:16px;background:var(--paper);color:var(--ink-soft)}
+.contact-simulator-avatar small{font-size:12px}
+
+.contact-crop-mask.rectangular{border-radius:0;box-shadow:none}
+.image-field .contact-photo-editor{margin-block:16px;text-align:start}
+.contact-crop-controls input[type=range]{direction:ltr}

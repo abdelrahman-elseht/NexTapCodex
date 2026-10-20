@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:db": "node scripts/database/test-database.mjs",
     "test:e2e:seed": "node scripts/database/seed-e2e.mjs",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:db:concurrency": "node scripts/database/test-concurrency.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^11.6.0",
@@ -37,11 +38,13 @@
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "e2e": "0.18.0",
+    "embedded-postgres": "17.10.0-beta.17",
     "eslint": "^9.35.0",
     "eslint-config-next": "^15.5.27",
     "jsqr": "^1.4.0",
     "playwright-core": "1.63.0",
     "typescript": "5.9.2",
+    "vcard-parser": "1.0.0",
     "vitest": "3.2.4"
   },
   "overrides": {

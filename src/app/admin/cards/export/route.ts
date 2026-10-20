@@ -1,3 +1,4 @@
+import { readBatchSnapshot } from "@/lib/cards/batch-snapshot";
 import { requireOwner } from "@/lib/auth/owner";
 import { cardUrls, getCardOrigin } from "@/lib/cards/card-manufacturing";
 
@@ -15,12 +16,10 @@ export async function GET(req: Request) {
     return new Response("Invalid batch", { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .from("cards")
-    .select("serial,token")
-    .eq("batch_id", id)
-    .order("serial");
-  if (error) return new Response("Not found", { status: 404 });
+  const snapshot = await readBatchSnapshot(supabase, id);
+  if (!snapshot) return new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } });
+  const data = snapshot.cards;
+  if (!data.length) return new Response("Empty inventory", { status: 409, headers: { "Cache-Control": "private, no-store" } });
 
   const rows = [
     ["serial", "token", "qr_url", "nfc_url"],

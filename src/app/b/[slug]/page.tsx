@@ -23,5 +23,5 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params;
   const snapshot = await getPublicPublication(slug);
   if (!snapshot) notFound();
-  return <PublicSnapshot snapshot={snapshot} />;
+  return <PublicSnapshot snapshot={snapshot} contactHref={`/b/${encodeURIComponent(slug)}/contact.vcf`} />;
 }

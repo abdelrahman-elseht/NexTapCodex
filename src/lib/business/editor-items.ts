@@ -1,3 +1,4 @@
+import { imageEditSchema, type ImageEdit } from "@/lib/media/image-edit";
 import { resolveProviderItem, type ProviderProfile } from "./providers";
 
 export type EditorItem = {
@@ -8,6 +9,7 @@ export type EditorItem = {
   subtitle?: string;
   badge?: string;
   alt?: string;
+  imageEdit?: ImageEdit;
   provider?: string;
   enabled?: boolean;
   icon?: string;
@@ -35,6 +37,7 @@ export function normalizeEditorItems(value: unknown, kind: string, scope: string
     const local = kind === "hours" || kind === "gallery";
     return [{
       id, label: text("label"), value: text("value"), url: kind === "hours" ? "" : text("url"),
+      ...(kind === "gallery" ? { imageEdit: imageEditSchema.safeParse(item.imageEdit).data } : {}),
       subtitle: text("subtitle"), badge: text("badge"), alt: text("alt"), enabled: item.enabled !== false,
       provider: local ? undefined : text("provider") || undefined,
       icon: local ? undefined : text("icon") || undefined,
@@ -50,4 +53,9 @@ export function resolveSectionItems(items: EditorItem[], kind: string, profiles:
   return items.map(item => ({ ...resolveProviderItem(item, profiles), ...(item.actions ? {
     actions: item.actions.map(action => resolveProviderItem(action, profiles)),
   } : {}) }));
+}
+
+// Copy the resolved destination, never an inherited mutable account reference.
+export function duplicateEditorItem(item: EditorItem): EditorItem {
+  return { ...item, id: crypto.randomUUID(), profileOverride: true, ...(item.actions ? { actions: item.actions.map(duplicateEditorItem) } : {}) };
 }

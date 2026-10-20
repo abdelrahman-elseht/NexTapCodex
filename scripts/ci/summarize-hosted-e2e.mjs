@@ -7,7 +7,7 @@ try {
 } catch (error) {
   if (error.code === "ENOENT") {
     console.log("Hosted E2E did not produce a report; preflight or setup did not complete.");
-    process.exit(0);
+    process.exit(1);
   }
   throw error;
 }
@@ -18,11 +18,21 @@ const deployment = JSON.parse(await fs.readFile(`${output}/deployment.json`, "ut
 if (deployment.commit !== run.vcs?.commit) throw new Error("Test checkout and deployed commit differ.");
 const fixture = JSON.parse(await fs.readFile(`${output}/fixture.json`, "utf8"));
 const verifiedAfterRun = deployment.verifiedAfterRun === true && Date.parse(deployment.verifiedAt) >= Date.parse(run.finishedAt);
+const acceptance = process.env.E2E_ALLOW_MUTATIONS === "true";
+const requiredFiles = ["admin-no-reload", "card-deletion", "provider-links", "card-state", "owner-card-journey", "card-manufacturing", "editor-reliability"];
+const missing = acceptance ? requiredFiles.flatMap(file => ["desktop", "mobile"].filter(target =>
+  !run.results.some(result => result.file.replaceAll("\\", "/").endsWith(`/${file}.e2e.ts`) && result.targetId === target && result.status === "passed")
+).map(target => `${file}:${target}`)) : [];
+const accepted = acceptance && verifiedAfterRun && run.exitCode === 0 && missing.length === 0 &&
+  run.summary.discovered === run.summary.selected && run.results.every(result => result.status === "passed");
 const summary = {
   runId: run.id,
   status: verifiedAfterRun ? run.status : "deployment-verification-failed",
   exitCode: verifiedAfterRun ? run.exitCode : 1,
   verifiedAfterRun,
+  acceptanceRequested: acceptance,
+  accepted,
+  missingRequiredJourneys: missing,
   startedAt: run.startedAt,
   finishedAt: run.finishedAt,
   sourceCommit: deployment.commit,
@@ -36,3 +46,4 @@ const summary = {
 };
 await fs.writeFile(`${output}/summary.json`, `${JSON.stringify(summary, null, 2)}\n`);
 console.log(JSON.stringify({ status: summary.status, counts: summary.counts, unselected: summary.unselected }));
+if (!verifiedAfterRun || (acceptance && !accepted)) process.exitCode = 1;

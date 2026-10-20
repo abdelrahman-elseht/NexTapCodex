@@ -3,6 +3,7 @@ import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { assertSupabaseEnvironment } from "../../src/lib/config/environment.mjs";
 import { verifyDeployment } from "./verify-hosted-deployment.mjs";
+import { assertBusinessEditorSchema } from "./business-editor-schema.mjs";
 
 if (process.argv.includes("--verify-deployment-only")) {
   await verifyDeployment();
@@ -30,6 +31,19 @@ if (error || !data.user) throw new Error("Protected Staging owner credentials co
 try {
   const owner = await client.from("owner_users").select("user_id").eq("user_id", data.user.id).maybeSingle();
   if (owner.error || !owner.data) throw new Error("The Staging Auth user is not on the owner allowlist.");
+  await assertBusinessEditorSchema(client);
+
+  // This is a no-write schema probe. A deployed app can authenticate while a
+  // required RPC migration is still absent; PostgREST reports that as PGRST202.
+  // Null input must reach the function and return its own validation code.
+  const adminPageProbe = await client.rpc("create_admin_page", {
+    request_key: null,
+    details: null,
+    seeds: null,
+  });
+  if (!adminPageProbe.error || adminPageProbe.error.code !== "22023") {
+    throw new Error(`Staging schema probe failed for create_admin_page (${adminPageProbe.error?.code || "no error"}).`);
+  }
 } finally {
   await client.auth.signOut({ scope: "local" });
 }

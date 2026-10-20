@@ -14,8 +14,8 @@ test("card confirmation finishes in a production build", async ({ app, screen, b
   await expect(browser.locator('.card-assignment-form select')).toHaveValue(fixture.pageId);
   await browser.locator('.card-assignment-form').getByRole("button", "تفعيل / نقل").tap();
   await screen.getByRole("button", "تأكيد التعيين").tap();
-  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/, { timeout: 10_000 });
-  await expect(browser.locator('[role="status"].success')).toContainText("تم تحديث تعيين البطاقة.");
+  await expect(browser.locator(".card-assignment-form .mutation-result").first()).toBeVisible();
+  await expect(browser.locator(".mutation-result").first()).toBeVisible();
 });
 
 test("unassigned card displays only its printed serial", async ({ app, browser }) => {

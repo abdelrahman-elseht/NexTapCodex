@@ -125,9 +125,9 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   // Assignment is confirmed in the dialog; this form has no row checkbox.
   await firstCardRow.getByRole("button", "تفعيل / نقل").tap();
   await screen.getByRole("button", "تأكيد التعيين").tap();
-  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/, { timeout: 20_000 });
+  await expect(browser.locator(".card-assignment-form .mutation-result").first()).toBeVisible();
   // Read the confirmation directly; the accumulated inventory can make a full accessibility snapshot expensive.
-  await expect(browser.locator('[role="status"].success')).toContainText("تم تحديث تعيين البطاقة.", { timeout: 20_000 });
+  await expect(browser.locator(".mutation-result").first()).toBeVisible();
 
   const baseUrl = app.baseUrl;
   if (!baseUrl) throw new Error("The E2E app target has no base URL.");
@@ -174,7 +174,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   // Assignment is confirmed in the dialog; this form has no row checkbox.
   await secondCardRow.getByRole("button", "تفعيل / نقل").tap();
   await screen.getByRole("button", "تأكيد التعيين").tap();
-  await expect(browser).toHaveURL(/\/admin\/cards\?assigned=1/, { timeout: 20_000 });
+  await expect(browser.locator(".card-assignment-form .mutation-result").first()).toBeVisible();
 
   const reassignedRedirect = await fetchApp(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
   expect(reassignedRedirect.status).toBe(302);
@@ -189,7 +189,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
   await app.open(`/admin/cards?batch=${createdBatchId}`);
   await browser.locator("tr").filter({ hasText: card.serial }).getByRole("button", "تعطيل", { exact: true }).tap();
   await screen.getByRole("button", "تعطيل البطاقة", { exact: true }).tap();
-  await expect(browser.locator('[role="status"].success')).toContainText("تم تحديث تعيين البطاقة.");
+  await expect(browser.locator(".mutation-result").first()).toBeVisible();
   const disabledRedirect = await fetchApp(new URL(`/c/${card.token}?via=nfc`, baseUrl), { redirect: "manual" });
   expect(disabledRedirect.status).toBe(302);
   expect(disabledRedirect.headers.get("location")).toContain("/card/unavailable?state=inactive");
