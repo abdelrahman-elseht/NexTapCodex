@@ -23,3 +23,5 @@
 - [Research](research/): provider documentation and technical findings.
 
 `handovers/` preserves dated reports and task instructions. Use current source, configuration, and test results to establish present behavior; historical reports retain their original dates and verification scope. Add new handovers here and link them from this index when they supersede existing operational guidance.
+
+- [Contacts local handoff](../CONTACTS_LOCAL_HANDOFF.md): implementation, local verification, blocked Supabase/native gates and Staging prerequisites.

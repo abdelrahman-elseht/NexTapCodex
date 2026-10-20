@@ -31,11 +31,28 @@ try {
   await cluster.initialise(); await cluster.start();
   const admin = await connect(false);
   await admin.query(await fs.readFile("scripts/database/test-bootstrap.sql", "utf8"));
-  for (const file of (await fs.readdir("supabase/migrations")).filter(f => f.endsWith(".sql")).sort()) await admin.query(await fs.readFile(`supabase/migrations/${file}`, "utf8"));
+  for (const file of (await fs.readdir("supabase/migrations")).filter(f => f.endsWith(".sql")).sort()) {
+    if (file.endsWith("_contacts.sql")) {
+      await admin.query("insert into public.businesses(id,name,category) values('00000000-0000-4000-8000-000000000010','Upgrade QA','QA'); insert into public.business_pages(id,business_id,slug,template) values('00000000-0000-4000-8000-000000000011','00000000-0000-4000-8000-000000000010','upgrade-qa','professional');");
+    }
+    await admin.query(await fs.readFile(`supabase/migrations/${file}`, "utf8"));
+  }
+  assert.deepEqual((await admin.query("select contact_config from public.business_pages where slug='upgrade-qa'")).rows[0].contact_config,{});
+  console.log("PASS real PostgreSQL: representative pre-contact draft survives upgrade with Contacts off");
   await admin.query("insert into auth.users values($1),('00000000-0000-4000-8000-000000000002');", [owner]);
   await admin.query("insert into public.owner_users(user_id) values($1)", [owner]);
   await admin.query(await fs.readFile("supabase/tests/inventory-deletion.sql", "utf8"));
   const a = await connect(), b = await connect();
+  await admin.query(await fs.readFile("supabase/tests/contacts.sql", "utf8"));
+  const contactBusiness = randomUUID(), contactPage = randomUUID();
+  await a.query("insert into public.businesses(id,name,category) values($1,'Contact race','QA')", [contactBusiness]);
+  await a.query("insert into public.business_pages(id,business_id,slug,template) values($1,$2,'contact-race','professional')", [contactPage,contactBusiness]);
+  const contactDraft = { businessId:contactBusiness,pageId:contactPage,name:"Contact race",category:"QA",archived:false,slug:"contact-race",template:"professional",providerProfiles:{},sections:[{key:"hero",kind:"hero",title:"",position:0,enabled:true,content:{}}],contact:{enabled:true,displayName:"Contact race",organization:"QA",primaryPhone:"01012345678",fields:[]} };
+  const saves = await Promise.allSettled([a,b].map(client => client.query("select public.save_contact_draft($1,0,0,true)",[contactDraft])));
+  assert.equal(saves.filter(result => result.status === "fulfilled").length,1);
+  assert.equal(saves.find(result => result.status === "rejected").reason.code,"40001");
+  assert.equal((await a.query("select count(*)::int n from public.page_publications where page_id=$1",[contactPage])).rows[0].n,1);
+  console.log("PASS real PostgreSQL: contact contracts and concurrent save/publish reject stale writer");
   const batches = (await Promise.all([a,b].map(async (client, lane) => {
     const results=[];
     for (let i=0;i<6;i++) results.push(await batch(client, `Concurrent ${lane}-${i}`,3));

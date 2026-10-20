@@ -4,12 +4,13 @@ import { prepareImage } from "@/lib/media/prepare";
 import type { ImageRole } from "@/lib/media/limits";
 
 export type UploadTracker = (key: string, pending: boolean) => void;
-export function ImageField({ businessId, label, value, alt, role = "photo", onChange, onAltChange, track }: {
+export function ImageField({ businessId, label, value, alt, role = "photo", onChange, onAltChange, onAsset, track }: {
   businessId: string; label: string; value: string; alt: string; role?: ImageRole;
   onChange: (url: string) => void; onAltChange: (alt: string) => void; track: UploadTracker;
+  onAsset?: (url: string, assetId: string) => void;
 }) {
   const id = useId(); const xhr = useRef<XMLHttpRequest | null>(null); const attempt = useRef(0);
-  const callbacks = useRef({ onChange, track }); callbacks.current = { onChange, track };
+  const callbacks = useRef({ onChange, onAsset, track }); callbacks.current = { onChange, onAsset, track };
   const [file, setFile] = useState<File | null>(null); const [pending, setPending] = useState(false);
   const [status, setStatus] = useState(""); const [error, setError] = useState(""); const [progress, setProgress] = useState(0);
   const [broken, setBroken] = useState("");
@@ -22,7 +23,7 @@ export function ImageField({ businessId, label, value, alt, role = "photo", onCh
       const prepared = await prepareImage(selected, role);
       if (token !== attempt.current) return;
       const form = new FormData(); form.set("businessId", businessId); form.set("role", role); form.set("alt", alt); form.set("file", prepared, "image");
-      const result = await new Promise<{ url: string }>((resolve, reject) => {
+      const result = await new Promise<{ url: string; photoAssetId: string }>((resolve, reject) => {
         const request = new XMLHttpRequest(); xhr.current = request;
         request.open("POST", "/api/admin/media");
         request.upload.onprogress = event => { if (event.lengthComputable) setProgress(Math.round(event.loaded / event.total * 100)); };
@@ -36,7 +37,9 @@ export function ImageField({ businessId, label, value, alt, role = "photo", onCh
         setStatus("Uploading image…"); request.send(form);
       });
       if (token !== attempt.current) return;
-      callbacks.current.onChange(result.url); setFile(null); setStatus("Image uploaded to this draft. Save to keep the change.");
+      if (callbacks.current.onAsset) callbacks.current.onAsset(result.url, result.photoAssetId);
+      else callbacks.current.onChange(result.url);
+      setFile(null); setStatus("Image uploaded to this draft. Save to keep the change.");
     } catch (error) {
       if (token !== attempt.current) return;
       setError(error instanceof Error ? error.message : "Upload failed. Retry."); setStatus("");

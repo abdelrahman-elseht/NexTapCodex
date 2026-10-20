@@ -12,17 +12,23 @@ async function all(table, columns) {
     rows.push(...data); if (data.length < 500) return rows;
   }
 }
-const [assets, drafts, publications] = await Promise.all([all("media_assets", "id,storage_path,created_at,size_bytes"), all("page_sections", "id,content"), all("page_publications", "id,snapshot")]);
+const [assets, drafts, publications, pages] = await Promise.all([all("media_assets", "id,storage_path,contact_photo_path,created_at,size_bytes"), all("page_sections", "id,content"), all("page_publications", "id,snapshot"), all("business_pages", "id,contact_config")]);
 const referenced = new Set();
 function visit(value) {
   if (typeof value === "string") {
     const marker = "/storage/v1/object/public/business-media/";
+    if (/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.contact\.jpg$/i.test(value)) referenced.add(value);
     if (value.includes(marker)) { try { referenced.add(decodeURIComponent(value.split(marker)[1].split("?")[0])); } catch { throw new Error("Audit incomplete: malformed media reference."); } }
   } else if (value && typeof value === "object") Object.values(value).forEach(visit);
 }
-drafts.forEach(row => visit(row.content)); publications.forEach(row => visit(row.snapshot));
+pages.forEach(row => visit(row.contact_config)); drafts.forEach(row => visit(row.content)); publications.forEach(row => visit(row.snapshot));
+// Preserve authoritative asset IDs even when the draft display URL is empty.
+for (const page of pages) {
+  const asset = assets.find(asset => asset.id === page.contact_config?.photoAssetId);
+  if (asset) { referenced.add(asset.storage_path); referenced.add(asset.contact_photo_path); }
+}
 const grace = Date.now() - 7 * 86400000;
-const candidates = assets.filter(asset => !referenced.has(asset.storage_path) && Date.parse(asset.created_at) < grace);
+const candidates = assets.filter(asset => !referenced.has(asset.storage_path) && !referenced.has(asset.contact_photo_path) && Date.parse(asset.created_at) < grace);
 console.log(JSON.stringify({ readOnly: true, graceDays: 7, scannedAssets: assets.length, scannedDrafts: drafts.length, scannedPublications: publications.length, candidates }, null, 2));
 // Storage-only objects (e.g. failed cleanup) need a separately paged bucket listing.
 // This report intentionally makes no deletion recommendation for unregistered paths.

@@ -1,11 +1,22 @@
-# Repository navigation
+# Repository Guidelines
 
-Before locating code or adding modules, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Use [docs/README.md](docs/README.md) to find product specs and historical handovers relevant to the task.
+## Navigation
 
-`@/*` resolves to `src/*`. Keep route-specific UI in that route's `_components/` directory and shared code in the documented domain folders. Framework registration files (`middleware.ts` and instrumentation) live directly in `src/` beside `src/app/`.
+* For architecture, database, or cross-module changes, consult `docs/ARCHITECTURE.md` and only read the related file in it before implementation.
+* Use `docs/README.md` to locate relevant specifications and handoffs only when needed.
+* Inspect existing patterns before introducing new modules.
 
-For source moves, update imports, test aliases/globs, package scripts, CI paths, `.gitignore` exceptions and documentation links. Verify typecheck, unit tests, lint and a fresh production build; Next.js generated types can retain old paths until regenerated. Run relevant existing browser journeys when routes or runtime registrations move.
+## Structure
 
-Use UTF-8-safe file operations and literal paths for bracketed Next.js route directories such as `[id]` and `[slug]`.
+* `@/*` maps to `src/*`.
+* Keep route-specific UI in route `_components/`.
+* Keep shared logic in the documented domain folders.
+* Place Next.js middleware and instrumentation directly under `src/`.
 
-If `.codegraph/` exists at the repository root, use CodeGraph before text searches to locate or understand code; otherwise use the architecture map and targeted searches.
+## Changes & Verification
+
+* Preserve existing functionality and avoid unrelated refactoring.
+* For file moves, update imports, aliases, tests, CI paths, and documentation references.
+* Run relevant tests based on the changes. For structural or configuration changes, run typecheck, lint, unit tests, and a fresh production build.
+* Run browser/E2E tests when modifying user-facing workflows or routes.
+* Use UTF-8-safe operations and literal paths for Next.js directories such as `[id]` and `[slug]`.

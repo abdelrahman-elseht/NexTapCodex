@@ -6,6 +6,7 @@ import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/business/content";
 import { isDeliveryProvider, deliveryLinkHref, destinationStrategyFor, isMobileWalletProvider, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
 import { z } from "zod";
+import { contactConfigSchema, compileContact } from "@/lib/business/contact";
 import { normalizeEditorItems } from "@/lib/business/editor-items";
 import { captureOperationError } from "@/lib/observability/operations";
 
@@ -57,7 +58,7 @@ type DraftSection = { id?: string; section_key?: string; key: string; kind: stri
 type DraftProviderProfile = { value?: string; url?: string; destinationStrategy?: string };
 function parseDraft(fd: FormData) {
  const raw = String(fd.get("draft") || "{}");
- const parsed = JSON.parse(raw) as { businessId?: string; pageId?: string; name?: string; category?: string; slug?: string; template?: string; archived?: boolean; sections?: DraftSection[]; providerProfiles?: Record<string, DraftProviderProfile> };
+ const parsed = JSON.parse(raw) as { businessId?: string; pageId?: string; name?: string; category?: string; slug?: string; template?: string; archived?: boolean; sections?: DraftSection[]; providerProfiles?: Record<string, DraftProviderProfile>; contact?: unknown; expectedPageRevision?: number; expectedBusinessRevision?: number };
  const name = String(parsed.name || "").trim().slice(0, 120);
  const category = String(parsed.category || "business").trim().slice(0, 80) || "business";
  const slug = String(parsed.slug || "").trim().toLowerCase();
@@ -81,7 +82,9 @@ function parseDraft(fd: FormData) {
    url: String(profile?.url || "").trim().slice(0, 2048) || undefined,
    destinationStrategy: destinationStrategyFor(provider, profile?.destinationStrategy, profile?.url),
  }]));
- return { businessId: parsed.businessId, pageId: parsed.pageId, name, category, slug, template, archived: Boolean(parsed.archived), sections: cleanSections, providerProfiles };
+ const contact = parsed.contact === undefined ? undefined : contactConfigSchema.parse(parsed.contact);
+ if (contact) compileContact(contact, { business: { name }, sections: cleanSections });
+ return { contact, expectedPageRevision: parsed.expectedPageRevision, expectedBusinessRevision: parsed.expectedBusinessRevision, businessId: parsed.businessId, pageId: parsed.pageId, name, category, slug, template, archived: Boolean(parsed.archived), sections: cleanSections, providerProfiles };
 }
 
 function cleanSectionContent(content: Record<string, unknown>, kind: string, scope: string): Record<string, unknown> {
@@ -121,73 +124,41 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
  return next;
 }
 
-async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["supabase"], draft: ReturnType<typeof parseDraft>) {
- const payload = {
-  target_business_id: draft.businessId,
-  target_page_id: draft.pageId,
-  business_name: draft.name,
-  business_category: draft.category,
-  business_status: draft.archived ? "archived" : "active",
-  page_slug: draft.slug,
-  page_template: draft.template,
-  section_rows: draft.sections.map(section => ({ section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content })),
-  target_provider_profiles: draft.providerProfiles,
- };
- let { data, error } = await supabase.rpc("save_page_draft", payload);
- // Older isolated projects do not yet expose the provider profile argument;
- // section-level resolved values keep those projects fully compatible.
- if (error && /target_provider_profiles|function .*save_page_draft|does not exist/i.test(error.message || "")) {
-  const legacyPayload = { ...payload };
-  delete (legacyPayload as Record<string, unknown>).target_provider_profiles;
-  ({ data, error } = await supabase.rpc("save_page_draft", legacyPayload));
- }
- // Retry against an older isolated schema whose CHECK constraint predates
- // quick_actions. The marker is normalized back into Quick Actions in the
- // editor and public renderer, so the owner never loses the intended section.
- if (error?.code === "23514" || /page_sections|quick_actions|kind.check/i.test(error?.message || "")) {
-  const legacyRows = draft.sections.map(section => section.kind === "quick_actions"
-   ? { section_key: section.key, kind: "social", title: "الإجراءات السريعة", position: section.position, enabled: section.enabled, content: { ...section.content, _editorKind: "quick_actions" } }
-   : { section_key: section.key, kind: section.kind, title: section.title, position: section.position, enabled: section.enabled, content: section.content });
-  ({ data, error } = await supabase.rpc("save_page_draft", { ...payload, section_rows: legacyRows }));
- }
- if (error) throw new Error(error.message || "Could not save draft.");
- const committedCount = data && typeof data.sectionCount === "number" ? data.sectionCount : undefined;
- const returnedSectionCount = data && Array.isArray(data.sections) ? data.sections.length : undefined;
- if (!data || data.ok !== true ||
-   (committedCount !== undefined && committedCount !== draft.sections.length) ||
-   (committedCount === undefined && returnedSectionCount !== undefined && returnedSectionCount !== draft.sections.length)) {
-  throw new Error("The draft was not committed. Your edits are preserved; retry Save draft.");
- }
+async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["supabase"], draft: ReturnType<typeof parseDraft>, publish = false) {
+ if (!Number.isSafeInteger(draft.expectedPageRevision) || !Number.isSafeInteger(draft.expectedBusinessRevision)) throw new Error("Reload the editor before saving. Your local edits are preserved.");
+ // The database resolves bindings again and freezes its own public allowlist.
+ const { data, error } = await supabase.rpc("save_contact_draft", { draft, expected_page_revision: draft.expectedPageRevision, expected_business_revision: draft.expectedBusinessRevision, publish });
+ if (error) throw new Error(error.code === "40001" ? "This draft changed in another session. Your local edits are preserved; reload in another tab to compare." : "Could not save. Check contact fields and retry.");
+ if (!data?.ok || !Number.isSafeInteger(data.pageRevision) || !Number.isSafeInteger(data.businessRevision)) throw new Error("The draft was not committed. Your edits are preserved.");
+ return data as { ok: true; pageRevision: number; businessRevision: number; version?: number };
 }
 
 /** Persist a complete local editor draft without redirecting or publishing it. */
-export async function saveDraftState(fd: FormData): Promise<{ ok: boolean; error?: string }> {
+export async function saveDraftState(fd: FormData): Promise<{ ok: boolean; error?: string; pageRevision?: number; businessRevision?: number }> {
  try {
   const { supabase } = await requireOwner();
   const draft = parseDraft(fd);
-  await persistDraft(supabase, draft);
+  const result = await persistDraft(supabase, draft);
   revalidatePath("/admin/businesses/" + draft.businessId);
   revalidatePath("/admin/businesses/" + draft.businessId + "/preview");
-  return { ok: true };
+  return result;
  } catch (error) {
-  captureOperationError(error, "admin.draft.save");
+  captureOperationError(new Error("Draft save failed"), "admin.draft.save");
   return { ok: false, error: error instanceof Error ? error.message : "Could not save draft." };
  }
 }
 
 /** Save the local draft and publish the validated snapshot in one explicit action. */
-export async function publishDraftState(fd: FormData): Promise<{ ok: boolean; error?: string; version?: number }> {
+export async function publishDraftState(fd: FormData): Promise<{ ok: boolean; error?: string; version?: number; pageRevision?: number; businessRevision?: number }> {
  try {
   const { supabase } = await requireOwner();
   const draft = parseDraft(fd);
-  await persistDraft(supabase, draft);
-  const { data, error } = await supabase.rpc("publish_page", { target_page_id: draft.pageId });
-  if (error) throw new Error("Could not publish this page.");
+  const result = await persistDraft(supabase, draft, true);
   revalidatePath("/b/[slug]", "page");
   revalidatePath("/admin/businesses/" + draft.businessId);
-  return { ok: true, version: typeof data?.version === "number" ? data.version : undefined };
+  return result;
  } catch (error) {
-  captureOperationError(error, "admin.page.publish");
+  captureOperationError(new Error("Page publication failed"), "admin.page.publish");
   return { ok: false, error: error instanceof Error ? error.message : "Could not publish this page." };
  }
 }
