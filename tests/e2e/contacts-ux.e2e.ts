@@ -109,6 +109,7 @@ test("Contacts UX crop, override, cached photo, visibility and publication isola
   const customFile = `${dir}/custom-${width}.png`; await writeFile(customFile, blue);
   await panel.getByLabel("Upload custom contact photo", { exact: true }).setInputFiles(customFile);
   await expect(panel.getByLabel("Custom Contact Photo URL")).toHaveValue(/business-media/);
+  await expect(panel.getByText("Image uploaded to this draft. Save to keep the change.", { exact: true })).toBeVisible();
   const overridden = await download(); expect(overridden).not.toBe(cropped);
   await screen.getByRole("button", "Publish", { exact: true }).tap(); await expect(browser.locator(".editor-save-status")).toHaveText("Published", { timeout: 30000 });
   expect(await (await fetch(`${origin}/b/${slug}/contact.vcf`)).text()).toBe(overridden);
