@@ -10,9 +10,12 @@ The business detail route selected the two optional Contacts page columns uncond
 
 `loadBusinessEditorPages` retries only when Postgres/PostgREST identifies one of the two optional Contacts columns as missing. It then supplies the same safe defaults used by the pre-Contacts editor (`emptyContact()` and revision `0`). Permission, network, missing-required-column, and other database errors are returned unchanged. The save path still requires `save_contact_draft`; this compatibility read does not bypass authorization or invent a legacy writer.
 
+The private Preview route uses the same loader and reads the business name/category separately, so opening Preview remains compatible with the legacy shape as well.
+
 ## Files changed
 
 - `src/app/admin/businesses/[id]/page.tsx` — uses the compatibility page loader.
+- `src/app/admin/businesses/[id]/preview/page.tsx` — applies the same compatibility read for owner Preview.
 - `src/lib/business/business-editor-pages.ts` — narrow optional-column fallback.
 - `tests/unit/business-editor-pages.test.ts` — regression coverage for each missing column, both missing columns, migrated rows, and unrelated failures.
 - `BUSINESSES_LOADING_FIX_HANDOFF.md` — this handoff.
