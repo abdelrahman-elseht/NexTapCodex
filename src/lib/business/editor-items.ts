@@ -51,3 +51,8 @@ export function resolveSectionItems(items: EditorItem[], kind: string, profiles:
     actions: item.actions.map(action => resolveProviderItem(action, profiles)),
   } : {}) }));
 }
+
+// Copy the resolved destination, never an inherited mutable account reference.
+export function duplicateEditorItem(item: EditorItem): EditorItem {
+  return { ...item, id: crypto.randomUUID(), profileOverride: true, ...(item.actions ? { actions: item.actions.map(duplicateEditorItem) } : {}) };
+}

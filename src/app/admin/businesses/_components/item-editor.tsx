@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { PaymentLogo } from "@/components/business/payment-logo";
 import { providerIconPath, deliveryLinkHref, isDeliveryProvider, isLocalWalletProvider, isMobileWalletProvider, isPaymentProvider, paymentLinkHref, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, providerLabels, type ProviderId, whatsappHref } from "@/lib/business/providers";
 
-import { createEditorItem, type EditorItem } from "@/lib/business/editor-items";
+import { duplicateEditorItem, createEditorItem, type EditorItem } from "@/lib/business/editor-items";
 export type { EditorItem } from "@/lib/business/editor-items";
 type Section = { id: string; kind: string };
 
@@ -48,9 +48,10 @@ function itemValidationError(item: EditorItem) {
   return "";
 }
 
-export function ItemEditor({ section, items, onChange, businessId, track, mutationLocked = false }: { section: Section; items: EditorItem[]; onChange: (items: EditorItem[]) => void; businessId?: string; track?: UploadTracker; mutationLocked?: boolean }) {
-  const set = (id: string, patch: Partial<EditorItem>) => onChange(items.map(item => item.id === id ? { ...item, ...patch } : item));
-  const move = (index: number, offset: number) => {
+export function ItemEditor({ section, items, onChange, onSaveDetails, businessId, track, mutationLocked = false }: { section: Section; items: EditorItem[]; onChange: (items: EditorItem[]) => void; onSaveDetails?: (item: EditorItem) => void; businessId?: string; track?: UploadTracker; mutationLocked?: boolean }) {
+  const set = (id: string, patch: Partial<EditorItem>) => onChange(items.map(item => item.id === id ? { ...item, ...patch, ...(("value" in patch || "url" in patch || "destinationStrategy" in patch) ? { profileOverride: true } : {}) } : item));
+  const move = (id: string, offset: number) => {
+    const index = items.findIndex(item => item.id === id);
     const target = index + offset;
     if (target < 0 || target >= items.length) return;
     const next = [...items];
@@ -95,15 +96,17 @@ export function ItemEditor({ section, items, onChange, businessId, track, mutati
           }} />{!isHours && <small className="field-hint">{provider === "bank" ? "These instructions stay available to your team. Visitors request transfer details directly from the business." : isLocalWalletProvider(provider) ? "Optional fallback details. Add a provider link to open the payment destination directly." : `This destination stays tied to ${providerLabels[provider]} if you change the button label.`}</small>}</label>}
           {section.kind === "gallery" && businessId && track && <ImageField businessId={businessId} label={`Gallery image ${index + 1}`} value={item.url} alt={item.alt || ""} onChange={url => set(item.id, { url })} onAltChange={alt => set(item.id, { alt })} track={track} />}
           {needsUrl && section.kind !== "gallery" && <label className="field"><span>{optionalUrl ? "Provider link (optional)" : isAction || isSocial ? "Destination URL" : "URL"}</span><input id={`item-${section.id}-${item.id}-url`} name={`${section.id}.${item.id}.url`} dir="ltr" inputMode="url" autoCapitalize="none" spellCheck={false} value={item.url} placeholder={urlPlaceholder} onChange={event => set(item.id, { url: event.target.value })} /><small className="field-hint">{isPaymentProvider(provider) ? "Paste the complete HTTPS payment link from your provider. Tapping the card opens that exact link; app opening depends on the provider and the phone. No details are copied when a link is set." : optionalUrl ? "Use only a verified link supplied by the provider. Without one, visitors can copy the saved details." : "Add the complete destination supplied by the business. No URL is inferred."}</small></label>}
-          {provider !== "custom" && !isHours && <label className="field"><span>Destination source</span><select value={item.profileOverride ? "override" : "default"} onChange={event => set(item.id, { profileOverride: event.target.value === "override" })}><option value="default">Use business default</option><option value="override">Override for this item</option></select><small>{item.profileOverride ? "Only this item changes." : "Editing these details updates the business default and other inherited items."}</small></label>}
+          {provider !== "custom" && !isHours && <label className="field"><span>Destination source</span><select value={item.profileOverride ? "override" : "default"} onChange={event => set(item.id, { profileOverride: event.target.value === "override" })}><option value="default">Use saved details</option><option value="override">Custom value</option></select><small>{item.profileOverride ? "Only this item changes." : "Uses saved business details. Editing creates a custom value for this item."}</small></label>}
+          {onSaveDetails && provider !== "custom" && !isHours && section.kind !== "gallery" && <button type="button" className="small-button" onClick={() => onSaveDetails(item)}>Save these details as business default</button>}
           {!isHours && <details className="item-optional-text"><summary>Optional item text</summary><label className="field">Item subtitle<input name={`${section.id}.${item.id}.subtitle`} value={item.subtitle || ""} maxLength={500} onChange={event => set(item.id,{subtitle:event.target.value})}/></label><label className="field">Item badge<input name={`${section.id}.${item.id}.badge`} value={item.badge || ""} maxLength={80} onChange={event => set(item.id,{badge:event.target.value})}/></label></details>}
-          {section.kind === "services" && <><label className="field">Service description<textarea value={item.value} maxLength={500} onChange={event => set(item.id,{value:event.target.value})}/></label><details><summary>Service buttons</summary><ItemEditor section={{id:`${section.id}-${item.id}`,kind:"quick_actions"}} items={item.actions || []} onChange={actions=>set(item.id,{actions})} mutationLocked={mutationLocked}/></details></>}
+          {section.kind === "services" && <><label className="field">Service description<textarea value={item.value} maxLength={500} onChange={event => set(item.id,{value:event.target.value})}/></label><details><summary>Service buttons</summary><ItemEditor section={{id:`${section.id}-${item.id}`,kind:"quick_actions"}} items={item.actions || []} onChange={actions=>set(item.id,{actions})} mutationLocked={mutationLocked} onSaveDetails={onSaveDetails}/></details></>}
 
           {(isAction || isPayment) && <label className="field"><span>Button icon</span><select value={item.icon || ""} onChange={event => set(item.id, { icon: event.target.value || undefined })}><option value="">Provider icon</option><option value="link">Link</option><option value="phone">Phone</option><option value="pin">Location pin</option><option value="menu">Menu</option><option value="calendar">Calendar</option><option value="google">Google</option><option value="globe">Website</option></select></label>}
           {itemValidationError(item) && <small className="field-error" role="alert">{itemValidationError(item)}</small>}
         </div>
         <label className="item-enabled"><input type="checkbox" checked={item.enabled !== false} onChange={event => set(item.id, { enabled: event.target.checked })} /> on</label>
-        <div className="item-reorder"><button type="button" onClick={() => move(index, -1)} disabled={index === 0 || mutationLocked} aria-label={`Move item ${index + 1} up`}>↑</button><button type="button" onClick={() => move(index, 1)} disabled={index === items.length - 1 || mutationLocked} aria-label={`Move item ${index + 1} down`}>↓</button></div>
+        <button type="button" className="small-button" disabled={mutationLocked || items.length >= 100} onClick={() => onChange([...items, duplicateEditorItem(item)])}>Duplicate item</button>
+        <div className="item-reorder"><button type="button" onClick={() => move(item.id, -1)} disabled={index === 0 || mutationLocked} aria-label={`Move item ${index + 1} up`}>↑</button><button type="button" onClick={() => move(item.id, 1)} disabled={index === items.length - 1 || mutationLocked} aria-label={`Move item ${index + 1} down`}>↓</button></div>
         <button type="button" className="small-button danger" disabled={mutationLocked} onClick={() => onChange(items.filter(entry => entry.id !== item.id))} aria-label={`Remove item ${index + 1}`}>×</button>
       </div>;
     })}

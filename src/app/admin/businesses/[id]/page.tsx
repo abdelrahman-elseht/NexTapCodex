@@ -21,20 +21,20 @@ export default async function EditBusiness({
   const query = await searchParams;
   const { supabase } = await requireOwner();
   let { data: business, error: businessError } = await supabase.from("businesses")
-    .select("id,name,category,status,provider_profiles").eq("id", id).maybeSingle();
+    .select("id,name,category,status,provider_profiles,draft_revision").eq("id", id).maybeSingle();
   if (businessError && /provider_profiles|column|schema cache/i.test(businessError.message || "")) {
     const fallback = await supabase.from("businesses").select("id,name,category,status").eq("id", id).maybeSingle();
-    business = fallback.data ? { ...fallback.data, provider_profiles: null } : null;
+    business = fallback.data ? { ...fallback.data, provider_profiles: null, draft_revision: 0 } : null;
     businessError = fallback.error;
   }
   if (businessError) return <section className="editor-panel error-panel" role="alert"><span className="panel-kicker">تعذر تحميل البيانات</span><h1>لم نتمكن من فتح النشاط</h1><p>حدثت مشكلة أثناء تحميل بيانات لوحة التحكم. أعد المحاولة أو ارجع إلى قائمة الأنشطة.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
   if (!business) notFound();
 
   const { data: pages, error: pagesError } = await supabase.from("business_pages")
-    .select("id,slug,template,page_type,branch_name,is_active,published_snapshot_id")
+    .select("id,slug,template,page_type,branch_name,is_active,published_snapshot_id,contact_config,draft_revision")
     .eq("business_id", id).order("created_at");
   if (pagesError) return <section className="editor-panel error-panel" role="alert"><span className="panel-kicker">تعذر تحميل البيانات</span><h1>لم نتمكن من تحميل صفحات النشاط</h1><p>أعد المحاولة أو ارجع إلى قائمة الأنشطة.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
-  const page = pages?.[0];
+  const page = query.page ? pages?.find(item => item.id === query.page) : pages?.find(item => item.page_type !== "branch") || pages?.[0];
   if (!page) return <section className="editor-panel error-panel" role="alert"><span className="panel-kicker">صفحة غير موجودة</span><h1>لا توجد صفحة لهذا النشاط بعد</h1><p>يمكنك العودة إلى القائمة ومراجعة النشاط.</p><Link className="button secondary" href="/admin/businesses">قائمة الأنشطة</Link></section>;
 
   const { data: sections, error: sectionError } = await supabase.from("page_sections")
@@ -69,9 +69,10 @@ export default async function EditBusiness({
       {query.sections === "reordered" && <div className="alert success" role="status">تم حفظ ترتيب الأقسام.</div>}
       {sectionError && <div className="alert" role="alert">تعذر تحميل أقسام الصفحة.</div>}
 
-      <BusinessEditor
-        business={{ id: business.id, name: business.name, category: business.category || "", status: business.status, providerProfiles: (business as any).provider_profiles || {} }}
-        page={{ id: page.id, slug: page.slug, template: page.template, is_active: page.is_active }}
+      <nav className="branch-list" aria-label="Page to edit">{(pages || []).map(item => <Link className="button secondary" key={item.id} href={"/admin/businesses/" + id + "?page=" + item.id} aria-current={item.id === page.id ? "page" : undefined}>{item.branch_name || item.slug}</Link>)}</nav>
+      <BusinessEditor key={page.id}
+        business={{ id: business.id, name: business.name, category: business.category || "", status: business.status, draftRevision: (business as any).draft_revision || 0, providerProfiles: (business as any).provider_profiles || {} }}
+        page={{ id: page.id, slug: page.slug, template: page.template, is_active: page.is_active, contact: Object.keys(page.contact_config || {}).length ? page.contact_config : undefined, draftRevision: page.draft_revision, branchName: page.branch_name || undefined }}
   sections={sectionList.map((section: any) => ({ id: section.id, section_key: section.section_key, kind: section.content?._editorKind === "quick_actions" && section.kind === "social" ? "quick_actions" : section.kind, title: section.content?._editorKind === "quick_actions" && section.kind === "social" ? "الإجراءات السريعة" : section.title, position: section.position, enabled: section.enabled, content: section.content as Record<string, unknown> }))}
       />
 
@@ -95,7 +96,7 @@ export default async function EditBusiness({
             <SubmitButton className="button secondary" pendingText="جارٍ التنفيذ...">إنشاء صفحة الفرع</SubmitButton>
           </MutationForm>
           {(pages || []).filter((item: any) => item.page_type === "branch").map((item: any) => (
-            <p key={item.id}><Link href={"/admin/businesses/" + id + "/preview?page=" + item.id}>{item.branch_name || item.slug} · /b/{item.slug}</Link></p>
+            <p key={item.id}><Link href={"/admin/businesses/" + id + "?page=" + item.id}>{item.branch_name || item.slug} · /b/{item.slug}</Link></p>
           ))}
         </div>
       </section>

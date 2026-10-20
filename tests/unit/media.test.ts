@@ -43,7 +43,7 @@ it("uses immutable owner/business paths and cleans storage after metadata failur
   await expect(storeManagedImage(client as never, "owner", "business", await optimizeImage(await raster(20, 20).png().toBuffer(), "logo"), "Logo")).rejects.toThrow();
   expect(upload.mock.calls[0][0]).toMatch(/^owner\/business\/[a-f0-9-]+\.webp$/);
   expect(upload.mock.calls[0][2]).toMatchObject({ upsert: false, contentType: "image/webp", cacheControl: "31536000" });
-  expect(remove).toHaveBeenCalledWith([upload.mock.calls[0][0]]);
+  expect(remove).toHaveBeenCalledWith([upload.mock.calls[0][0], upload.mock.calls[1][0]]);
   upload.mockResolvedValue({ error: { message: "storage failed" } }); remove.mockClear(); insert.mockClear();
   await expect(storeManagedImage(client as never, "owner", "business", await optimizeImage(await raster(20, 20).png().toBuffer(), "logo"), "Logo")).rejects.toThrow();
   expect(insert).not.toHaveBeenCalled(); expect(remove).not.toHaveBeenCalled();

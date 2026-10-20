@@ -44,6 +44,7 @@
     "jsqr": "^1.4.0",
     "playwright-core": "1.63.0",
     "typescript": "5.9.2",
+    "vcard-parser": "1.0.0",
     "vitest": "3.2.4"
   },
   "overrides": {
