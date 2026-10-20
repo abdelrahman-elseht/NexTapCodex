@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock("@/lib/supabase/public", () => ({ createPublicClient: () => ({ rpc }) }));
-import { downloadContact, readContactPhoto } from "@/lib/business/contact-download";
-const contact = { version: 1, enabled: true, displayName: "Synthetic QA", organization: "QA", primaryPhone: "+201012345678", fields: [] };
+import { contactResponse, downloadContact, readContactPhoto } from "@/lib/business/contact-download";
+const contact = { version: 1 as const, enabled: true as const, displayName: "Synthetic QA", organization: "QA", primaryPhone: "+201012345678", fields: [] };
 const path = "00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002/00000000-0000-4000-8000-000000000003.contact.jpg";
 beforeEach(() => { vi.restoreAllMocks(); rpc.mockReset(); });
 describe("fresh public contact responses", () => {
@@ -11,13 +11,16 @@ describe("fresh public contact responses", () => {
     const response = await downloadContact({ slug: "synthetic-qa" }, head);
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("text/vcard; charset=utf-8");
-    expect(response.headers.get("content-disposition")).toBe('attachment; filename="business-contact.vcf"');
+    expect(response.headers.get("content-disposition")).toBe('inline; filename="business-contact.vcf"');
     expect(response.headers.get("cache-control")).toBe("private, no-store, max-age=0");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
     expect(response.headers.get("referrer-policy")).toBe("no-referrer");
     expect(await response.text()).toMatch(head ? /^$/ : /^BEGIN:VCARD\r\nVERSION:3.0/);
     expect(rpc).toHaveBeenCalledWith("get_published_page", { page_slug: "synthetic-qa" });
+  });
+  it("keeps a forced attachment fallback available", async () => {
+    expect((await contactResponse(contact, false, true)).headers.get("content-disposition")).toBe('attachment; filename="business-contact.vcf"');
   });
   it("never reuses a successful response after disable or card reassignment", async () => {
     rpc.mockResolvedValueOnce({ data: contact }).mockResolvedValueOnce({ data: null });

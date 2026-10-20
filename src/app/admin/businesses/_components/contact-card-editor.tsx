@@ -36,7 +36,7 @@ export function ContactCardEditor({ config, onChange, name, branchName, sections
       <label className="field">Organization<input maxLength={2000} value={config.organization} onChange={event => patch({ organization: event.target.value })} /></label>
       <label className="field">Primary phone<input dir="ltr" inputMode="tel" maxLength={100} value={config.primaryPhone} disabled={config.phoneFromPage} onChange={event => patch({ primaryPhone: event.target.value })} /></label>
       <label className="toggle-control"><input type="checkbox" checked={config.phoneFromPage} onChange={event => patch({ phoneFromPage: event.target.checked })} />Use this page’s Find us phone</label>
-      <ImageField businessId={businessId} label="Contact photo" role="logo" value={config.photoUrl} alt="Contact photo" onAltChange={() => {}} onChange={photoUrl => patch({ photoUrl, photoAssetId: undefined })} onAsset={(photoUrl, photoAssetId) => patch({ photoUrl, photoAssetId })} track={track} />
+      <ImageField businessId={businessId} label="Business logo used as contact photo" role="logo" value={config.photoUrl} alt="Business logo" onAltChange={() => {}} onChange={photoUrl => patch({ photoUrl, photoAssetId: undefined })} onAsset={(photoUrl, photoAssetId) => patch({ photoUrl, photoAssetId })} track={track} />
     </div>
     <div className="contact-field-list">{config.fields.map((field, index) => <fieldset key={field.id} className="contact-field-row">
       <legend>Contact field {index + 1}</legend>

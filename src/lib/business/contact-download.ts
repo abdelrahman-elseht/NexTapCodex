@@ -24,12 +24,12 @@ export async function readContactPhoto(path?: string): Promise<Uint8Array | unde
     return bytes;
   } catch { return; }
 }
-export async function contactResponse(contact: ContactProjection, head = false) {
+export async function contactResponse(contact: ContactProjection, head = false, attachment = false) {
   const body = serializeVCard(contact, head ? undefined : await readContactPhoto(contact.photoPath));
-  return new Response(head ? null : body, { headers: { ...contactHeaders, "Content-Type": "text/vcard; charset=utf-8", "Content-Disposition": 'attachment; filename="business-contact.vcf"' } });
+  return new Response(head ? null : body, { headers: { ...contactHeaders, "Content-Type": "text/vcard; charset=utf-8", "Content-Disposition": `${attachment ? "attachment" : "inline"}; filename="business-contact.vcf"` } });
 }
 /** No publication cache or rollout fallback: each request checks current eligibility. */
-export async function downloadContact(identity: { slug: string } | { token: string }, head = false) {
+export async function downloadContact(identity: { slug: string } | { token: string }, head = false, attachment = false) {
   try {
     const client = createPublicClient();
     const token = "token" in identity;
@@ -40,6 +40,6 @@ export async function downloadContact(identity: { slug: string } | { token: stri
     if (error) return contactError(503, head);
     const contact = token ? data : data?.contact;
     if (contact?.version !== 1 || contact.enabled !== true) return contactError(404, head);
-    return await contactResponse(contact, head);
+    return await contactResponse(contact, head, attachment);
   } catch { return contactError(503, head); }
 }

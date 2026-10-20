@@ -48,16 +48,19 @@ describe("contact configuration and projection", () => {
 describe("vCard wire format", () => {
   it("parses independently with Arabic, emoji, structured N/ADR, repeated phones/URLs and escaped notes", () => {
     const c = contact(); c.fields = [
-      { kind: "phone", label: "Other", value: "+442071234567" },
+      { kind: "phone", label: "Other", value: "+442071234567" }, { kind: "phone", label: "Mobile", value: "+442071234568" },
       { kind: "website", label: "One", value: "https://one.test" }, { kind: "website", label: "Two", value: "https://two.test" },
+      { kind: "whatsapp", label: "WhatsApp", value: "https://wa.me/201000000000" }, { kind: "social", label: "Instagram", value: "https://instagram.com/example" },
+      { kind: "custom", label: "Booking page", value: "https://example.test/book" },
       { kind: "email", label: "Work", value: "qa@example.test" },
       { kind: "address", label: "Office", value: "Cairo; مصر, Nile" },
       { kind: "notes", label: "Notes", value: "Hello, world; \\ ☕\nFN:still a note" },
     ];
     const raw = serializeVCard(c), parsed = parser.parse(raw);
     expect(parsed.version[0].value).toBe("3.0"); expect(parsed.fn[0].value).toBe("مقهى ☕");
-    expect(parsed.n[0].value).toHaveLength(5); expect(parsed.tel.map(row => row.value)).toEqual(["+201012345678", "+442071234567"]);
-    expect(parsed.url.map(row => row.value)).toEqual(["https://one.test", "https://two.test"]);
+    expect(parsed.n[0].value).toHaveLength(5); expect(parsed.tel.map(row => row.value)).toEqual(["+201012345678", "+442071234567", "+442071234568"]);
+    expect(parsed.url.map(row => row.value)).toEqual(["https://one.test", "https://two.test", "https://wa.me/201000000000", "https://instagram.com/example", "https://example.test/book"]);
+    expect(raw).toContain("URL;TYPE=Booking-page:"); expect(raw).toContain("WhatsApp: https://wa.me/201000000000");
     expect(parsed.adr[0].value).toHaveLength(7); expect(parsed.fn).toHaveLength(1);
     expect(raw.startsWith("BEGIN:VCARD\r\nVERSION:3.0\r\n")).toBe(true); expect(raw.endsWith("END:VCARD\r\n")).toBe(true);
     expect(raw).not.toContain("\ufeff"); expect(raw.replace(/\r\n/g, "")).not.toMatch(/[\r\n]/);
@@ -95,6 +98,8 @@ describe("Quick Actions reference placement", () => {
     const html = render(sections);
     expect(html.match(/class="contact-download-button"/g)).toHaveLength(1);
     expect(html).not.toMatch(/contact-download-button[^>]*target=/);
+    expect(html).not.toMatch(/contact-download-button[^>]*download=/);
+    expect(html).toContain('class="contact-download-fallback"');
     const cta = html.indexOf('class="contact-download-button"'), tile = html.indexOf('class="quick-action ');
     if (tile >= 0) expect(cta).toBeLessThan(tile);
   });

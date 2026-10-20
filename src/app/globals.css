@@ -513,6 +513,7 @@ h1,h2,h3{letter-spacing:-.025em;line-height:1.24}
 .contact-download{display:grid;gap:6px;margin-bottom:10px}
 .contact-download-button{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:44px;padding:10px 16px;border-radius:10px;background:var(--contact-burgundy);color:var(--card);font-size:14px;font-weight:600}
 .contact-download-button:hover{background:#632b30}
+.contact-download-fallback{justify-self:center;color:var(--ink-soft);font-size:12px;text-decoration:underline;text-underline-offset:2px}
 .contact-download-button[aria-disabled=true]{cursor:default}
 .contact-download-button svg{flex:none}
 [dir=rtl] .contact-download-button svg{transform:scaleX(-1)}

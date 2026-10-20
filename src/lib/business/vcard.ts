@@ -20,9 +20,13 @@ export function serializeVCard(contact: ContactProjection, photo?: Uint8Array) {
     if (/[\u0000-\u0008\u000b-\u001f\u007f]/.test(field.value)) throw new Error("Invalid contact text.");
     if (field.kind === "phone") { const phone = contactPhone(field.value); if (!phone) throw new Error("Invalid phone."); lines.push(`TEL;TYPE=WORK,VOICE:${phone}`); }
     else if (field.kind === "email") { if (field.value.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) throw new Error("Invalid email."); lines.push(`EMAIL;TYPE=INTERNET:${escape(field.value)}`); }
-    else if (field.kind === "website") { if (!contactWeb(field.value)) throw new Error("Invalid URL."); lines.push(`URL:${escape(field.value)}`); }
+    else if (field.kind === "website") { if (!contactWeb(field.value)) throw new Error("Invalid URL."); lines.push(urlLine(field)); }
     else if (field.kind === "address") lines.push(`ADR;TYPE=WORK:;;${escape(field.value)};;;;`);
-    else if (["social", "whatsapp", "hours", "notes", "custom"].includes(field.kind)) { if (["social", "whatsapp"].includes(field.kind) && !contactWeb(field.value)) throw new Error("Invalid URL."); notes.push(`${field.label || field.kind}: ${field.value}`); }
+    else if (["social", "whatsapp", "hours", "notes", "custom"].includes(field.kind)) {
+      if (["social", "whatsapp"].includes(field.kind) && !contactWeb(field.value)) throw new Error("Invalid URL.");
+      if (["social", "whatsapp", "custom"].includes(field.kind) && contactWeb(field.value)) lines.push(urlLine(field));
+      notes.push(`${field.label || field.kind}: ${field.value}`);
+    }
     else throw new Error("Unsupported contact property.");
   }
   const note = notes.join("\n");
@@ -33,4 +37,9 @@ export function serializeVCard(contact: ContactProjection, photo?: Uint8Array) {
   const result = lines.map(foldVCardLine).join("\r\n") + "\r\n";
   if (Buffer.byteLength(result) > 300 * 1024) throw new Error("Contact exceeds download limit.");
   return result;
+}
+
+function urlLine(field: { label: string; value: string }) {
+  const label = field.label.trim().replace(/[^A-Za-z0-9-]/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+  return label ? `URL;TYPE=${label}:${escape(field.value)}` : `URL:${escape(field.value)}`;
 }

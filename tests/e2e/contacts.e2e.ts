@@ -62,7 +62,7 @@ test("Contacts configure, preview, save/reload, publish, download and disable on
     await app.open('/b/'+slug);
     const cta=browser.locator(".contact-download-button");
     await expect(cta).toHaveCount(1);
-    const download=await browser.waitForDownload(()=>cta.tap());
+    const download=await browser.waitForDownload(()=>browser.locator(".contact-download-fallback").tap());
     await cardFile(download.path,name);
     await app.open(editor);
     await contact.getByRole("checkbox","Enable contact download").uncheck();
