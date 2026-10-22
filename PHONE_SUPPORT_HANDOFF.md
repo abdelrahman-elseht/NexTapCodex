@@ -1,6 +1,17 @@
 # Flexible phone and landline support
 
-Implemented on `main`, 2026-10-21. Changes remain in the working tree. No commit, push, deployment, hosted migration, or hosted test-data mutation was performed.
+Implemented in commit `8507b622ff352857d46669044235d536cc4b9de0` on `feat/flexible-phone-support`, 2026-10-21. The commit is pushed and has a Ready Vercel Preview. It is not merged to remote `main` and is not live on Production.
+
+## Production release status (2026-10-22)
+
+- PR #13 is open from `feat/flexible-phone-support` to `main`. `quality` passes; the automated `self-review` fails because the PR body lacks its required checklist and release evidence. No human approval is recorded.
+- Vercel reports the existing Production deployment as Ready at `https://nextap.services` (deployment `dpl_DcXvBGu8LXS9KrDWivgEQ5MzbDzz`, created 2026-10-20). The feature commit is only on its Preview deployment.
+- Read-only Supabase migration history for Staging (`flkakuysakgwfoemgbwn`) contains `20261020210229`; Production (`jezpobjlfvihikplxrta`) does not. The current `origin/staging` source does not contain this migration file, so Staging's migration history and checked-in source need reconciliation before release acceptance.
+- Migration SHA-256: `336B026522E7F4F087BD98A869EF4B205D078AB346CE2FE08ECE8F1459A897D1`.
+- This release attempt did not apply a hosted migration, mutate hosted test data, merge to `main`, or deploy to Production. Production remains on its prior Ready deployment.
+- Full Local Supabase owner/browser E2E remains blocked because Docker/Podman and the local Supabase stack are unavailable. The database-independent browser checks and disposable database tests below passed, but they do not establish the authenticated save/publish/download journey.
+
+Production release remains gated on reconciling the Staging migration/source state, completing the full Local Supabase E2E, and recording the required release evidence. Do not treat the existing Vercel Preview as a Production release.
 
 ## Behavior and implementation
 
@@ -29,7 +40,7 @@ New migration: `supabase/migrations/20261020210229_flexible_phone_support.sql`.
 
 It replaces private contact phone validation and compilation, adds a private page-local binding resolver, and freezes original phone text plus safe enum types into contact projections. The new resolver has an empty search path and is not executable by public/anon/authenticated roles. Existing authorization, payment-binding exclusions, contact limits, managed-photo rules, revision checks, atomic publication, and immutable snapshots remain in place.
 
-No stored-number rewrite or destructive schema change is included. Existing published snapshots stay frozen; publish an edited page to use its new contact configuration. The new migration must be applied to the intended environment before the app uses the new contact configuration keys. It has only been applied to disposable test databases during this task.
+No stored-number rewrite or destructive schema change is included. Existing published snapshots stay frozen; publish an edited page to use its new contact configuration. The new migration must be applied to the intended environment before the app uses the new contact configuration keys. The Staging migration history currently records it, while Production does not; no hosted migration was applied during this release attempt.
 
 ## Verification
 
