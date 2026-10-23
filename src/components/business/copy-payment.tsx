@@ -2,8 +2,43 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { buildWalletUssdCode, dialerHref } from "@/lib/business/wallet-ussd";
+import { PaymentLogo } from "@/components/business/payment-logo";
 
-export function PaymentAction({ value, provider, mode = "copy", accessibleLabel, className = "", children, language = "en" }: {
+function WalletPaymentAction({ value, provider, accessibleLabel, className, children, language }: Omit<Parameters<typeof PaymentAction>[0], "mode">) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const headingId = useId();
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [status, setStatus] = useState("");
+  const ar = language === "ar";
+  const code = buildWalletUssdCode(provider, value, amount);
+  const enabled = process.env.NEXT_PUBLIC_WALLET_USSD_ENABLED === "true";
+  useEffect(() => { if (open) dialog.current?.showModal(); }, [open]);
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setStatus(ar ? "تم نسخ الرمز." : "Full code copied.");
+    } catch {
+      setStatus(ar ? "تعذر النسخ. حدد الرمز وانسخه يدويًا." : "Copy was blocked. Select the code and copy it manually.");
+    }
+  }
+  return <>
+    <button type="button" className={className} onClick={() => { setOpen(true); setAmount(""); setStatus(""); }} aria-label={accessibleLabel} aria-haspopup="dialog">{children}</button>
+    {open && createPortal(<dialog ref={dialog} className="payment-instructions-dialog wallet-payment-dialog" aria-labelledby={headingId} dir={ar ? "rtl" : "ltr"} lang={language} onClose={() => setOpen(false)} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
+      <div className="wallet-payment-brand"><PaymentLogo provider={provider as "vodafone" | "etisalat" | "orange"} /><h2 id={headingId}>{provider === "vodafone" ? "Vodafone Cash" : provider === "orange" ? "Orange Cash" : "e& money"}</h2></div>
+      <p>{ar ? "أدخل المبلغ بالجنيه المصري. تحقّق من المستفيد قبل إتمام أي تحويل." : "Enter an amount in EGP. Verify the recipient before completing any transfer."}</p>
+      <label className="field">{ar ? "المبلغ (جنيه مصري)" : "Amount (EGP)"}<input autoFocus type="number" min="0.01" step="0.01" inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} /></label>
+      {!enabled && <p role="status">{ar ? "هذه الصيغة التجريبية غير مفعلة على هذا الموقع." : "Experimental dialing formats are disabled on this deployment."}</p>}
+      {enabled && code && <><label className="field">{ar ? "رمز التحويل" : "Full code"}<code className="wallet-code" dir="ltr">{code}</code></label><p>{ar ? "قد لا يدعم جهازك فتح طالب الاتصال. استخدم النسخ كبديل." : "Your device may not support dialer handoff. Use copy as a fallback."}</p><div className="wallet-payment-actions"><a className="button primary" href={dialerHref(code)}>{ar ? "فتح لوحة الاتصال" : "Open Dialer"}</a><button className="button secondary" type="button" onClick={() => void copyCode()}>{ar ? "نسخ الرمز كاملًا" : "Copy Full Code"}</button></div></>}
+      {enabled && !code && <p role="alert">{ar ? "أدخل مبلغًا صحيحًا أكبر من صفر." : "Enter a valid amount greater than zero."}</p>}
+      <p role="status" aria-live="polite">{status}</p><p>{ar ? "لن تطلب NexTap رمز PIN أو كلمة مرور لمرة واحدة، ولن تؤكد الدفع." : "NexTap never asks for a PIN or OTP and does not confirm payments."}</p>
+      <button type="button" className="button secondary" onClick={() => dialog.current?.close()}>{ar ? "إغلاق" : "Close"}</button>
+    </dialog>, document.body)}
+  </>;
+}
+
+function PaymentInstructionsAction({ value, provider, mode = "copy", accessibleLabel, className = "", children, language = "en" }: {
   value: string;
   provider: string;
   mode?: "copy" | "instructions";
@@ -45,4 +80,11 @@ export function PaymentAction({ value, provider, mode = "copy", accessibleLabel,
       <button type="button" className="button secondary" autoFocus onClick={() => dialog.current?.close()}>{ar ? "إغلاق" : "Close"}</button>
     </dialog>, document.body)}
   </>;
+}
+
+export function PaymentAction(props: Parameters<typeof PaymentInstructionsAction>[0]) {
+  if (props.provider !== "instapay" && ["vodafone", "etisalat", "orange"].includes(props.provider)) {
+    return <WalletPaymentAction {...props} />;
+  }
+  return <PaymentInstructionsAction {...props} />;
 }
