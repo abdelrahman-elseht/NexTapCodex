@@ -1,6 +1,6 @@
 # Wallet payment Staging handoff
 
-Status: wallet USSD implementation is deployed to the protected Staging branch and passed local plus hosted public QA. No Production changes were made. The Staging feature flag remains disabled, so visitors do not see experimental codes or dialer actions.
+Status: wallet USSD implementation is deployed to the protected Staging branch and passed local plus hosted public QA. The experimental controls are enabled for the Staging branch only. No Production changes were made.
 
 ## Implementation
 
@@ -9,7 +9,7 @@ Status: wallet USSD implementation is deployed to the protected Staging branch a
 - Vodafone Cash, e& money, and Orange Cash open an amount-only localized modal. InstaPay keeps its existing instructions/copy flow.
 - Sandbox-derived formats are: Vodafone *9*7*{recipient}*{amount}#; e& *777*1*{recipient}*{amount}#; Orange #7115*1*{amount}*{recipient}#.
 - Amounts must be positive with at most two decimal places. The exact generated code is copied only after an explicit user action; # is encoded in tel links.
-- Experimental code display, copy, and dialer controls render only when NEXT_PUBLIC_WALLET_USSD_ENABLED=true. Staging currently leaves this unset. No PIN/OTP collection, automatic transfer, or payment confirmation was added.
+- Experimental code display, copy, and dialer controls render only when NEXT_PUBLIC_WALLET_USSD_ENABLED=true. Staging now has this value as a branch-scoped Preview variable; Production remains unset. No PIN/OTP collection, automatic transfer, or payment confirmation was added.
 - The reference file is sandbox material with fictional recipients and GHS examples. It does not validate Egyptian EGP carrier behavior.
 
 ## Changed files
@@ -29,11 +29,11 @@ Pre-existing workspace changes were preserved and are not part of the implementa
 - Branch: staging
 - Source commit: ef30ab8786f38dc11e4afe03dcb2c853f9540702
 - Git push: origin/staging advanced from c1332a077e3e9e1079eaa4e19bc0236403174aac; the remote reported its configured protected-rule bypass for the direct Staging instruction.
-- Vercel deployment: dpl_BS48qPzRJPe9vjY915jRE3i4vyf8
-- Deployment URL: https://nextap-ajm36qjib-abdelrahman-867e.vercel.app
+- Vercel deployment: dpl_3e55VSY39uxJQsSHSxbTDycjtdXZ
+- Deployment URL: https://nextap-1yi41pmvo-abdelrahman-867e.vercel.app
 - Stable Staging alias: https://staging.nextap.services
 - Vercel build status: Ready; the build cloned branch staging at commit ef30ab8 and completed successfully.
-- NEXT_PUBLIC_WALLET_USSD_ENABLED: disabled on Staging. No Production deployment, domain, Supabase project, DNS, or customer record was changed.
+- NEXT_PUBLIC_WALLET_USSD_ENABLED: true for Preview deployments on Git branch staging only. Production remains unset. No Production deployment, domain, Supabase project, DNS, or customer record was changed.
 
 ## Acceptance results
 
@@ -43,7 +43,7 @@ Pre-existing workspace changes were preserved and are not part of the implementa
 | Provider icons open the corresponding modals | PASS | Local disabled E2E and hosted Staging E2E opened Vodafone, e& money, and Orange modals on desktop and mobile browser targets. |
 | Amount is the only required visitor input | PASS | The modal exposes only the localized Amount (EGP) input before the experimental actions. |
 | Recipient and amount generate each provider code | PARTIAL / UNVERIFIED | Unit tests cover all three field orders, leading-zero preservation, spaced +20 normalization, positive amount validation, and dialer escaping. Enabled local browser E2E confirms code and dialer controls for all three providers. The formats remain sandbox-derived and are not carrier-verified. |
-| Open Dialer and Copy Full Code | PARTIAL / UNVERIFIED | Enabled local browser E2E verifies the controls and URI shape. Staging keeps the flag disabled; browser emulation cannot prove a real dialer or clipboard on a carrier device. |
+| Open Dialer and Copy Full Code | PARTIAL / UNVERIFIED | Enabled local and hosted Staging browser E2E verify the controls and URI shape. Browser emulation cannot prove a real dialer or clipboard on a carrier device. |
 | Unsupported-device fallback | PARTIAL | The modal explains copy as a fallback and handles clipboard failure in code. Unsupported-device and real clipboard-denial behavior were not independently exercised for wallet actions. |
 | Arabic/English, RTL/LTR, and responsive layout | PARTIAL | Arabic/English strings and dir/lang handling are implemented. Desktop/mobile browser coverage is English-only; Arabic visual and accessibility review remain unverified. |
 | InstaPay remains unchanged | PASS | Local and hosted focused E2E confirm the existing InstaPay instructions dialog remains separate and no wallet dialog is opened for InstaPay. |
@@ -60,7 +60,7 @@ Provider status: Vodafone Cash UNVERIFIED, e& money UNVERIFIED, Orange Cash UNVE
 - npm.cmd run build: PASS locally. The Vercel Staging build also completed successfully.
 - Local disabled wallet E2E: run 01a16973-4eda-704d-b7b8-5599526b230e, 2/2 desktop/mobile, http://127.0.0.1:3137/demo. It covers all three modal opens, amount field, disabled-state fallback, and the separate InstaPay dialog.
 - Local enabled wallet E2E: run 01a16961-73ee-709e-8c42-f9967bface6b, 2/2 desktop/mobile. It covers all three provider code surfaces, Open Dialer URI shape, and Copy Full Code visibility. This is browser emulation only.
-- Hosted Staging wallet E2E: run 01a16972-4a9b-76f0-ab8f-0cbeab225a69, 2/2 desktop/mobile, base origin https://staging.nextap.services. Vercel SSO protection was handled by the repository's host-only cookie bootstrap; the experimental flag remained disabled.
+- Hosted Staging wallet E2E: run 01a16982-cf07-7b73-8789-b44579ff5562, 2/2 desktop/mobile, base origin https://staging.nextap.services. Vercel SSO protection was handled by the repository's host-only cookie bootstrap; the Staging branch flag was enabled for this run.
 - Latest local report: .e2e/report.json records run 01a16973-4eda-704d-b7b8-5599526b230e.
 - Local screenshots:
   - .e2e/artifacts/desktop/tests_e2e_wallet-payment.e2e.ts__wallet_20payment_20actions_20open_20an_20amount-only_20modal_20with_20sandbox_-25299da6/default/attempt-0/screenshots/001-wallet-payment-modal.png
@@ -82,7 +82,7 @@ Provider status: Vodafone Cash UNVERIFIED, e& money UNVERIFIED, Orange Cash UNVE
 - No authenticated Admin independent-recipient or Draft/Preview/Publish persistence journey was run.
 - No Arabic visual/accessibility journey was run.
 - No real device, dialer, clipboard, SIM, carrier, or provider contract test was run. Browser emulation does not establish carrier compatibility.
-- Keep the Staging/public flag disabled until authoritative provider documentation and real-device testing validate each format.
+- Keep the Production flag disabled until authoritative provider documentation and real-device testing validate each format. Staging is the controlled enabled environment.
 
 ## Production readiness
 
