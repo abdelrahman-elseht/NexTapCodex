@@ -20,7 +20,7 @@ begin
  exception when serialization_failure then null; end;
  select public.save_contact_draft(d,p.draft_revision,b.draft_revision,true) into r from public.business_pages p join public.businesses b on b.id=p.business_id where p.id=pid;
  c := public.get_published_page('contact-contract')->'contact';
- if c->>'primaryPhone' <> '+201012345678' or c#>>'{fields,0,value}' <> 'https://second.test' or jsonb_array_length(c->'fields')<>1 or c::text like '%secret%' or c::text like '%binding%' then raise exception 'bad projection'; end if;
+ if c->>'primaryPhone' <> '01012345678' or c#>>'{fields,0,value}' <> 'https://second.test' or jsonb_array_length(c->'fields')<>1 or c::text like '%secret%' or c::text like '%binding%' then raise exception 'bad projection'; end if;
  if (select contact_config from public.business_pages where id=other_id) <> '{}'::jsonb then raise exception 'branch draft changed'; end if;
  old_publication := (r->>'publicationId')::uuid;
  insert into public.card_batches(id,name,quantity,created_by,batch_code) values(batch,'Contact QA',1,auth.uid(),'CONTACT-QA');

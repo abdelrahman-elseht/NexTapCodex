@@ -1,4 +1,5 @@
 import { contactPhone, contactWeb, contactNote, contactConfigSchema, type ContactProjection } from "./contact";
+import { dialablePhone, vcardPhoneType } from "./phone";
 const escape = (value: string) => value.replace(/\\/g, "\\\\").replace(/\r\n|\r|\n/g, "\\n").replace(/;/g, "\\;").replace(/,/g, "\\,");
 /** Fold by UTF-8 octets, including the continuation space, without splitting code points. */
 export function foldVCardLine(value: string) {
@@ -13,13 +14,15 @@ export function foldVCardLine(value: string) {
 export function serializeVCard(contact: ContactProjection, photo?: Uint8Array) {
   if (contact.version !== 1 || !contact.enabled || !contact.displayName.trim() || !contactPhone(contact.primaryPhone)) throw new Error("Invalid contact.");
   // Revalidate persisted projections before emitting any wire properties.
-  contactConfigSchema.parse({ enabled: true, displayName: contact.displayName, organization: contact.organization, primaryPhone: contact.primaryPhone, fields: contact.fields.map((field, i) => ({ ...field, id: String(i), enabled: true })) });
-  const lines = ["BEGIN:VCARD", "VERSION:3.0", `FN:${escape(contact.displayName)}`, "N:;;;;", `ORG:${escape(contact.organization || contact.displayName)}`, `TEL;TYPE=WORK,VOICE:${contactPhone(contact.primaryPhone)}`];
+  contactConfigSchema.parse({ enabled: true, displayName: contact.displayName, organization: contact.organization, primaryPhone: contact.primaryPhone, primaryPhoneType: contact.primaryPhoneType, fields: contact.fields.map((field, i) => ({ ...field, id: String(i), enabled: true })) });
+  const primaryPhone = dialablePhone(contact.primaryPhone);
+  const phones = new Set([primaryPhone]);
+  const lines = ["BEGIN:VCARD", "VERSION:3.0", `FN:${escape(contact.displayName)}`, "N:;;;;", `ORG:${escape(contact.organization || contact.displayName)}`, `TEL;TYPE=${vcardPhoneType(contact.primaryPhoneType)}:${primaryPhone}`];
   const notes: string[] = [];
   const urls = new Set<string>();
   for (const field of contact.fields) {
     if (/[\u0000-\u0008\u000b-\u001f\u007f]/.test(field.value)) throw new Error("Invalid contact text.");
-    if (field.kind === "phone") { const phone = contactPhone(field.value); if (!phone) throw new Error("Invalid phone."); lines.push(`TEL;TYPE=WORK,VOICE:${phone}`); }
+    if (field.kind === "phone") { const phone = dialablePhone(field.value); if (!phone) throw new Error("Invalid phone."); if (!phones.has(phone)) { phones.add(phone); lines.push(`TEL;TYPE=${vcardPhoneType(field.phoneType)}:${phone}`); } }
     else if (field.kind === "email") { if (field.value.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) throw new Error("Invalid email."); lines.push(`EMAIL;TYPE=INTERNET:${escape(field.value)}`); }
     else if (["website", "social", "whatsapp"].includes(field.kind) || (["custom", "notes", "hours"].includes(field.kind) && contactWeb(field.value))) {
       if (!contactWeb(field.value)) throw new Error("Invalid URL.");

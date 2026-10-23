@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
 import { parseSectionContent, sectionKinds, isTemplate, presetSections } from "@/lib/business/content";
 import { isDeliveryProvider, deliveryLinkHref, destinationStrategyFor, isMobileWalletProvider, normalizeEgyptianPhone, normalizeInstagram, normalizeProviderValue, normalizeSafeUrl, type ProviderId } from "@/lib/business/providers";
+import { dialablePhone } from "@/lib/business/phone";
 import { z } from "zod";
 import { contactConfigSchema, compileContact } from "@/lib/business/contact";
 import { resolveContactPhoto } from "@/lib/media/resolve-contact-photo";
@@ -71,6 +72,7 @@ function parseDraft(fd: FormData) {
    if (!section || !sectionKinds.includes(section.kind as any)) throw new Error("Unsupported section type.");
    const key = String(section.section_key || section.key || section.kind).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40) || `section_${index + 1}`;
    const content = section.content && typeof section.content === "object" ? cleanSectionContent(section.content as Record<string, unknown>, section.kind, key) : {};
+   if (section.kind === "about" && content.description !== undefined && (typeof content.description !== "string" || content.description.length > 1200 || /[\u0000-\u0008\u000b-\u001f\u007f]/.test(content.description))) throw new Error("About copy must be plain text up to 1200 characters.");
    // Run the same URL/item checks used by the legacy section form.
    parseSectionContent(JSON.stringify(content), section.kind);
    return { key, kind: section.kind, title: String(section.title ?? section.kind).trim().slice(0, 80), position: index, enabled: Boolean(section.enabled), content };
@@ -102,11 +104,11 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
    const item = raw as Record<string, unknown>;
    const provider = typeof item.provider === "string" ? item.provider.trim().slice(0, 40) : undefined;
    const label = String(item.label || "").trim().slice(0, 80);
-   const valueText = String(item.value || "").trim().slice(0, 500);
+   const valueText = String(item.value || "").slice(0, 500);
    const url = String(item.url || "").trim().slice(0, 2048);
    if (isDeliveryProvider(provider) && item.url && !deliveryLinkHref(provider, String(item.url))) throw new Error("Delivery destinations must be complete HTTPS URLs without credentials or control characters.");
    if (provider === "call" || provider === "phone") {
-    if (valueText && !normalizeEgyptianPhone(valueText)) throw new Error("Use a valid Egyptian phone number for this action.");
+    if (valueText && !dialablePhone(valueText)) throw new Error("Use digits, spaces, +, parentheses, hyphens, dots, * or # for this phone action.");
    } else if (provider === "whatsapp") {
     if (valueText && !normalizeEgyptianPhone(valueText) && !normalizeSafeUrl(url)) throw new Error("Use a valid WhatsApp number or destination URL.");
    } else if (provider === "instagram") {
@@ -119,7 +121,7 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
     throw new Error("Use a valid Egyptian wallet number.");
    }
     const destinationStrategy = destinationStrategyFor(provider, typeof item.destinationStrategy === "string" ? item.destinationStrategy : undefined, url);
-    return { id: item.id, ...(kind === "gallery" && item.imageEdit ? {imageEdit:item.imageEdit} : {}), subtitle: typeof item.subtitle === "string" ? item.subtitle.trim().slice(0,500) : undefined, badge: typeof item.badge === "string" ? item.badge.trim().slice(0,80) : undefined, ...(Array.isArray(item.actions) ? {actions: cleanSectionContent({items:item.actions}, "quick_actions", String(item.id)).items} : {}), label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
+    return { id: item.id, ...(kind === "gallery" && item.imageEdit ? {imageEdit:item.imageEdit} : {}), subtitle: typeof item.subtitle === "string" ? item.subtitle.trim().slice(0,500) : undefined, badge: typeof item.badge === "string" ? item.badge.trim().slice(0,80) : undefined, ...(Array.isArray(item.actions) ? {actions: cleanSectionContent({items:item.actions}, "quick_actions", String(item.id)).items} : {}), label, value: valueText, url, alt: typeof item.alt === "string" ? item.alt.trim().slice(0, 200) : undefined, provider, phoneType: ["mobile","landline","work","other"].includes(String(item.phoneType)) ? String(item.phoneType) : undefined, destinationStrategy, profileOverride: item.profileOverride === true, enabled: item.enabled !== false, icon: typeof item.icon === "string" ? item.icon.trim().slice(0, 40) : undefined };
   });
  }
  return next;

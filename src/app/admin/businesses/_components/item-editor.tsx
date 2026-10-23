@@ -1,5 +1,7 @@
 "use client";
 import { imageEditSchema } from "@/lib/media/image-edit";
+import { dialablePhone, phoneTypes } from "@/lib/business/phone";
+import { LandlineGlyph } from "@/components/ui/landline-glyph";
 
 import { ImageField, type UploadTracker } from "./image-field";
 import type { ReactNode } from "react";
@@ -18,10 +20,11 @@ const valueLabels: Partial<Record<ProviderId, string>> = {
 const valueProviders = new Set<ProviderId>(["call", "phone", "whatsapp", "instapay", "vodafone", "etisalat", "orange", "bank", "email", "instagram"]);
 const brandIcons = new Set(["whatsapp", "facebook", "instagram", "tiktok", "youtube", "snapchat", "x", "linkedin", "telegram", "instapay", "vodafone", "github", "behance", "artstation", "dribbble", "medium", "talabat", "fast"]);
 
-function providerIcon(provider: ProviderId): ReactNode {
+function providerIcon(provider: ProviderId, phoneType?: string): ReactNode {
   if (isLocalWalletProvider(provider)) return <PaymentLogo provider={provider} />;
   if (brandIcons.has(provider)) return <img src={providerIconPath(provider)} alt="" width={24} height={24} />;
   const paths: Record<string, ReactNode> = {
+    landline: <LandlineGlyph />,
     call: <path d="M6 3.8 9 3l2 4.5-2.1 1.7a13 13 0 0 0 5.9 5.9l1.7-2.1 4.5 2-.8 3a2.3 2.3 0 0 1-2.6 1.7C10 18.8 5.2 14 4.3 6.4A2.3 2.3 0 0 1 6 3.8Z" />,
     maps: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
     reviews: <path d="m12 3 2.7 5.6 6.2.9-4.5 4.4 1.1 6.2-5.5-2.9-5.5 2.9 1.1-6.2-4.5-4.4 6.2-.9L12 3Z" />,
@@ -30,7 +33,7 @@ function providerIcon(provider: ProviderId): ReactNode {
     booking: <><rect x="4" y="5" width="16" height="16" rx="2" /><path d="M8 3v4m8-4v4M4 10h16m-12 4h2m3 0h2m-7 3h2" /></>,
     link: <path d="m10 13 4-4m-6 7H6a4 4 0 0 1 0-8h4m4 0h4a4 4 0 0 1 0 8h-4" />,
   };
-  const name = provider === "location" || provider === "maps" ? "maps"
+  const name = phoneType === "landline" && ["phone", "call"].includes(provider) ? "landline" : provider === "location" || provider === "maps" ? "maps"
     : provider === "reviews" ? "reviews"
     : provider === "call" || provider === "phone" ? "call"
     : provider === "email" ? "email"
@@ -41,7 +44,8 @@ function providerIcon(provider: ProviderId): ReactNode {
 
 function itemValidationError(item: EditorItem) {
   const provider = item.provider as ProviderId | undefined;
-  if ((["whatsapp", "phone", "call"].includes(provider || "") || isMobileWalletProvider(provider)) && item.value.trim() && !normalizeEgyptianPhone(item.value)) return "Use a valid Egyptian mobile number, such as 01012345678.";
+  if ((["whatsapp"].includes(provider || "") || isMobileWalletProvider(provider)) && item.value.trim() && !normalizeEgyptianPhone(item.value)) return "Use a valid Egyptian mobile number, such as 01012345678.";
+  if (["phone", "call"].includes(provider || "") && item.value.trim() && !dialablePhone(item.value)) return "Use digits, spaces, +, parentheses, hyphens, dots, * or #.";
   if (provider === "instagram" && item.value.trim() && !normalizeInstagram(item.value)) return "Use an Instagram handle or https://instagram.com/ URL.";
   if (provider === "instapay" && item.value.trim() && !normalizeProviderValue("instapay", item.value)) return "Use an InstaPay IPA such as name@instapay.";
   if (provider === "email" && item.value.trim() && !normalizeProviderValue("email", item.value)) return "Use a valid email address.";
@@ -74,7 +78,7 @@ export function ItemEditor({ section, items, onChange, onSaveDetails, businessId
       const optionalUrl = !isHours && (isPayment || (isAction && (["whatsapp", "bank"].includes(provider) || isLocalWalletProvider(provider))) || (isSocial && provider === "whatsapp"));
       const needsUrl = !isHours && (!needsValue || optionalUrl);
       const valueLabel = isHours ? "Hours" : valueLabels[provider] || "Details";
-      const valuePlaceholder = provider === "call" || provider === "phone" || provider === "whatsapp" || isMobileWalletProvider(provider) ? "01012345678"
+      const valuePlaceholder = provider === "call" || provider === "phone" ? "02 2345 6789" : provider === "whatsapp" || isMobileWalletProvider(provider) ? "01012345678"
         : provider === "instapay" ? "name@instapay"
         : provider === "instagram" ? "@yourbusiness"
         : provider === "email" ? "name@example.com"
@@ -84,10 +88,11 @@ export function ItemEditor({ section, items, onChange, onSaveDetails, businessId
       return <div className="live-item-row" key={item.id} data-item-id={item.id}>
         <span className="item-drag" aria-hidden="true">:::</span>
         <div className="live-item-fields">
-          {(isAction || isSocial || isPayment || isDeliveryProvider(provider)) && <span className={`provider-inline-icon provider-${provider}`}>{providerIcon(provider)}</span>}
+          {(isAction || isSocial || isPayment || isDeliveryProvider(provider)) && <span className={`provider-inline-icon provider-${provider}`}>{providerIcon(provider, item.phoneType)}</span>}
           {provider === "fast" && <p className="field-hint">Paste the public Fast page or share URL for this business or restaurant. Open it to check the business identity before publishing.</p>}
           {isAction && <label className="field">Provider<select aria-label="Action provider" value={provider} onChange={event => set(item.id, { provider: event.target.value, icon: undefined, url: "", value: "", profileOverride: true })}>{Object.entries(providerLabels).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>}
           <label className="field"><span>{isAction ? "Button label" : "Label"}</span><input id={`item-${section.id}-${item.id}-label`} name={`${section.id}.${item.id}.label`} value={item.label} placeholder={isHours ? "Day or period" : providerLabels[provider]} onChange={event => set(item.id, { label: event.target.value })} /></label>
+          {["phone", "call"].includes(provider) && <label className="field">Phone type<select value={item.phoneType || "work"} onChange={event => set(item.id, { phoneType: event.target.value as typeof phoneTypes[number] })}>{phoneTypes.map(type => <option key={type} value={type}>{type[0].toUpperCase() + type.slice(1)}</option>)}</select></label>}
           {needsValue && <label className="field"><span>{valueLabel}</span><input name={`${section.id}.${item.id}.value`} type={isMobileWalletProvider(provider) ? "text" : undefined} dir={provider === "bank" ? "auto" : "ltr"} inputMode={provider === "call" || provider === "phone" || provider === "whatsapp" || isMobileWalletProvider(provider) ? "tel" : undefined} autoComplete="off" value={item.value} placeholder={valuePlaceholder} onChange={event => {
             const value = event.target.value;
             const patch: Partial<EditorItem> = { value };

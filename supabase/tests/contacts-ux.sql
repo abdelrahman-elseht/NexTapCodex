@@ -41,5 +41,11 @@ begin
    update public.business_pages set contact_config=jsonb_set(cfg,'{fields,0,binding,property}','"value"') where id=pid;
    perform private.compile_contact(pid); raise exception 'payment identifier binding accepted';
  exception when raise_exception then if sqlerrm='payment identifier binding accepted' then raise; end if; end;
+ insert into public.page_sections(page_id,section_key,kind,title,position,enabled,content) values(pid,'about','about','About',2,true,jsonb_build_object('description',E'Line 1\r\nLine 2\rLine 4'));
+ if (select content->>'description' from public.page_sections where page_id=pid and section_key='about') <> E'Line 1\nLine 2\nLine 4' then raise exception 'About line breaks were not normalized'; end if;
+ begin
+   update public.page_sections set content=jsonb_build_object('description','bad' || chr(1)) where page_id=pid and section_key='about';
+   raise exception 'About control character accepted';
+ exception when raise_exception then if sqlerrm='About control character accepted' then raise; end if; end;
 end; $$;
 rollback;
