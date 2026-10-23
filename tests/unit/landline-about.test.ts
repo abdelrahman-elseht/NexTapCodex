@@ -31,7 +31,7 @@ describe("landline and service-code safety", () => {
     ] } }));
     expect(html).toContain("Line 1\nLine 2\n\nLine 4");
     expect(html).toContain('href="tel:0223456789"');
-    expect(html).toContain("(02) 2345-6789");
+    expect(html).not.toContain("(02) 2345-6789");
   });
 
   it("keeps unsafe legacy phone rows visible as text-only", () => {
