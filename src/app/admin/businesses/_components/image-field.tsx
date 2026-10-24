@@ -60,8 +60,8 @@ export function ImageField({ businessId, label, value, alt, role = "photo", onCh
     <label className="field">{label} alt text<input value={alt} maxLength={200} onChange={event => onAltChange(event.target.value)} /></label>
     {value && <div className="upload-preview">{broken === value ? <span>Image unavailable. Replace the URL or upload another image.</span> : <img src={mediaDisplayUrl(value)} alt={alt || `${label} preview`} width={240} height={120} onError={() => setBroken(value)} />}</div>}
     {value && onEdited && <ContactPhotoEditor key={`${imageEdit?.sourceUrl || value}:${imageEdit ? "edited" : "original"}`} subject={label} src={imageEdit?.sourceUrl || value} crop={imageEdit?.crop} circular={role === "logo"} aspect={role === "logo" ? 1 : aspect} onAspectChange={role === "logo" ? undefined : setAspect} busy={pending} onApply={crop => void upload(null, { sourceUrl: imageEdit?.sourceUrl || value, crop, aspect: role === "logo" ? 1 : aspect })} />}
-    <label className="field">Upload {label.toLowerCase()}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={pending} onChange={event => { const chosen = event.target.files?.[0]; event.target.value = ""; if (chosen) void upload(chosen); }} /></label>
-    <small>Still JPEG, PNG or WebP. Up to 5 MiB per image. Draft images are private; publishing makes referenced images available to visitors.</small>
+    <label className="field">Upload {label.toLowerCase()}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif,.avif" disabled={pending} onChange={event => { const chosen = event.target.files?.[0]; event.target.value = ""; if (chosen) void upload(chosen); }} /></label>
+    <small>Still JPEG, PNG, WebP or AVIF. Up to 5 MiB per image. Draft images are private; publishing makes referenced images available to visitors.</small>
     {pending && <progress max={100} value={progress} aria-label={`${label} upload progress`} />}
     {status && <p role="status">{status}</p>}{error && <p role="alert" className="field-error">{error}</p>}
     <div className="image-field-actions">

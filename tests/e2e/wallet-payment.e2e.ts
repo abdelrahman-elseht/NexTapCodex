@@ -1,8 +1,9 @@
 ﻿import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
+import { resolveWalletUssdEnabled } from "../../src/lib/config/wallet-ussd.mjs";
 
 test("wallet payment actions open an amount-only modal with sandbox codes behind the staging flag", async ({ app, browser, screen }) => {
-  const enabled = process.env.NEXT_PUBLIC_WALLET_USSD_ENABLED === "true";
+  const enabled = resolveWalletUssdEnabled(process.env) === "true";
   await app.open("/demo");
   for (const provider of ["Vodafone Cash", "Etisalat Cash", "Orange Cash (Mobinil)"]) {
     await screen.getByRole("button", provider, { exact: true }).first().tap();

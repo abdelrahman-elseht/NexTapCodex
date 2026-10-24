@@ -6,7 +6,7 @@ export async function prepareImage(file: File, role: ImageRole): Promise<Blob> {
   if (!file.size || file.size > MAX_INPUT_BYTES) throw new Error("Choose an image up to 5 MiB per image.");
   if (file.size <= MAX_TRANSPORT_BYTES) return file; // authoritative decoding stays on the server
   const dimensions = inspectStillRaster(new Uint8Array(await file.arrayBuffer()));
-  if (!dimensions) throw new Error("Choose a still JPEG, PNG or WebP image.");
+  if (!dimensions) throw new Error("Choose a still JPEG, PNG, WebP or AVIF image.");
   if (!dimensions.width || !dimensions.height || dimensions.width * dimensions.height > MAX_PIXELS || Math.max(dimensions.width, dimensions.height) > MAX_DIMENSION) throw new Error("Image dimensions exceed the 20 megapixel limit.");
   if (typeof createImageBitmap !== "function") throw new Error("This browser cannot prepare large images. Choose an image below 3 MiB or use a current browser.");
   let bitmap: ImageBitmap;

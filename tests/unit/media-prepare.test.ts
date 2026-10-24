@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 import sharp from "sharp";
 import { prepareImage } from "../../src/lib/media/prepare";
 import { inspectStillRaster } from "../../src/lib/media/inspect";
-it.each(["jpeg", "png", "webp"] as const)("inspects %s dimensions before browser allocation", async format => {
+it.each(["jpeg", "png", "webp", "avif"] as const)("inspects %s dimensions before browser allocation", async format => {
   const bytes = await sharp({ create: { width: 100, height: 60, channels: 3, background: "red" } }).toFormat(format).toBuffer();
   expect(inspectStillRaster(bytes)).toEqual({ width: 100, height: 60 });
 });

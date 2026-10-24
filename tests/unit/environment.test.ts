@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { assertSupabaseEnvironment, SUPABASE_PROJECTS } from "../../src/lib/config/environment.mjs";
+import { resolveWalletUssdEnabled } from "../../src/lib/config/wallet-ussd.mjs";
 
 const env = (project: string = SUPABASE_PROJECTS.staging) => ({
   NEXT_PUBLIC_SUPABASE_URL: `https://${project}.supabase.co`,
@@ -33,5 +34,21 @@ describe("Supabase environment isolation", () => {
     expect(() => assertSupabaseEnvironment({ ...env(), NEXT_PUBLIC_SUPABASE_URL: "invalid" })).toThrow();
     expect(() => assertSupabaseEnvironment({ ...env(), NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_secret_wrong" })).toThrow();
     expect(() => assertSupabaseEnvironment({ ...env(), NEXT_PUBLIC_SUPABASE_URL: `http://${SUPABASE_PROJECTS.staging}.supabase.co` })).toThrow();
+  });
+});
+
+describe("wallet USSD deployment policy", () => {
+  it("defaults non-production deployments on and production deployments off", () => {
+    expect(resolveWalletUssdEnabled({ NEXTAP_ENV: "staging" })).toBe("true");
+    expect(resolveWalletUssdEnabled({ VERCEL_ENV: "preview" })).toBe("true");
+    expect(resolveWalletUssdEnabled({ NEXTAP_ENV: "test" })).toBe("true");
+    expect(resolveWalletUssdEnabled({ NEXTAP_ENV: "production" })).toBe("false");
+    expect(resolveWalletUssdEnabled({ VERCEL_ENV: "production" })).toBe("false");
+  });
+
+  it("honors an explicit value and treats an empty injected value as unset", () => {
+    expect(resolveWalletUssdEnabled({ NEXT_PUBLIC_WALLET_USSD_ENABLED: "false", NEXTAP_ENV: "staging" })).toBe("false");
+    expect(resolveWalletUssdEnabled({ NEXT_PUBLIC_WALLET_USSD_ENABLED: "true", VERCEL_ENV: "production" })).toBe("true");
+    expect(resolveWalletUssdEnabled({ NEXT_PUBLIC_WALLET_USSD_ENABLED: "", NEXTAP_ENV: "staging" })).toBe("true");
   });
 });

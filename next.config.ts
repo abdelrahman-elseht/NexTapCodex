@@ -1,10 +1,12 @@
 import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import { assertSupabaseEnvironment } from "./src/lib/config/environment.mjs";
+import { resolveWalletUssdEnabled } from "./src/lib/config/wallet-ussd.mjs";
 assertSupabaseEnvironment(process.env);
 const nextConfig: NextConfig = {
   distDir: process.env.NEXTAP_BUILD_DIR || ".next",
   poweredByHeader: false,
+  env: { NEXT_PUBLIC_WALLET_USSD_ENABLED: resolveWalletUssdEnabled(process.env) },
   images: {
     dangerouslyAllowSVG: false,
     // Fixed logo sizes can select small variants instead of a 640px fill image.
