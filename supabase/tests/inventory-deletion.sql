@@ -68,6 +68,7 @@ do $$ begin
 end; $$;
 reset role;
 -- Expiry, actor binding, all statuses, legacy large batches and RPC creation.
+insert into private.admin_admissions(user_id,role,reason) values('00000000-0000-4000-8000-000000000002','administrator','Disposable second internal administrator');
 insert into public.owner_users(user_id) values('00000000-0000-4000-8000-000000000002');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);

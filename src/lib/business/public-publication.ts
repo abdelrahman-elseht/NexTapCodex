@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
-import type { Snapshot } from "@/components/business/public-snapshot";
+import type { PublicationSnapshot as Snapshot } from "./publication";
 import { captureOperationError } from "@/lib/observability/operations";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
 

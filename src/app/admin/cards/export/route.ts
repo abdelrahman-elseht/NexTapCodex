@@ -10,7 +10,7 @@ function csvCell(value: string) {
 }
 
 export async function GET(req: Request) {
-  const { supabase, userId } = await requireOwner();
+  const { supabase, userId } = await requireOwner("export");
   const budget = consumeRateLimit("card-export", userId, { max: 20, windowMs: 60_000, maxKeys: 256 });
   if (!budget.allowed) return new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } });
   const requestOrigin = getCardOrigin(undefined, req.headers);

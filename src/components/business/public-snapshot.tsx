@@ -1,7 +1,7 @@
 import React from "react";
 import { telephoneHref } from "@/lib/business/phone";
 import { LandlineGlyph } from "@/components/ui/landline-glyph";
-import type { ContactProjection } from "@/lib/business/contact";
+import type { PublicationSnapshot } from "@/lib/business/publication";
 import { ManagedImage } from "./managed-image";
 import { DeferredGallery } from "./deferred-gallery";
 import type { GalleryViewItem } from "./gallery-view";
@@ -9,11 +9,11 @@ import { sectionText } from "@/lib/business/section-text";
 import { safeUrl } from "@/lib/business/content";
 import { PaymentAction } from "@/components/business/copy-payment";
 import { PaymentLogo } from "@/components/business/payment-logo";
-import { providerIconPath, deliveryLinkHref, isDeliveryProvider, destinationStrategyFor, getProviderMetadata, isLocalWalletProvider, isMobileWalletProvider, isPaymentProvider, normalizeEgyptianPhone, paymentLinkHref, resolveProviderItem, type ProviderProfile } from "@/lib/business/providers";
+import { providerIconPath, deliveryLinkHref, isDeliveryProvider, destinationStrategyFor, getProviderMetadata, isLocalWalletProvider, isMobileWalletProvider, isPaymentProvider, normalizeEgyptianPhone, paymentLinkHref, resolveProviderItem } from "@/lib/business/providers";
 
 type Item = { id?: string; subtitle?: string; badge?: string; actions?: Item[]; label?: string; url?: string; value?: string; alt?: string; provider?: string; enabled?: boolean; icon?: string; destinationStrategy?: string; profileOverride?: boolean; phoneType?: string };
-type Section = { key?: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
-export type Snapshot = { business?: { name?: string; category?: string }; contact?: ContactProjection; page?: { slug?: string; branchName?: string; template?: string }; providerProfiles?: Record<string, ProviderProfile>; sections?: Section[]; publicationId?: string; version?: number };
+type Section = import("@/lib/business/publication").PublicationSection;
+export type Snapshot = PublicationSnapshot;
 
 const iconFiles: Record<string, string> = { whatsapp: "whatsapp", facebook: "facebook", instagram: "instagram", tiktok: "tiktok", snapchat: "snapchat", youtube: "youtube", x: "x", twitter: "x", telegram: "telegram", linkedin: "linkedin", talabat: "talabat", fast: "fast", github: "github", behance: "behance", artstation: "artstation", dribbble: "dribbble", medium: "medium", pinterest: "pinterest", messenger: "messenger", google: "google" };
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }

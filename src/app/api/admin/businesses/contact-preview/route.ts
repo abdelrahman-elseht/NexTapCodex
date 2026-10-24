@@ -36,6 +36,6 @@ export async function POST(request: Request) {
     const contact = compileContact(config, { business: { name: draft.name }, page: { branchName: page.branch_name }, sections: draft.sections });
     if (!contact) return contactError(404);
     contact.photoPath = await resolveContactPhoto(client, draft.businessId, config, draft.sections || []);
-    return await contactResponse(contact);
+    return await contactResponse(contact, false, false, client);
   } catch { return new Response("Check the contact fields and try again.", { status: 400, headers: { "Cache-Control": "private, no-store" } }); }
 }

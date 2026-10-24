@@ -2,6 +2,8 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { serializeVCard } from "./vcard";
 import type { ContactProjection } from "./contact";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { readManagedObject } from "@/lib/media/read-object";
 
 export const contactHeaders = {
   "Cache-Control": "private, no-store, max-age=0",
@@ -11,22 +13,17 @@ export function contactError(status: number, head = false) {
   return new Response(head ? null : status === 404 ? "Not found" : "Service unavailable", { status, headers: { ...contactHeaders, "Content-Type": "text/plain; charset=utf-8" } });
 }
 /** Only immutable precomputed objects from this application's bucket, with a byte/time budget. */
-export async function readContactPhoto(path?: string): Promise<Uint8Array | undefined> {
+export async function readContactPhoto(path?: string, client?: SupabaseClient): Promise<Uint8Array | undefined> {
   if (!path || !/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}(?:\.crop-\d{1,4}-\d{1,4}-\d{4})?\.contact\.jpg$/i.test(path)) return;
   try {
-    const origin = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const response = await fetch(`${origin}/storage/v1/object/public/business-media/${path}`, { cache: "no-store", signal: AbortSignal.timeout(3000), redirect: "error" });
-    if (!response.ok || Number(response.headers.get("content-length")) > 200 * 1024) return;
-    const reader = response.body?.getReader(); if (!reader) return;
-    const chunks: Uint8Array[] = []; let size = 0;
-    while (true) { const chunk = await reader.read(); if (chunk.done) break; size += chunk.value.byteLength; if (size > 200 * 1024) { await reader.cancel(); return; } chunks.push(chunk.value); }
-    const bytes = Buffer.concat(chunks);
+    const bytes = await readManagedObject(path, 200 * 1024, client);
+    if (!bytes) return;
     if (bytes[0] !== 0xff || bytes[1] !== 0xd8) return;
     return bytes;
   } catch { return; }
 }
-export async function contactResponse(contact: ContactProjection, head = false, attachment = false) {
-  const body = serializeVCard(contact, head ? undefined : await readContactPhoto(contact.photoPath));
+export async function contactResponse(contact: ContactProjection, head = false, attachment = false, client?: SupabaseClient) {
+  const body = serializeVCard(contact, head ? undefined : await readContactPhoto(contact.photoPath, client));
   return new Response(head ? null : body, { headers: { ...contactHeaders, "Content-Type": "text/vcard; charset=utf-8", "Content-Disposition": `${attachment ? "attachment" : "inline"}; filename="business-contact.vcf"` } });
 }
 /** No publication cache or rollout fallback: each request checks current eligibility. */

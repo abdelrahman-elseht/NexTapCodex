@@ -10,7 +10,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response("Invalid batch", { status: 400 });
 
-  const { supabase, userId } = await requireOwner();
+  const { supabase, userId } = await requireOwner("export");
   const budget = consumeRateLimit("manufacturing-export", userId, { max: 5, windowMs: 60_000, maxKeys: 256 });
   if (!budget.allowed) return new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } });
   const snapshot = await readBatchSnapshot(supabase, id);

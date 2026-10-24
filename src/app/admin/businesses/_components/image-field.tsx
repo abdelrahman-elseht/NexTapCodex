@@ -4,6 +4,7 @@ import { prepareImage } from "@/lib/media/prepare";
 import type { ImageRole } from "@/lib/media/limits";
 import { renderImageCrop, type ImageEdit } from "@/lib/media/image-edit";
 import { ContactPhotoEditor } from "./contact-photo-editor";
+import { mediaDisplayUrl } from "@/lib/media/urls";
 
 export type UploadTracker = (key: string, pending: boolean) => void;
 export function ImageField({ businessId, label, value, alt, role = "photo", onChange, onAltChange, onAsset, track, imageEdit, onEdited, cropAspect = 4 / 3 }: {
@@ -57,10 +58,10 @@ export function ImageField({ businessId, label, value, alt, role = "photo", onCh
     <legend>{label}</legend>
     <label className="field">{label} URL<input dir="ltr" value={value} onChange={event => onChange(event.target.value)} disabled={pending} /></label>
     <label className="field">{label} alt text<input value={alt} maxLength={200} onChange={event => onAltChange(event.target.value)} /></label>
-    {value && <div className="upload-preview">{broken === value ? <span>Image unavailable. Replace the URL or upload another image.</span> : <img src={value} alt={alt || `${label} preview`} width={240} height={120} onError={() => setBroken(value)} />}</div>}
+    {value && <div className="upload-preview">{broken === value ? <span>Image unavailable. Replace the URL or upload another image.</span> : <img src={mediaDisplayUrl(value)} alt={alt || `${label} preview`} width={240} height={120} onError={() => setBroken(value)} />}</div>}
     {value && onEdited && <ContactPhotoEditor key={`${imageEdit?.sourceUrl || value}:${imageEdit ? "edited" : "original"}`} subject={label} src={imageEdit?.sourceUrl || value} crop={imageEdit?.crop} circular={role === "logo"} aspect={role === "logo" ? 1 : aspect} onAspectChange={role === "logo" ? undefined : setAspect} busy={pending} onApply={crop => void upload(null, { sourceUrl: imageEdit?.sourceUrl || value, crop, aspect: role === "logo" ? 1 : aspect })} />}
     <label className="field">Upload {label.toLowerCase()}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={pending} onChange={event => { const chosen = event.target.files?.[0]; event.target.value = ""; if (chosen) void upload(chosen); }} /></label>
-    <small>Still JPEG, PNG or WebP. Up to 5 MiB per image. Uploaded images are publicly readable by URL.</small>
+    <small>Still JPEG, PNG or WebP. Up to 5 MiB per image. Draft images are private; publishing makes referenced images available to visitors.</small>
     {pending && <progress max={100} value={progress} aria-label={`${label} upload progress`} />}
     {status && <p role="status">{status}</p>}{error && <p role="alert" className="field-error">{error}</p>}
     <div className="image-field-actions">

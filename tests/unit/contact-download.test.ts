@@ -4,7 +4,7 @@ vi.mock("@/lib/supabase/public", () => ({ createPublicClient: () => ({ rpc }) })
 import { contactResponse, downloadContact, readContactPhoto } from "@/lib/business/contact-download";
 const contact = { version: 1 as const, enabled: true as const, displayName: "Synthetic QA", organization: "QA", primaryPhone: "+201012345678", fields: [] };
 const path = "00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002/00000000-0000-4000-8000-000000000003.contact.jpg";
-beforeEach(() => { vi.restoreAllMocks(); rpc.mockReset(); });
+beforeEach(() => { vi.restoreAllMocks(); rpc.mockReset(); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://fixture.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_fixture"); });
 describe("fresh public contact responses", () => {
   it.each([false, true])("checks current publication for GET/HEAD (HEAD=%s)", async head => {
     rpc.mockResolvedValue({ data: { contact }, error: null });
@@ -62,7 +62,7 @@ describe("bounded immutable photo fetch", () => {
   it("reads an approved JPEG with a request deadline and no shared cache", async () => {
     const bytes = new Uint8Array([255, 216, 255, 217]);
     const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(bytes));
-    expect(await readContactPhoto(path)).toEqual(Buffer.from(bytes));
+    expect(await readContactPhoto(path)).toEqual(bytes);
     expect(fetcher.mock.calls[0][1]).toMatchObject({ cache: "no-store", redirect: "error" });
     expect(fetcher.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
   });

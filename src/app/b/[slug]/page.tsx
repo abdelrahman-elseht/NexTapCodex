@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getPublicPublication } from "@/lib/business/public-publication";
-import { PublicSnapshot, type Snapshot } from "@/components/business/public-snapshot";
+import { PublicSnapshot } from "@/components/business/public-snapshot";
+import type { PublicationSnapshot as Snapshot } from "@/lib/business/publication";
 export const dynamic = "force-dynamic";
 
 function heroFrom(snapshot: Snapshot) {

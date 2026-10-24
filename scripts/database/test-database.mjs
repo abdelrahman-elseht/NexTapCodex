@@ -15,6 +15,7 @@ try {
   }
   await db.exec(`
     insert into auth.users values ('00000000-0000-4000-8000-000000000001'),('00000000-0000-4000-8000-000000000002');
+    insert into private.admin_admissions(user_id,role,reason) values ('00000000-0000-4000-8000-000000000001','administrator','Disposable contract-test administrator');
     insert into public.owner_users(user_id) values ('00000000-0000-4000-8000-000000000001');
   `);
   for (const file of process.argv.includes("--cache-only") ? [] : ["phase123-contracts.sql", "phase5-incremental-saves.sql", "phase6-publication-cache.sql", "preprod-publication-security.sql", "launch-architecture-security.sql", "inventory-deletion.sql", "contacts.sql", "contacts-ux.sql"]) {
@@ -24,6 +25,10 @@ try {
     }
     console.log(`Passed ${file}`);
   }
+  await db.exec(await fs.readFile("supabase/tests/internal-admin-capabilities.sql", "utf8"));
+  console.log("Passed internal-admin-capabilities.sql");
+  await db.exec(await fs.readFile("supabase/tests/publication-media-privacy.sql", "utf8"));
+  console.log("Passed publication-media-privacy.sql");
   // Calling both wrappers as anon catches missing privileges on their private callees.
   await db.exec("set role anon");
   assert.equal((await db.query("select public.get_publication_pointer('missing') as pointer")).rows[0].pointer, null);

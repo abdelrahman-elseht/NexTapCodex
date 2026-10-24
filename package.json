@@ -21,12 +21,12 @@
     "@supabase/ssr": "0.10.0",
     "@supabase/supabase-js": "2.100.1",
     "fflate": "^0.8.3",
-    "next": "15.5.27",
+    "next": "15.5.28",
     "qrcode": "^1.5.4",
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "sharp": "0.35.5",
-    "zod": "4.1.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@e2e-dev/web": "0.13.0",
@@ -40,14 +40,16 @@
     "e2e": "0.18.0",
     "embedded-postgres": "17.10.0-beta.17",
     "eslint": "^9.35.0",
-    "eslint-config-next": "^15.5.27",
+    "eslint-config-next": "15.5.28",
     "jsqr": "^1.4.0",
     "playwright-core": "1.63.0",
     "typescript": "5.9.2",
     "vcard-parser": "1.0.0",
-    "vitest": "3.2.4"
+    "vitest": "4.1.12"
   },
   "overrides": {
-    "postcss": "8.5.29"
+    "postcss": "8.5.29",
+    "vite": "7.3.7",
+    "zod": "$zod"
   }
 }

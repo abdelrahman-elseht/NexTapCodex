@@ -13,7 +13,7 @@ export class MissingBodyError extends Error {
 }
 
 /** Read a request body without allowing a chunked request to grow unbounded. */
-export async function readBoundedBody(request: Request, maxBytes: number): Promise<Uint8Array> {
+export async function readBoundedBody(request: Pick<Request, "headers" | "body">, maxBytes: number): Promise<Uint8Array> {
   const contentLength = request.headers.get("content-length");
   if (contentLength !== null) {
     const declared = Number(contentLength);

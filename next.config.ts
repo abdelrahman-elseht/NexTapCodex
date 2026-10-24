@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXTAP_BUILD_DIR || ".next",
   poweredByHeader: false,
   images: {
+    dangerouslyAllowSVG: false,
     // Fixed logo sizes can select small variants instead of a 640px fill image.
     imageSizes: [32, 48, 64, 84, 96, 128, 168, 256, 384],
     remotePatterns: process.env.NEXT_PUBLIC_SUPABASE_URL ? [{

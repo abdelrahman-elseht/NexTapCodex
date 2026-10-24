@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     catch { return response({ error: "Upload must originate from this site." }, 403); }
   }
   let owner: Awaited<ReturnType<typeof requireOwner>>;
-  try { owner = await requireOwner(); } catch (error) {
+  try { owner = await requireOwner("media"); } catch (error) {
     return response({ error: isRedirectError(error) ? "Sign in with an authorized owner account to upload." : "Authorization unavailable. Retry." }, isRedirectError(error) ? 401 : 503);
   }
   const budget = consumeRateLimit("admin-media", owner.userId, { max: 20, windowMs: 60_000, maxKeys: 256 });
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const form = await new Response(Buffer.concat(chunks), { headers: { "Content-Type": request.headers.get("content-type") || "" } }).formData();
     const businessId = String(form.get("businessId") || ""); const role = String(form.get("role") || ""); const file = form.get("file");
     if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(businessId) || !["photo", "logo"].includes(role) || !(file instanceof File)) return response({ error: "Choose a business and a still image." }, 400);
-    // All allowlisted owners manage the shared inventory; the authenticated query also enforces RLS.
+    // Trusted internal editors manage all businesses; the authenticated query also enforces RLS.
     const { data: business, error } = await owner.supabase.from("businesses").select("id").eq("id", businessId).maybeSingle();
     if (error) return response({ error: "Could not check this business. Retry." }, 503);
     if (!business) return response({ error: "Business not found or not accessible." }, 403);

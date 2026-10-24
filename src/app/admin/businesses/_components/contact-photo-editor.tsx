@@ -1,9 +1,11 @@
 "use client";
 import { useCallback, useId, useRef, useState } from "react";
 import { imageCropRectangle } from "@/lib/media/image-edit";
+import { mediaDisplayUrl } from "@/lib/media/urls";
 import { cropRectangle, defaultContactCrop, type ContactCrop } from "@/lib/business/contact-crop";
 
 export function ContactAvatar({ src, crop = defaultContactCrop, size = 96 }: { src: string; crop?: ContactCrop; size?: number }) {
+  src = mediaDisplayUrl(src);
   const [dimensions, setDimensions] = useState({ width: 1, height: 1 });
   const [broken, setBroken] = useState(false);
   // Cached images can finish before hydration attaches the load handler.
@@ -16,6 +18,7 @@ export function ContactAvatar({ src, crop = defaultContactCrop, size = 96 }: { s
 }
 
 export function ContactPhotoEditor({ src, crop, onApply, subject = "Contact photo", circular = true, aspect = 1, onAspectChange, busy = false }: { src: string; crop?: ContactCrop; onApply: (crop: ContactCrop) => void; subject?: string; circular?: boolean; aspect?: number; onAspectChange?: (aspect: number) => void; busy?: boolean }) {
+  src = mediaDisplayUrl(src);
   const helpId = useId();
   const [value, setValue] = useState(crop || defaultContactCrop);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
