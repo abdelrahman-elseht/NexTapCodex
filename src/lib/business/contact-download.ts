@@ -1,6 +1,7 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { serializeVCard } from "./vcard";
 import type { ContactProjection } from "./contact";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 export const contactHeaders = {
   "Cache-Control": "private, no-store, max-age=0",
@@ -33,7 +34,9 @@ export async function downloadContact(identity: { slug: string } | { token: stri
   try {
     const client = createPublicClient();
     const token = "token" in identity;
-    if (token ? !/^[A-Za-z0-9_-]{32,64}$/.test(identity.token) : !/^[a-z0-9](?:[a-z0-9-]{0,58}[a-z0-9])?$/.test(identity.slug)) return contactError(404, head);
+    if (token ? !/^[A-Za-z0-9_-]{32,64}$/.test(identity.token) : !/^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?$/.test(identity.slug)) return contactError(404, head);
+    const budget = consumeRateLimit("contact-download", token ? identity.token : identity.slug, { max: 60, windowMs: 60_000, maxKeys: 2048 });
+    if (!budget.allowed) return contactError(429, head);
     const { data, error } = token
       ? await client.rpc("get_card_contact", { card_token: identity.token })
       : await client.rpc("get_published_page", { page_slug: identity.slug });

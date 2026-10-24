@@ -1,6 +1,7 @@
 import { readBatchSnapshot } from "@/lib/cards/batch-snapshot";
 import { requireOwner } from "@/lib/auth/owner";
 import { cardUrls, getCardOrigin } from "@/lib/cards/card-manufacturing";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,9 @@ function csvCell(value: string) {
 }
 
 export async function GET(req: Request) {
-  const { supabase } = await requireOwner();
+  const { supabase, userId } = await requireOwner();
+  const budget = consumeRateLimit("card-export", userId, { max: 20, windowMs: 60_000, maxKeys: 256 });
+  if (!budget.allowed) return new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } });
   const requestOrigin = getCardOrigin(undefined, req.headers);
   const id = new URL(req.url).searchParams.get("batch");
   if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {

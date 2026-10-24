@@ -48,6 +48,17 @@ describe("card manufacturing export", () => {
     }
   });
 
+  it("ignores forged proxy origins in hosted environments", () => {
+    const previous = process.env.NEXTAP_ENV;
+    process.env.NEXTAP_ENV = "staging";
+    try {
+      expect(getCardOrigin(undefined, new Headers({ host: "attacker.example", "x-forwarded-host": "attacker.example", origin: "https://attacker.example" }))).toBe("https://staging.nextap.services");
+    } finally {
+      if (previous === undefined) delete process.env.NEXTAP_ENV;
+      else process.env.NEXTAP_ENV = previous;
+    }
+  });
+
   it("keeps manifest, NFC CSV, filenames, and QR payloads aligned for every card", async () => {
     const archive = unzipSync(await manufacturingZip(cards, "BATCH-001"));
     const manifest = csvRows(new TextDecoder().decode(archive["manifest.csv"]));

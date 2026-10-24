@@ -10,7 +10,7 @@ import { spawnSync } from "node:child_process";
 afterEach(() => vi.unstubAllEnvs());
 
 const identity = {
-  commit: "a".repeat(40), branch: "chore/hosted-staging-validation", deploymentId: "dpl_verified",
+  commit: "a".repeat(40), branch: "staging", deploymentId: "dpl_verified",
   deploymentUrl: "nextap-abc123-abdelrahman-867e.vercel.app", target: "preview", supabaseProject: "flkakuysakgwfoemgbwn",
 };
 

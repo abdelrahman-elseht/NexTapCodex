@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import { zipSync } from "fflate";
+import { allowDynamicPublicOrigin, configuredPublicOrigin, normalizePublicOrigin } from "@/lib/security/public-origin";
 
 export type ManufacturingCard = {
   serial: string;
@@ -9,37 +10,25 @@ export type ManufacturingCard = {
 
 export const CARD_ORIGIN = "https://nextap.services";
 
-function normalizeOrigin(value: string | null | undefined) {
-  const candidate = value?.trim();
-  if (!candidate) return null;
-
-  try {
-    const url = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(candidate) ? candidate : `https://${candidate}`);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    return url.origin;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Resolve the public origin for a request. Proxies such as ngrok forward the
  * browser-facing host/protocol in these headers while the app itself may run
  * on localhost.
  */
 export function getCardOrigin(requestOrigin?: string, requestHeaders?: Headers) {
-  const forwardedHost = requestHeaders?.get("x-forwarded-host")?.split(",")[0]?.trim();
-  const host = forwardedHost || requestHeaders?.get("host")?.split(",")[0]?.trim();
-  const forwardedProto = requestHeaders?.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  const hostOrigin = host ? normalizeOrigin(`${forwardedProto || "https"}://${host}`) : null;
-  const originHeader = normalizeOrigin(requestHeaders?.get("origin"));
-  const refererOrigin = normalizeOrigin(requestHeaders?.get("referer"));
-  const hostName = host?.replace(/^\[/, "").split("]")[0]?.split(":")[0].toLowerCase();
-  const hostIsLocal = hostName === "localhost" || hostName === "127.0.0.1" || hostName === "::1";
-  // Some tunnel configurations rewrite Host to localhost. The browser's
-  // referer still carries the public tunnel origin in that case.
-  const fromHeaders = hostIsLocal ? (originHeader || refererOrigin || hostOrigin) : (originHeader || hostOrigin);
-  return normalizeOrigin(requestOrigin) || fromHeaders || normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL) || CARD_ORIGIN;
+  if (allowDynamicPublicOrigin()) {
+    const forwardedHost = requestHeaders?.get("x-forwarded-host")?.split(",")[0]?.trim();
+    const host = forwardedHost || requestHeaders?.get("host")?.split(",")[0]?.trim();
+    const forwardedProto = requestHeaders?.get("x-forwarded-proto")?.split(",")[0]?.trim();
+    const hostOrigin = host ? normalizePublicOrigin(`${forwardedProto || "https"}://${host}`) : null;
+    const originHeader = normalizePublicOrigin(requestHeaders?.get("origin") || undefined);
+    const refererOrigin = normalizePublicOrigin(requestHeaders?.get("referer") || undefined);
+    const hostName = host?.replace(/^\[/, "").split("]")[0]?.split(":")[0].toLowerCase();
+    const hostIsLocal = hostName === "localhost" || hostName === "127.0.0.1" || hostName === "::1";
+    const fromHeaders = hostIsLocal ? (originHeader || refererOrigin || hostOrigin) : (originHeader || hostOrigin);
+    return normalizePublicOrigin(requestOrigin) || fromHeaders || configuredPublicOrigin();
+  }
+  return configuredPublicOrigin() || CARD_ORIGIN;
 }
 
 export function cardUrls(token: string, requestOrigin?: string) {

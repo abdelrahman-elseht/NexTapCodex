@@ -1,5 +1,5 @@
 "use server";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
@@ -50,16 +50,22 @@ export async function saveBusiness(fd:FormData){
  const {supabase}=await requireOwner();
  const businessId=val(fd,"business_id",50),pageId=val(fd,"page_id",50),name=val(fd,"name",120),category=val(fd,"category",80),slug=val(fd,"slug",60).toLowerCase(),template=val(fd,"template",20);
  if(!name||!slugSchema.safeParse(slug).success||!isTemplate(template)) redirect("/admin/businesses/"+businessId+"?error=validation");
- const {error:be}=await supabase.from("businesses").update({name,category,status:fd.get("archive")==="on"?"archived":"active",updated_at:new Date().toISOString()}).eq("id",businessId);
- const {error:pe}=await supabase.from("business_pages").update({slug,template,updated_at:new Date().toISOString()}).eq("id",pageId);
- if(be||pe) redirect("/admin/businesses/"+businessId+"?error=save");
+ const { error } = await supabase.rpc("update_business_page", { target_business_id: businessId, target_page_id: pageId, business_name: name, business_category: category, business_status: fd.get("archive")==="on" ? "archived" : "active", page_slug: slug, page_template: template });
+ if(error) redirect("/admin/businesses/"+businessId+"?error=save");
  revalidatePath("/admin");revalidatePath("/b/"+slug);redirect("/admin/businesses/"+businessId+"?saved=1");
 }
 
 type DraftSection = { id?: string; section_key?: string; key: string; kind: string; title: string; position: number; enabled: boolean; content: Record<string, unknown> };
 type DraftProviderProfile = { value?: string; url?: string; destinationStrategy?: string };
-function parseDraft(fd: FormData) {
+const MAX_DRAFT_SECTIONS = 40;
+const MAX_DRAFT_ITEMS = 400;
+const MAX_DRAFT_TEXT_BYTES = 512 * 1024;
+export async function parseDraft(fd: FormData) {
+ return parseDraftSync(fd);
+}
+function parseDraftSync(fd: FormData) {
  const raw = String(fd.get("draft") || "{}");
+ if (new TextEncoder().encode(raw).byteLength > 256 * 1024) throw new Error("Draft is too large.");
  const parsed = JSON.parse(raw) as { businessId?: string; pageId?: string; name?: string; category?: string; slug?: string; template?: string; archived?: boolean; sections?: DraftSection[]; providerProfiles?: Record<string, DraftProviderProfile>; contact?: unknown; expectedPageRevision?: number; expectedBusinessRevision?: number };
  const name = String(parsed.name || "").trim().slice(0, 120);
  const category = String(parsed.category || "business").trim().slice(0, 80) || "business";
@@ -67,19 +73,29 @@ function parseDraft(fd: FormData) {
  const template = String(parsed.template || "professional");
  if (!parsed.businessId || !parsed.pageId || !name || !slugSchema.safeParse(slug).success || !isTemplate(template)) throw new Error("Check the business name, slug and template.");
  const sections = Array.isArray(parsed.sections) ? parsed.sections : [];
+ if (sections.length > MAX_DRAFT_SECTIONS) throw new Error("Too many sections.");
+ let itemCount = 0;
+ let decodedTextBytes = new TextEncoder().encode(name + category + slug + template).byteLength;
  if (!sections.some(section => section.kind === "hero")) throw new Error("A page needs a hero section.");
  const cleanSections = sections.map((section, index) => {
    if (!section || !sectionKinds.includes(section.kind as any)) throw new Error("Unsupported section type.");
    const key = String(section.section_key || section.key || section.kind).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40) || `section_${index + 1}`;
-   const content = section.content && typeof section.content === "object" ? cleanSectionContent(section.content as Record<string, unknown>, section.kind, key) : {};
+   const rawContent = section.content && typeof section.content === "object" ? section.content as Record<string, unknown> : {};
+   itemCount += countDraftItems(rawContent);
+   if (itemCount > MAX_DRAFT_ITEMS) throw new Error("Draft content exceeds the permitted limit.");
+   const content = cleanSectionContent(rawContent, section.kind, key);
+   decodedTextBytes += new TextEncoder().encode(JSON.stringify(content)).byteLength + new TextEncoder().encode(String(section.title ?? section.kind)).byteLength;
+   if (itemCount > MAX_DRAFT_ITEMS || decodedTextBytes > MAX_DRAFT_TEXT_BYTES) throw new Error("Draft content exceeds the permitted limit.");
    if (section.kind === "about" && content.description !== undefined && (typeof content.description !== "string" || content.description.length > 1200 || /[\u0000-\u0008\u000b-\u001f\u007f]/.test(content.description))) throw new Error("About copy must be plain text up to 1200 characters.");
    // Run the same URL/item checks used by the legacy section form.
    parseSectionContent(JSON.stringify(content), section.kind);
    return { key, kind: section.kind, title: String(section.title ?? section.kind).trim().slice(0, 80), position: index, enabled: Boolean(section.enabled), content };
  });
  for (const [provider, profile] of Object.entries(parsed.providerProfiles || {})) {
+  decodedTextBytes += new TextEncoder().encode(provider + JSON.stringify(profile || {})).byteLength;
   if (isDeliveryProvider(provider) && profile?.url && !deliveryLinkHref(provider, profile.url)) throw new Error("Delivery destinations must be safe HTTPS URLs.");
  }
+ if (Object.keys(parsed.providerProfiles || {}).length > 40 || decodedTextBytes > MAX_DRAFT_TEXT_BYTES) throw new Error("Draft content exceeds the permitted limit.");
  const providerProfiles = Object.fromEntries(Object.entries(parsed.providerProfiles || {}).slice(0, 40).map(([provider, profile]) => [provider.slice(0, 40), {
    value: String(profile?.value || "").trim().slice(0, 500) || undefined,
    url: String(profile?.url || "").trim().slice(0, 2048) || undefined,
@@ -89,6 +105,14 @@ function parseDraft(fd: FormData) {
  if (contact) compileContact(contact, { business: { name }, sections: cleanSections });
  return { contact, expectedPageRevision: parsed.expectedPageRevision, expectedBusinessRevision: parsed.expectedBusinessRevision, businessId: parsed.businessId, pageId: parsed.pageId, name, category, slug, template, archived: Boolean(parsed.archived), sections: cleanSections, providerProfiles };
 }
+
+function countDraftItems(value: unknown): number {
+ if (Array.isArray(value)) return value.reduce((count, item) => count + 1 + countDraftItems(item), 0);
+ if (value && typeof value === "object") return Object.values(value).reduce((count, item) => count + countDraftItems(item), 0);
+ return 0;
+}
+
+type ParsedDraft = ReturnType<typeof parseDraftSync>;
 
 function cleanSectionContent(content: Record<string, unknown>, kind: string, scope: string): Record<string, unknown> {
  content = {...content,...(Array.isArray(content.items)?{items:normalizeEditorItems(content.items,kind,scope)}:{})};
@@ -127,7 +151,7 @@ function cleanSectionContent(content: Record<string, unknown>, kind: string, sco
  return next;
 }
 
-async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["supabase"], draft: ReturnType<typeof parseDraft>, publish = false) {
+async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["supabase"], draft: ParsedDraft, publish = false) {
  if (!Number.isSafeInteger(draft.expectedPageRevision) || !Number.isSafeInteger(draft.expectedBusinessRevision)) throw new Error("Reload the editor before saving. Your local edits are preserved.");
  // The database resolves bindings again and freezes its own public allowlist.
  if (draft.contact?.enabled) await resolveContactPhoto(supabase, draft.businessId, draft.contact, draft.sections);
@@ -141,7 +165,7 @@ async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["
 export async function saveDraftState(fd: FormData): Promise<{ ok: boolean; error?: string; pageRevision?: number; businessRevision?: number }> {
  try {
   const { supabase } = await requireOwner();
-  const draft = parseDraft(fd);
+  const draft = parseDraftSync(fd);
   const result = await persistDraft(supabase, draft);
   revalidatePath("/admin/businesses/" + draft.businessId);
   revalidatePath("/admin/businesses/" + draft.businessId + "/preview");
@@ -156,7 +180,7 @@ export async function saveDraftState(fd: FormData): Promise<{ ok: boolean; error
 export async function publishDraftState(fd: FormData): Promise<{ ok: boolean; error?: string; version?: number; pageRevision?: number; businessRevision?: number }> {
  try {
   const { supabase } = await requireOwner();
-  const draft = parseDraft(fd);
+  const draft = parseDraftSync(fd);
   const result = await persistDraft(supabase, draft, true);
   revalidatePath("/b/[slug]", "page");
   revalidatePath("/admin/businesses/" + draft.businessId);
@@ -220,10 +244,8 @@ export async function setPageActive(fd:FormData){
 export async function createBranch(fd:FormData){
  const {supabase}=await requireOwner();const businessId=val(fd,"business_id",50),parentId=val(fd,"parent_page_id",50),slug=val(fd,"slug",60).toLowerCase(),branchName=val(fd,"branch_name",100);
  if(!slugSchema.safeParse(slug).success||!branchName)redirect("/admin/businesses/"+businessId+"?error=branch");
- const {data:parent}=await supabase.from("business_pages").select("template").eq("id",parentId).single();
- const {data:page,error}=await supabase.from("business_pages").insert({business_id:businessId,parent_page_id:parentId,page_type:"branch",branch_name:branchName,slug,template:parent?.template||"professional"}).select("id").single();
- if(error||!page)redirect("/admin/businesses/"+businessId+"?error=branch");
- await supabase.from("page_sections").insert([{page_id:page.id,section_key:"hero",kind:"hero",title:branchName,position:0,content:defaults.hero},{page_id:page.id,section_key:"contact",kind:"contact",title:"تواصل معنا",position:1,content:defaults.contact}]);
+ const { error } = await supabase.rpc("create_admin_page", { request_key: randomUUID(), details: { businessId, parentId, slug, branchName }, seeds: [{ kind:"hero", title:branchName, enabled:true, content:defaults.hero }, { kind:"contact", title:"تواصل معنا", enabled:true, content:defaults.contact }] });
+ if(error)redirect("/admin/businesses/"+businessId+"?error=branch");
  revalidatePath("/admin/businesses/"+businessId);redirect("/admin/businesses/"+businessId+"?branch=created");
 }
 export async function createBatch(fd:FormData){

@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { setTimeout } from "node:timers/promises";
 
 export function assertDeployment(identity, commit, branch) {
-  if (identity.commit !== commit || identity.branch !== branch || identity.target !== "preview" ||
+  if (branch !== "staging" || identity.commit !== commit || identity.branch !== branch || identity.target !== "preview" ||
       identity.supabaseProject !== "flkakuysakgwfoemgbwn" ||
       !/^dpl_[a-zA-Z0-9]+$/.test(identity.deploymentId) ||
       !/^nextap-[a-z0-9]+-abdelrahman-867e\.vercel\.app$/.test(identity.deploymentUrl)) {

@@ -5,6 +5,7 @@ import { optimizeImage } from "@/lib/media/optimize";
 import { storeManagedImage } from "@/lib/media/store";
 import { MAX_TRANSPORT_BYTES } from "@/lib/media/limits";
 import { captureOperationError } from "@/lib/observability/operations";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 export const runtime = "nodejs";
 const response = (body: object, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
 
@@ -19,6 +20,8 @@ export async function POST(request: Request) {
   try { owner = await requireOwner(); } catch (error) {
     return response({ error: isRedirectError(error) ? "Sign in with an authorized owner account to upload." : "Authorization unavailable. Retry." }, isRedirectError(error) ? 401 : 503);
   }
+  const budget = consumeRateLimit("admin-media", owner.userId, { max: 20, windowMs: 60_000, maxKeys: 256 });
+  if (!budget.allowed) return response({ error: "Upload limit exceeded. Retry later." }, 429);
   // Bound even chunked requests before allocating a multipart buffer.
   const ceiling = MAX_TRANSPORT_BYTES + 32 * 1024;
   if (Number(request.headers.get("content-length")) > ceiling) return response({ error: "Prepare the image below 3 MiB before uploading." }, 413);
