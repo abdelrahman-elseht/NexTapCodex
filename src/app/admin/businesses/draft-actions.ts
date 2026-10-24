@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { requireOwner } from "@/lib/auth/owner";
 import { parseDraftPayload, type ParsedDraft } from "@/lib/business/draft";
 import { resolveContactPhoto } from "@/lib/media/resolve-contact-photo";
@@ -30,6 +31,7 @@ export async function saveDraftState(fd: FormData): Promise<{ ok: boolean; error
     return result;
   } catch (error) {
     captureOperationError(new Error("Draft save failed"), "admin.draft.save");
+    if (isRedirectError(error)) return { ok: false, error: "Your account is not authorized to save drafts." };
     return { ok: false, error: error instanceof Error ? error.message : "Could not save draft." };
   }
 }
@@ -45,6 +47,7 @@ export async function publishDraftState(fd: FormData): Promise<{ ok: boolean; er
     return result;
   } catch (error) {
     captureOperationError(new Error("Page publication failed"), "admin.page.publish");
+    if (isRedirectError(error)) return { ok: false, error: "Your account is not authorized to publish this page." };
     return { ok: false, error: error instanceof Error ? error.message : "Could not publish this page." };
   }
 }

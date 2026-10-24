@@ -17,7 +17,7 @@ NexTap is a Next.js App Router modular monolith. The source tree is organized by
 | `src/lib/media/` | Image inspection, preparation, optimization and storage. |
 | `src/lib/supabase/` | Supabase adapters for server, public and middleware clients. |
 | `src/lib/observability/` | Sentry sanitization and operation telemetry. |
-| `src/lib/config/` | Environment and startup configuration guards. |
+| `src/lib/config/` | Environment and startup configuration guards, including Staging/Production project mapping. |
 | `supabase/migrations/` | Ordered database migrations. |
 | `supabase/tests/` | SQL contract and security tests. |
 | `tests/unit/` | Vitest tests for library modules and route handlers. |
@@ -45,3 +45,6 @@ NexTap is a Next.js App Router modular monolith. The source tree is organized by
 - Card inventory/manufacturing: `src/app/admin/cards/` → `src/lib/cards/`.
 - Managed images: `src/app/api/admin/media/` → `src/lib/media/`.
 - Auth/session: `src/app/auth/`, `src/lib/auth/`, `src/lib/supabase/`, and `src/middleware.ts`.
+
+- Owner editor transport: `src/app/api/admin/businesses/draft/route.ts` receives the editor's same-origin JSON save/publish requests; `src/app/admin/businesses/draft-actions.ts` validates and persists them.
+- Capability mapping: `src/lib/auth/owner.ts` enforces the internal admin role, while `src/lib/config/environment.mjs` owns the Staging/Production project mapping.
