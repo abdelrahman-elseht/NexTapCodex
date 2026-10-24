@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+﻿import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { readManagedObject } from "@/lib/media/read-object";
 const path = "00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002/00000000-0000-4000-8000-000000000003.webp";
@@ -15,8 +15,9 @@ it("rejects declared and chunked overflow before buffering the full object", asy
 });
 it("uses only the verified session token for private reads and never puts it in the URL", async () => {
   const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));
-  const client = { auth: { getSession: async () => ({ data: { session: { access_token: "synthetic-session" } } }) } } as SupabaseClient;
+  const client = { auth: { getSession: async () => ({ data: { session: { access_token: "test-token" } } }) } } as SupabaseClient;
   expect(await readManagedObject(path, 8, client)).toEqual(new TextEncoder().encode("ok"));
   expect(fetcher.mock.calls[0][0]).toBe(`https://fixture.supabase.co/storage/v1/object/business-media/${path}`);
-  expect(fetcher.mock.calls[0][1]).toMatchObject({ headers: { apikey: "sb_publishable_fixture", Authorization: "Bearer synthetic-session" }, cache: "no-store", redirect: "error" });
+  expect(fetcher.mock.calls[0][1]).toMatchObject({ headers: { apikey: "sb_publishable_fixture", Authorization: "Bearer test-token" }, cache: "no-store", redirect: "error" });
 });
+
