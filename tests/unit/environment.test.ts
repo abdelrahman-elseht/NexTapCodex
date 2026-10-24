@@ -38,12 +38,12 @@ describe("Supabase environment isolation", () => {
 });
 
 describe("wallet USSD deployment policy", () => {
-  it("defaults non-production deployments on and production deployments off", () => {
+  it("defaults every deployment on when no explicit override is configured", () => {
     expect(resolveWalletUssdEnabled({ NEXTAP_ENV: "staging" })).toBe("true");
     expect(resolveWalletUssdEnabled({ VERCEL_ENV: "preview" })).toBe("true");
     expect(resolveWalletUssdEnabled({ NEXTAP_ENV: "test" })).toBe("true");
-    expect(resolveWalletUssdEnabled({ NEXTAP_ENV: "production" })).toBe("false");
-    expect(resolveWalletUssdEnabled({ VERCEL_ENV: "production" })).toBe("false");
+    expect(resolveWalletUssdEnabled({ NEXTAP_ENV: "production" })).toBe("true");
+    expect(resolveWalletUssdEnabled({ VERCEL_ENV: "production" })).toBe("true");
   });
 
   it("honors an explicit value and treats an empty injected value as unset", () => {
