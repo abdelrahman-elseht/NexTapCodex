@@ -11,6 +11,14 @@ it.each(["jpeg", "png", "webp", "avif"] as const)("decodes real %s bytes regardl
   expect(metadata.format).toBe("webp"); expect(metadata.width).toBe(1600); expect(metadata.height).toBe(800);
   expect(metadata.exif).toBeUndefined(); expect(result.size).toBeLessThan(MAX_INPUT_BYTES);
 });
+it("normalizes an AVIF whose major brand is mif1", async () => {
+  const bytes = Buffer.from(await raster(100, 60).avif().toBuffer());
+  bytes.write("mif1", 8, "ascii");
+  const result = await optimizeImage(bytes, "photo");
+  expect(result.width).toBe(100);
+  expect(result.height).toBe(60);
+  expect((await sharp(result.bytes).metadata()).format).toBe("webp");
+});
 it("preserves transparent logos, limits to 512 and never enlarges", async () => {
   const result = await optimizeImage(await raster(1024, 512, true).png().toBuffer(), "logo");
   const metadata = await sharp(result.bytes).metadata();
