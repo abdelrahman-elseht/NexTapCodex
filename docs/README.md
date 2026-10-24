@@ -1,6 +1,7 @@
 # Documentation index
 
 - [Architecture and repository map](ARCHITECTURE.md): where to locate code and place new modules.
+- [Known issues and regression guards](KNOWN_ISSUES.md): recurring failure modes and the checks that prevent them returning.
 - [Product contract](product/PRODUCT.md): product behavior and constraints.
 - [User and admin stories](specs/USER_ADMIN_STORIES.md): acceptance criteria and corresponding browser journeys.
 - [Original agent specification](specs/NEXTAP_FROM_SCRATCH_AGENT_SPEC.md): historical implementation requirements.

@@ -5,7 +5,7 @@ import { storeManagedImage } from "../../src/lib/media/store";
 import { isOptimizableImage } from "../../src/lib/media/urls";
 
 const raster = (width = 2000, height = 1000, alpha = false) => sharp({ create: { width, height, channels: alpha ? 4 : 3, background: { r: 100, g: 80, b: 20, alpha: alpha ? 0.25 : 1 } } });
-it.each(["jpeg", "png", "webp"] as const)("decodes real %s bytes regardless of filename/MIME; bounds photos", async format => {
+it.each(["jpeg", "png", "webp", "avif"] as const)("decodes real %s bytes regardless of filename/MIME; bounds photos", async format => {
   const result = await optimizeImage(await raster().toFormat(format).toBuffer(), "photo");
   const metadata = await sharp(result.bytes).metadata();
   expect(metadata.format).toBe("webp"); expect(metadata.width).toBe(1600); expect(metadata.height).toBe(800);

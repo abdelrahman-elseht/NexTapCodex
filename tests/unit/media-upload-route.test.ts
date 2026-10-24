@@ -9,9 +9,9 @@ beforeEach(() => {
   vi.clearAllMocks(); mocks.owner.mockResolvedValue({ userId: "owner", supabase: { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: mocks.business }) }) }) } });
   mocks.business.mockResolvedValue({ data: { id: businessId }, error: null }); mocks.store.mockResolvedValue({ url: "https://fixture/image.webp" });
 });
-async function request(bytes?: Uint8Array, id = businessId) {
+async function request(bytes?: Uint8Array, id = businessId, format: "png" | "avif" = "png") {
   const fd = new FormData(); fd.set("businessId", id); fd.set("role", "photo");
-  fd.set("file", new Blob([new Uint8Array(bytes || await sharp({ create: { width: 20, height: 20, channels: 3, background: "red" } }).png().toBuffer())], { type: "text/plain" }), "fake.txt");
+  fd.set("file", new Blob([new Uint8Array(bytes || await sharp({ create: { width: 20, height: 20, channels: 3, background: "red" } }).toFormat(format).toBuffer())], { type: "text/plain" }), "fake.txt");
   return new Request("http://localhost/api/admin/media", { method: "POST", body: fd, headers: { origin: "http://localhost" } });
 }
 it("denies anonymous owner redirects without uploading", async () => {
@@ -28,6 +28,10 @@ it("authoritatively decodes despite fake MIME and filename, rejects corrupt inpu
   expect((await POST(await request())).status).toBe(200);
   expect(mocks.store.mock.calls[0][3].width).toBe(20);
   expect((await POST(await request(new Uint8Array([1, 2, 3])))).status).toBe(422);
+});
+it("accepts a real AVIF upload at the route boundary", async () => {
+  expect((await POST(await request(undefined, businessId, "avif"))).status).toBe(200);
+  expect(mocks.store.mock.calls[0][3].width).toBe(20);
 });
 it("bounds chunked bodies and rejects oversized declared requests", async () => {
   const bytes = new Uint8Array(3 * 1024 * 1024 + 32769);

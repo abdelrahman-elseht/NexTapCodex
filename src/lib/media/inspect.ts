@@ -36,5 +36,20 @@ export function inspectStillRaster(bytes: Uint8Array): { width: number; height: 
     }
     return dimensions;
   }
+  // AVIF stores dimensions in an ISO-BMFF `ispe` box inside its `meta` box.
+  // Scan bounded bytes for the box after confirming an AVIF-compatible ftyp.
+  if (ascii(4, 4) === "ftyp" && ["avif", "avis"].includes(ascii(8, 4))) {
+    for (let offset = 16; offset + 20 <= bytes.length;) {
+      const size = view.getUint32(offset);
+      if (ascii(offset + 4, 4) === "ispe" && size >= 20) {
+        return { width: view.getUint32(offset + 12), height: view.getUint32(offset + 16) };
+      }
+      if (size < 8) break;
+      offset += size;
+    }
+    for (let offset = 0; offset + 20 <= bytes.length; offset++) {
+      if (ascii(offset, 4) === "ispe") return { width: view.getUint32(offset + 8), height: view.getUint32(offset + 12) };
+    }
+  }
   return null;
 }
