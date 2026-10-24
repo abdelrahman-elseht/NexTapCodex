@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXTAP_BUILD_DIR || ".next",
   poweredByHeader: false,
   images: {
+    dangerouslyAllowSVG: false,
     // Fixed logo sizes can select small variants instead of a 640px fill image.
     imageSizes: [32, 48, 64, 84, 96, 128, 168, 256, 384],
     remotePatterns: process.env.NEXT_PUBLIC_SUPABASE_URL ? [{
@@ -17,7 +18,21 @@ const nextConfig: NextConfig = {
     }] : [],
   },
   async headers() {
-    return [{ source: "/c/:path*", headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }] }];
+    const scriptPolicy = process.env.NODE_ENV === "development" ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+    const securityHeaders = [
+      { key: "Content-Security-Policy", value: `default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src ${scriptPolicy}; connect-src 'self' https://*.supabase.co https://*.sentry.io; font-src 'self' data:; upgrade-insecure-requests` },
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+      { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+    ];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/admin/:path*", headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }, ...securityHeaders] },
+      { source: "/api/admin/:path*", headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }, ...securityHeaders] },
+      { source: "/c/:path*", headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }, ...securityHeaders] },
+    ];
   }
 };
 export default withSentryConfig(nextConfig, {

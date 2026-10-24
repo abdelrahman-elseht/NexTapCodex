@@ -1,4 +1,5 @@
 import { safeUrl } from "./content";
+import { dialablePhone, telephoneHref } from "./phone";
 
 export type ProviderId = "whatsapp"|"facebook"|"instagram"|"tiktok"|"youtube"|"snapchat"|"x"|"linkedin"|"telegram"|"github"|"behance"|"artstation"|"dribbble"|"medium"|"website"|"maps"|"reviews"|"booking"|"order"|"talabat"|"fast"|"location"|"call"|"instapay"|"vodafone"|"etisalat"|"orange"|"phone"|"email"|"menu"|"custom"|"bank";
 export type LocalWalletProvider = "instapay"|"vodafone"|"etisalat"|"orange";
@@ -86,7 +87,7 @@ export function buildProviderProfiles(items: ProviderItemLike[]): Record<string,
 }
 
 export function resolveProviderItem<T extends ProviderItemLike>(item: T, profiles: Record<string, ProviderProfile>): T {
-  if (!item.provider || item.provider === "custom" || !getProviderMetadata(item.provider) || item.profileOverride) return item;
+  if (!item.provider || item.provider === "custom" || !getProviderMetadata(item.provider) || item.profileOverride || ((item.provider === "phone" || item.provider === "call") && Boolean(item.value))) return item;
   const profile = profiles[item.provider];
   if (!profile) return item;
   return {
@@ -143,7 +144,7 @@ export function normalizeEgyptianPhone(value: string) {
   if (/^\+201\d{9}$/.test(raw)) return raw;
   return "";
 }
-export function phoneHref(value: string) { const phone = normalizeEgyptianPhone(value); return phone ? `tel:${phone}` : ""; }
+export function phoneHref(value: string) { return telephoneHref(value); }
 export function whatsappHref(value: string) { const phone = normalizeEgyptianPhone(value); return phone ? `https://wa.me/${phone.slice(1)}` : ""; }
 export function normalizeInstagram(value: string) {
   const input = value.trim(); if (!input) return "";
@@ -153,7 +154,8 @@ export function normalizeInstagram(value: string) {
 export function normalizeSafeUrl(value: string) { const input = value.trim(); return safeUrl(input) && /^https?:$/i.test(new URL(input).protocol) ? input : ""; }
 export function normalizeProviderValue(provider: ProviderId, value: string) {
   if (isDeliveryProvider(provider)) return deliveryLinkHref(provider, value);
-  if (provider === "whatsapp" || isMobileWalletProvider(provider) || provider === "phone") return normalizeEgyptianPhone(value);
+  if (provider === "whatsapp" || isMobileWalletProvider(provider)) return normalizeEgyptianPhone(value);
+  if (provider === "phone" || provider === "call") return dialablePhone(value) ? value : "";
   if (provider === "instagram") return normalizeInstagram(value);
   if (provider === "instapay") return /^[a-z0-9._-]{2,64}@[a-z0-9._-]{2,64}$/i.test(value.trim()) ? value.trim() : "";
   if (provider === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) ? value.trim() : "";

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { imageEditSchema } from "@/lib/media/image-edit";
+import { phoneTypes } from "./phone";
 
 export const safeUrl = (value: unknown): value is string => {
   if (typeof value !== "string" || value.length > 2048) return false;
@@ -20,8 +21,9 @@ const itemFields = {
   badge: z.string().trim().max(80).optional(),
   label: z.string().trim().max(80).optional().or(z.literal("")),
   url: z.string().trim().max(2048).optional().or(z.literal("")),
-  value: z.string().trim().max(500).optional().or(z.literal("")),
+  value: z.string().max(500).optional().or(z.literal("")),
   provider: providerSchema,
+  phoneType: z.enum(phoneTypes).optional(),
   destinationStrategy: z.enum(["verified_deep_link", "external_url", "copy_identifier", "instructions"]).optional(),
   profileOverride: z.boolean().optional(),
   enabled: z.boolean().optional(),

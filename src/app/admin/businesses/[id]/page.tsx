@@ -4,7 +4,6 @@ import { requireOwner } from "@/lib/auth/owner";
 import { MutationForm } from "@/components/admin/mutation-form";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { BusinessEditor } from "../_components/business-editor";
-import { loadBusinessEditorPages, type BusinessEditorPageRow } from "@/lib/business/business-editor-pages";
 
 const labels: Record<string, string> = {
   hero: "الرئيسية", about: "عن النشاط", hours: "مواعيد العمل", contact: "التواصل والموقع",
@@ -31,8 +30,9 @@ export default async function EditBusiness({
   if (businessError) return <section className="editor-panel error-panel" role="alert"><span className="panel-kicker">تعذر تحميل البيانات</span><h1>لم نتمكن من فتح النشاط</h1><p>حدثت مشكلة أثناء تحميل بيانات لوحة التحكم. أعد المحاولة أو ارجع إلى قائمة الأنشطة.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
   if (!business) notFound();
 
-  const { data: pages, error: pagesError } = await loadBusinessEditorPages(columns => supabase.from("business_pages")
-    .select(columns).eq("business_id", id).order("created_at") as unknown as PromiseLike<{ data: BusinessEditorPageRow[] | null; error: { code?: string; message?: string } | null }>);
+  const { data: pages, error: pagesError } = await supabase.from("business_pages")
+    .select("id,slug,template,page_type,branch_name,is_active,published_snapshot_id,contact_config,draft_revision")
+    .eq("business_id", id).order("created_at");
   if (pagesError) return <section className="editor-panel error-panel" role="alert"><span className="panel-kicker">تعذر تحميل البيانات</span><h1>لم نتمكن من تحميل صفحات النشاط</h1><p>أعد المحاولة أو ارجع إلى قائمة الأنشطة.</p><Link className="button secondary" href="/admin">العودة إلى لوحة التحكم</Link></section>;
   const page = query.page ? pages?.find(item => item.id === query.page) : pages?.find(item => item.page_type !== "branch") || pages?.[0];
   if (!page) return <section className="editor-panel error-panel" role="alert"><span className="panel-kicker">صفحة غير موجودة</span><h1>لا توجد صفحة لهذا النشاط بعد</h1><p>يمكنك العودة إلى القائمة ومراجعة النشاط.</p><Link className="button secondary" href="/admin/businesses">قائمة الأنشطة</Link></section>;

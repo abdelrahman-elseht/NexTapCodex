@@ -1,5 +1,6 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { captureOperationError } from "@/lib/observability/operations";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,9 @@ export async function GET(
 ) {
   const { token } = await params;
   if (!/^[A-Za-z0-9_-]{32,64}$/.test(token)) {
+    return redirectToPath("/card/unavailable?state=invalid");
+  }
+  if (!consumeRateLimit("card-resolution", token, { max: 120, windowMs: 60_000, maxKeys: 2048 }).allowed) {
     return redirectToPath("/card/unavailable?state=invalid");
   }
 

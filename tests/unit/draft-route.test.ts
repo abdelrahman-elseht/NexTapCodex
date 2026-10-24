@@ -45,3 +45,42 @@ it("returns validation failures without claiming success", async () => {
   const response = await POST(request());
   expect(response.status).toBe(400); expect(await response.json()).toEqual({ ok: false, error: "Invalid draft" });
 });
+
+it("rejects oversized fixed-length bodies before form parsing or mutation", async () => {
+  const response = await POST(new Request("http://localhost:3137/api/admin/businesses/draft", {
+    method: "POST",
+    headers: { origin: "http://localhost:3137", "content-type": "application/x-www-form-urlencoded", "content-length": String(513 * 1024) },
+    body: "x",
+  }));
+  expect(response.status).toBe(413);
+  expect(mocks.claims).not.toHaveBeenCalled();
+  expect(mocks.save).not.toHaveBeenCalled();
+});
+
+it("rejects oversized chunked bodies before multipart parsing", async () => {
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode("x".repeat(513 * 1024)));
+      controller.close();
+    },
+  });
+  const response = await POST(new Request("http://localhost:3137/api/admin/businesses/draft", {
+    method: "POST", headers: { origin: "http://localhost:3137", "content-type": "application/x-www-form-urlencoded" }, body: stream, ...( { duplex: "half" } as any),
+  }));
+  expect(response.status).toBe(413);
+  expect(mocks.claims).not.toHaveBeenCalled();
+});
+
+it("rejects unsupported content types without invoking the action", async () => {
+  const response = await POST(new Request("http://localhost:3137/api/admin/businesses/draft", {
+    method: "POST", headers: { origin: "http://localhost:3137", "content-type": "application/json" }, body: JSON.stringify({ mode: "save", draft: "{}" }),
+  }));
+  expect(response.status).toBe(415);
+  expect(mocks.save).not.toHaveBeenCalled();
+});
+
+it("rejects a missing body without authenticating", async () => {
+  const response = await POST(new Request("http://localhost:3137/api/admin/businesses/draft", { method: "POST", headers: { origin: "http://localhost:3137" } }));
+  expect(response.status).toBe(400);
+  expect(mocks.claims).not.toHaveBeenCalled();
+});

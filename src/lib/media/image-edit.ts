@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { contactCropSchema } from "@/lib/business/contact-crop";
+import { mediaDisplayUrl } from "./urls";
+import { readBoundedBody } from "@/lib/security/bounded-body";
+import { inspectStillRaster } from "./inspect";
 
 export const imageEditSchema = z.object({
   sourceUrl: z.string().max(2048).refine(value => {
@@ -20,10 +23,13 @@ export function imageCropRectangle(width: number, height: number, crop: ImageEdi
 
 /** Export only on Apply; retain the source URL for subsequent adjustments. */
 export async function renderImageCrop(sourceUrl: string, crop: ImageEdit["crop"], aspect: number, edge: number) {
-  const response = await fetch(sourceUrl, { mode: "cors", credentials: "omit", signal: AbortSignal.timeout(15000) });
+  const displayUrl = mediaDisplayUrl(sourceUrl);
+  const response = await fetch(displayUrl, { mode: "cors", credentials: displayUrl.startsWith("/api/media/") ? "same-origin" : "omit", signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error("Could not load the original image. Retry or upload another image.");
-  const blob = await response.blob();
-  if (blob.size > 5 * 1024 * 1024) throw new Error("Choose an image up to 5 MiB to crop.");
+  const bytes = await readBoundedBody(response, 5 * 1024 * 1024);
+  const dimensions = inspectStillRaster(bytes);
+  if (!dimensions || dimensions.width * dimensions.height > 20_000_000 || Math.max(dimensions.width, dimensions.height) > 16_384) throw new Error("Choose a still image within the 20 megapixel limit.");
+  const blob = new Blob([new Uint8Array(bytes)]);
   const bitmap = await createImageBitmap(blob, { imageOrientation: "from-image" });
   try {
     if (bitmap.width * bitmap.height > 20_000_000 || Math.max(bitmap.width, bitmap.height) > 16_384) throw new Error("Image dimensions exceed the 20 megapixel limit.");

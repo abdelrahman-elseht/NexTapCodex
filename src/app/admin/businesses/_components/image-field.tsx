@@ -4,6 +4,7 @@ import { prepareImage } from "@/lib/media/prepare";
 import type { ImageRole } from "@/lib/media/limits";
 import { renderImageCrop, type ImageEdit } from "@/lib/media/image-edit";
 import { ContactPhotoEditor } from "./contact-photo-editor";
+import { mediaDisplayUrl } from "@/lib/media/urls";
 
 export type UploadTracker = (key: string, pending: boolean) => void;
 export function ImageField({ businessId, label, value, alt, role = "photo", onChange, onAltChange, onAsset, track, imageEdit, onEdited, cropAspect = 4 / 3 }: {
@@ -13,7 +14,6 @@ export function ImageField({ businessId, label, value, alt, role = "photo", onCh
   imageEdit?: ImageEdit; onEdited?: (url: string, edit?: ImageEdit) => void; cropAspect?: number;
 }) {
   const id = useId(); const xhr = useRef<XMLHttpRequest | null>(null); const attempt = useRef(0);
-  const handledFile = useRef<string | null>(null);
   const callbacks = useRef({ onChange, onAsset, track, onEdited }); callbacks.current = { onChange, onAsset, track, onEdited };
   const [file, setFile] = useState<File | null>(null); const [pending, setPending] = useState(false);
   const [status, setStatus] = useState(""); const [error, setError] = useState(""); const [progress, setProgress] = useState(0);
@@ -54,27 +54,14 @@ export function ImageField({ businessId, label, value, alt, role = "photo", onCh
       if (token === attempt.current) { xhr.current = null; setPending(false); callbacks.current.track(id, false); }
     }
   }
-  function handleFileInput(event: React.ChangeEvent<HTMLInputElement>) {
-    const chosen = event.currentTarget.files?.[0];
-    event.currentTarget.value = "";
-    if (!chosen) return;
-    // Browsers dispatch both input and change for file inputs. Guard the shared
-    // handler so the same selection cannot start two uploads when both fire.
-    const key = `${chosen.name}:${chosen.size}:${chosen.lastModified}`;
-    if (handledFile.current === key) return;
-    handledFile.current = key;
-    void upload(chosen).finally(() => {
-      if (handledFile.current === key) handledFile.current = null;
-    });
-  }
   return <fieldset className="image-field">
     <legend>{label}</legend>
     <label className="field">{label} URL<input dir="ltr" value={value} onChange={event => onChange(event.target.value)} disabled={pending} /></label>
     <label className="field">{label} alt text<input value={alt} maxLength={200} onChange={event => onAltChange(event.target.value)} /></label>
-    {value && <div className="upload-preview">{broken === value ? <span>Image unavailable. Replace the URL or upload another image.</span> : <img src={value} alt={alt || `${label} preview`} width={240} height={120} onError={() => setBroken(value)} />}</div>}
+    {value && <div className="upload-preview">{broken === value ? <span>Image unavailable. Replace the URL or upload another image.</span> : <img src={mediaDisplayUrl(value)} alt={alt || `${label} preview`} width={240} height={120} onError={() => setBroken(value)} />}</div>}
     {value && onEdited && <ContactPhotoEditor key={`${imageEdit?.sourceUrl || value}:${imageEdit ? "edited" : "original"}`} subject={label} src={imageEdit?.sourceUrl || value} crop={imageEdit?.crop} circular={role === "logo"} aspect={role === "logo" ? 1 : aspect} onAspectChange={role === "logo" ? undefined : setAspect} busy={pending} onApply={crop => void upload(null, { sourceUrl: imageEdit?.sourceUrl || value, crop, aspect: role === "logo" ? 1 : aspect })} />}
-    <label className="field">Upload {label.toLowerCase()}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={pending} onInput={handleFileInput} onChange={handleFileInput} /></label>
-    <small>Still JPEG, PNG or WebP. Up to 5 MiB per image. Uploaded images are publicly readable by URL.</small>
+    <label className="field">Upload {label.toLowerCase()}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={pending} onChange={event => { const chosen = event.target.files?.[0]; event.target.value = ""; if (chosen) void upload(chosen); }} /></label>
+    <small>Still JPEG, PNG or WebP. Up to 5 MiB per image. Draft images are private; publishing makes referenced images available to visitors.</small>
     {pending && <progress max={100} value={progress} aria-label={`${label} upload progress`} />}
     {status && <p role="status">{status}</p>}{error && <p role="alert" className="field-error">{error}</p>}
     <div className="image-field-actions">

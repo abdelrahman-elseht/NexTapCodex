@@ -14,6 +14,7 @@ const env = {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_e2e_placeholder",
   NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3137",
+  NEXT_PUBLIC_WALLET_USSD_ENABLED: process.env.NEXT_PUBLIC_WALLET_USSD_ENABLED ?? "",
   NEXTAP_ENV: sentryDiagnostics ? "staging" : "test",
   SENTRY_DSN: process.env.SENTRY_DSN ?? "",
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? process.env.SENTRY_DSN ?? "",

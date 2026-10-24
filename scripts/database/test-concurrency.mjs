@@ -40,6 +40,7 @@ try {
   assert.deepEqual((await admin.query("select contact_config from public.business_pages where slug='upgrade-qa'")).rows[0].contact_config,{});
   console.log("PASS real PostgreSQL: representative pre-contact draft survives upgrade with Contacts off");
   await admin.query("insert into auth.users values($1),('00000000-0000-4000-8000-000000000002');", [owner]);
+  await admin.query("insert into private.admin_admissions(user_id,role,reason) values($1,'administrator','Disposable concurrency-test administrator')", [owner]);
   await admin.query("insert into public.owner_users(user_id) values($1)", [owner]);
   await admin.query(await fs.readFile("supabase/tests/inventory-deletion.sql", "utf8"));
   const a = await connect(), b = await connect();

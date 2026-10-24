@@ -31,4 +31,11 @@ describe("public publication resolver", () => {
     await expect(getPublicPublication("disabled-shop")).resolves.toBeNull();
     expect(rpc.mock.calls.map(([name]) => name)).toEqual(["get_publication_pointer", "get_published_page"]);
   });
+
+  it("rejects malformed and overlong slugs before touching Supabase", async () => {
+    const { getPublicPublication } = await import("../../src/lib/business/public-publication");
+    await expect(getPublicPublication("bad slug")).resolves.toBeNull();
+    await expect(getPublicPublication("a".repeat(61))).resolves.toBeNull();
+    expect(rpc).not.toHaveBeenCalled();
+  });
 });

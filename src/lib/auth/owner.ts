@@ -13,4 +13,12 @@ const getOwner = cache(async () => {
 });
 
 /** Request-local memoization avoids repeating the same auth and allowlist query. */
-export function requireOwner() { return getOwner(); }
+export type AdminCapability = "read" | "edit" | "publish" | "media" | "inventory" | "export" | "delete";
+export async function requireOwner(capability: AdminCapability = "read") {
+  const owner = await getOwner();
+  if (capability !== "read") {
+    const { data, error } = await owner.supabase.rpc("admin_has_capability", { capability });
+    if (error || data !== true) redirect("/403");
+  }
+  return owner;
+}

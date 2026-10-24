@@ -10,9 +10,6 @@ on:
   push:
     branches:
       - staging
-      # Bootstrap hosted validation before this workflow reaches the default branch.
-      # Remove this temporary branch after the candidate is accepted.
-      - chore/hosted-staging-validation
 
 permissions:
   contents: read
@@ -24,7 +21,7 @@ concurrency:
 jobs:
   hosted-e2e:
     name: hosted E2E
-    if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/chore/hosted-staging-validation'
+    if: github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
