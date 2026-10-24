@@ -8,7 +8,7 @@ insert into storage.objects(bucket_id,name) values
  ('business-media','00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000081/00000000-0000-4000-8000-000000000083.webp'),
  ('business-media','00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000081/00000000-0000-4000-8000-000000000084.webp');
 grant usage on schema storage to anon,authenticated;
-grant select,delete,update on storage.objects to anon,authenticated;
+grant select,insert,delete,update on storage.objects to anon,authenticated;
 set local role anon;
 do $$ begin
  assert not exists(select 1 from storage.objects where bucket_id='business-media'),'draft accessible anonymously';
@@ -17,6 +17,11 @@ reset role;
 set local role authenticated;
 do $$ begin
  assert (select count(*) from storage.objects where bucket_id='business-media')=2,'internal draft read denied';
+end; $$;
+insert into storage.objects(bucket_id,name) values
+ ('business-media','00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000081/00000000-0000-4000-8000-000000000085.webp');
+do $$ begin
+ assert exists(select 1 from storage.objects where name like '%85.webp'),'owner media upload denied';
 end; $$;
 select public.publish_page('00000000-0000-4000-8000-000000000082');
 set local role anon;
