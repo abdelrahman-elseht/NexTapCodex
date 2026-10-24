@@ -33,6 +33,12 @@ it("accepts a real AVIF upload at the route boundary", async () => {
   expect((await POST(await request(undefined, businessId, "avif"))).status).toBe(200);
   expect(mocks.store.mock.calls[0][3].width).toBe(20);
 });
+it("accepts a real AVIF upload with mif1 major brand", async () => {
+  const bytes = Buffer.from(await sharp({ create: { width: 20, height: 20, channels: 3, background: "red" } }).avif().toBuffer());
+  bytes.write("mif1", 8, "ascii");
+  expect((await POST(await request(bytes))).status).toBe(200);
+  expect(mocks.store.mock.calls[0][3].width).toBe(20);
+});
 it("bounds chunked bodies and rejects oversized declared requests", async () => {
   const bytes = new Uint8Array(3 * 1024 * 1024 + 32769);
   const chunked = new Request("http://localhost/api/admin/media", { method: "POST", body: bytes });

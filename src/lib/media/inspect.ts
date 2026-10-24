@@ -36,19 +36,49 @@ export function inspectStillRaster(bytes: Uint8Array): { width: number; height: 
     }
     return dimensions;
   }
-  // AVIF stores dimensions in an ISO-BMFF `ispe` box inside its `meta` box.
-  // Scan bounded bytes for the box after confirming an AVIF-compatible ftyp.
-  if (ascii(4, 4) === "ftyp" && ["avif", "avis"].includes(ascii(8, 4))) {
-    for (let offset = 16; offset + 20 <= bytes.length;) {
-      const size = view.getUint32(offset);
-      if (ascii(offset + 4, 4) === "ispe" && size >= 20) {
-        return { width: view.getUint32(offset + 12), height: view.getUint32(offset + 16) };
+  // AVIF is an ISO-BMFF file. The `avif` brand may be major or compatible;
+  // parse bounded boxes rather than relying on fixed offsets.
+  if (ascii(4, 4) === "ftyp") {
+    const box = (offset: number, end: number) => {
+      if (offset + 8 > end) return null;
+      const size32 = view.getUint32(offset);
+      const header = size32 === 1 ? 16 : 8;
+      if (offset + header > end) return null;
+      const size = size32 === 1 ? Number(view.getBigUint64(offset + 8)) : size32 === 0 ? end - offset : size32;
+      if (!Number.isSafeInteger(size) || size < header || offset + size > end) return null;
+      return { type: ascii(offset + 4, 4), start: offset, header, end: offset + size };
+    };
+    const fileType = box(0, bytes.length);
+    if (fileType?.type === "ftyp" && fileType.end - fileType.start >= fileType.header + 8) {
+      const major = ascii(fileType.start + fileType.header, 4);
+      const brands = [major];
+      for (let offset = fileType.start + fileType.header + 8; offset + 4 <= fileType.end; offset += 4) brands.push(ascii(offset, 4));
+      if (brands.includes("avif") || brands.includes("avis")) {
+        const containers = new Set(["meta", "iprp", "ipco", "moov", "trak", "mdia", "minf", "stbl", "dinf", "meco", "ipro"]);
+        let dimensions: { width: number; height: number } | null = null;
+        let malformed = false;
+        const walk = (start: number, end: number, depth: number): void => {
+          if (malformed || depth > 16) { malformed = true; return; }
+          for (let offset = start; offset < end;) {
+            const child = box(offset, end);
+            if (!child) { malformed = true; return; }
+            if (["moov", "trak", "mvex"].includes(child.type)) { malformed = true; return; }
+            if (child.type === "ispe" && child.end - child.start >= child.header + 12) {
+              const width = view.getUint32(child.start + child.header + 4);
+              const height = view.getUint32(child.start + child.header + 8);
+              if (!width || !height || dimensions) { malformed = true; return; }
+              dimensions = { width, height };
+            } else if (containers.has(child.type)) {
+              const childStart = child.type === "meta" ? child.start + child.header + 4 : child.start + child.header;
+              if (childStart > child.end) { malformed = true; return; }
+              walk(childStart, child.end, depth + 1);
+            }
+            offset = child.end;
+          }
+        };
+        walk(fileType.end, bytes.length, 0);
+        if (!malformed && dimensions) return dimensions;
       }
-      if (size < 8) break;
-      offset += size;
-    }
-    for (let offset = 0; offset + 20 <= bytes.length; offset++) {
-      if (ascii(offset, 4) === "ispe") return { width: view.getUint32(offset + 8), height: view.getUint32(offset + 12) };
     }
   }
   return null;
