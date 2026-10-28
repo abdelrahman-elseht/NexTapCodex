@@ -4,17 +4,18 @@ import type { ManagedImage } from "./optimize";
 import { prepareContactPhoto } from "./contact-photo";
 
 export async function storeManagedImage(supabase: SupabaseClient, ownerId: string, businessId: string, image: ManagedImage, alt: string) {
-  const path = `${ownerId}/${businessId}/${randomUUID()}.webp`;
+  const mimeType = `image/${image.format}`;
+  const path = `${ownerId}/${businessId}/${randomUUID()}.${image.format}`;
   const bucket = supabase.storage.from("business-media");
   const photo = await prepareContactPhoto(image.bytes);
-  const photoPath = path.replace(/\.webp$/, ".contact.jpg");
-  const { error } = await bucket.upload(path, image.bytes, { contentType: "image/webp", cacheControl: "31536000", upsert: false });
+  const photoPath = path.replace(/\.(?:webp|avif)$/, ".contact.jpg");
+  const { error } = await bucket.upload(path, image.bytes, { contentType: mimeType, cacheControl: "31536000", upsert: false });
   if (error) throw new Error("Upload failed. Retry the image upload.");
   let photoAssetId: string;
   try {
     const { error: photoError } = await bucket.upload(photoPath, photo, { contentType: "image/jpeg", cacheControl: "31536000", upsert: false });
     if (photoError) throw photoError;
-    const { data: asset, error: metadataError } = await supabase.from("media_assets").insert({ business_id: businessId, storage_path: path, contact_photo_path: photoPath, mime_type: "image/webp", size_bytes: image.size, alt_text: alt.trim().slice(0, 200) }).select("id").single();
+    const { data: asset, error: metadataError } = await supabase.from("media_assets").insert({ business_id: businessId, storage_path: path, contact_photo_path: photoPath, mime_type: mimeType, size_bytes: image.size, alt_text: alt.trim().slice(0, 200) }).select("id").single();
     if (metadataError) throw metadataError;
     if (!asset) throw new Error("Image metadata missing.");
     photoAssetId = asset.id;

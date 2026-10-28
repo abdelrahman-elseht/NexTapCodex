@@ -2,7 +2,7 @@ import sharp from "sharp";
 import { inspectStillRaster } from "./inspect";
 import { MAX_INPUT_BYTES, MAX_PIXELS, MAX_DIMENSION, type ImageRole } from "./limits";
 export { MAX_INPUT_BYTES } from "./limits";
-export type ManagedImage = { bytes: Buffer; width: number; height: number; size: number };
+export type ManagedImage = { bytes: Buffer; width: number; height: number; size: number; format: "avif" | "webp" };
 
 /** Bytes, never a filename or MIME declaration, are the source of truth. */
 export async function optimizeImage(input: Buffer, role: ImageRole): Promise<ManagedImage> {
@@ -20,9 +20,12 @@ export async function optimizeImage(input: Buffer, role: ImageRole): Promise<Man
     if (!inspected) throw new Error("Choose a valid still JPEG, PNG, WebP or AVIF image; animations are not supported.");
     if (!metadata.width || !metadata.height || metadata.width > MAX_DIMENSION || metadata.height > MAX_DIMENSION || metadata.width * metadata.height > MAX_PIXELS) throw new Error("Image dimensions exceed the 20 megapixel limit.");
     const edge = role === "logo" ? 512 : 1600;
-    const { data, info } = await pipeline.rotate().resize({ width: edge, height: edge, fit: "inside", withoutEnlargement: true }).webp({ quality: 82, effort: 4 }).toBuffer({ resolveWithObject: true });
+    // Keep AVIF uploads in AVIF; transcoding them to WebP can expand the stored file.
+    const format = isAvif ? "avif" : "webp";
+    const output = pipeline.rotate().resize({ width: edge, height: edge, fit: "inside", withoutEnlargement: true });
+    const { data, info } = await (format === "avif" ? output.avif({ quality: 60, effort: 4 }) : output.webp({ quality: 82, effort: 4 })).toBuffer({ resolveWithObject: true });
     if (data.length > MAX_INPUT_BYTES) throw new Error("The processed image is too large. Choose a smaller image.");
-    return { bytes: data, width: info.width, height: info.height, size: data.length };
+    return { bytes: data, width: info.width, height: info.height, size: data.length, format };
   } catch (error) {
     if (error instanceof Error && /Choose|Animated|dimensions|processed/.test(error.message)) throw error;
     throw new Error("This image could not be decoded. Choose a valid still JPEG, PNG, WebP or AVIF.");

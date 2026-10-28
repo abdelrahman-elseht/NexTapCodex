@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ path
       bytes = await readManagedObject(path, 5 * 1024 * 1024, client);
     }
     if (!bytes) return denied();
-    const type = path.endsWith(".webp") ? "image/webp" : path.endsWith(".png") ? "image/png" : "image/jpeg";
+    const type = path.endsWith(".avif") ? "image/avif" : path.endsWith(".webp") ? "image/webp" : path.endsWith(".png") ? "image/png" : "image/jpeg";
     return new Response(bytes as BodyInit, { headers: { "Content-Type": type, "Content-Length": String(bytes.byteLength), "Cache-Control": published ? "public, max-age=60, must-revalidate" : "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'; sandbox", "Vary": "Cookie" } });
   } catch { return denied(); }
 }

@@ -8,7 +8,7 @@ const raster = (width = 2000, height = 1000, alpha = false) => sharp({ create: {
 it.each(["jpeg", "png", "webp", "avif"] as const)("decodes real %s bytes regardless of filename/MIME; bounds photos", async format => {
   const result = await optimizeImage(await raster().toFormat(format).toBuffer(), "photo");
   const metadata = await sharp(result.bytes).metadata();
-  expect(metadata.format).toBe("webp"); expect(metadata.width).toBe(1600); expect(metadata.height).toBe(800);
+  expect(metadata.format).toBe(format === "avif" ? "heif" : "webp"); expect(result.format).toBe(format === "avif" ? "avif" : "webp"); expect(metadata.width).toBe(1600); expect(metadata.height).toBe(800);
   expect(metadata.exif).toBeUndefined(); expect(result.size).toBeLessThan(MAX_INPUT_BYTES);
 });
 it("normalizes an AVIF whose major brand is mif1", async () => {
@@ -17,7 +17,8 @@ it("normalizes an AVIF whose major brand is mif1", async () => {
   const result = await optimizeImage(bytes, "photo");
   expect(result.width).toBe(100);
   expect(result.height).toBe(60);
-  expect((await sharp(result.bytes).metadata()).format).toBe("webp");
+  expect((await sharp(result.bytes).metadata()).format).toBe("heif");
+  expect(result.format).toBe("avif");
 });
 it("preserves transparent logos, limits to 512 and never enlarges", async () => {
   const result = await optimizeImage(await raster(1024, 512, true).png().toBuffer(), "logo");
@@ -55,4 +56,15 @@ it("uses immutable owner/business paths and cleans storage after metadata failur
   upload.mockResolvedValue({ error: { message: "storage failed" } }); remove.mockClear(); insert.mockClear();
   await expect(storeManagedImage(client as never, "owner", "business", await optimizeImage(await raster(20, 20).png().toBuffer(), "logo"), "Logo")).rejects.toThrow();
   expect(insert).not.toHaveBeenCalled(); expect(remove).not.toHaveBeenCalled();
+});
+it("stores AVIF bytes with a matching immutable path and MIME type", async () => {
+  const upload = vi.fn().mockResolvedValue({ error: null });
+  const insert = vi.fn((_asset: unknown) => ({ select: () => ({ single: async () => ({ data: { id: "asset" }, error: null }) }) }));
+  const client = { storage: { from: () => ({ upload, remove: vi.fn(), getPublicUrl: () => ({ data: { publicUrl: "https://fixture/image.avif" } }) }) }, from: () => ({ insert }) };
+  const avif = await optimizeImage(await raster(20, 20).avif().toBuffer(), "photo");
+  const result = await storeManagedImage(client as never, "owner", "business", avif, "Photo");
+  expect(result.url).toMatch(/\.avif$/);
+  expect(upload.mock.calls[0][0]).toMatch(/^owner\/business\/[a-f0-9-]+\.avif$/);
+  expect(upload.mock.calls[0][2]).toMatchObject({ contentType: "image/avif", upsert: false });
+  expect(insert.mock.calls[0][0]).toMatchObject({ mime_type: "image/avif", size_bytes: avif.size });
 });

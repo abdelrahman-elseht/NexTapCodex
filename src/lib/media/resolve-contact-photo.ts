@@ -15,7 +15,7 @@ export async function resolveContactPhoto(client: SupabaseClient, businessId: st
     // Never fetch arbitrary URLs or accept a different project's storage objects.
     if (!url.startsWith(prefix)) return;
     const path = url.slice(prefix.length);
-    if (!/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.(webp|png|jpe?g)$/i.test(path)) return;
+    if (!/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.(webp|avif|png|jpe?g)$/i.test(path)) return;
     query = query.eq("storage_path", path);
   }
   const { data: asset, error } = await query.maybeSingle();

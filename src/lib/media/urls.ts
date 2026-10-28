@@ -4,11 +4,11 @@ export function isOptimizableImage(source: string, storageOrigin = process.env.N
   if (source.startsWith("/") && !source.startsWith("//") && !/[\\]|(?:\.{2})/.test(source)) return /\.(?:png|jpe?g|webp|avif)(?:\?.*)?$/i.test(source);
   try {
     const url = new URL(source); const origin = new URL(storageOrigin);
-    return url.origin === origin.origin && url.protocol === "https:" && !url.username && !url.password && !url.search && url.pathname.startsWith("/storage/v1/object/public/business-media/") && /\.webp$/i.test(url.pathname);
+    return url.origin === origin.origin && url.protocol === "https:" && !url.username && !url.password && !url.search && url.pathname.startsWith("/storage/v1/object/public/business-media/") && /\.(?:webp|avif)$/i.test(url.pathname);
   } catch { return false; }
 }
 
-export const managedMediaPath = /^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}(?:\.crop-\d{1,4}-\d{1,4}-\d{4})?\.(?:webp|png|jpe?g|contact\.jpg)$/i;
+export const managedMediaPath = /^[a-f0-9-]{36}\/[a-f0-9-]{36}\/[a-f0-9-]{36}(?:\.crop-\d{1,4}-\d{1,4}-\d{4})?\.(?:webp|avif|png|jpe?g|contact\.jpg)$/i;
 /** Preserve persisted snapshot URLs; resolve their bytes through publication-aware access. */
 export function mediaDisplayUrl(source: string, storageOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL || "") {
   try {
