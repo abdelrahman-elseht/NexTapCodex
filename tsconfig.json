@@ -31,6 +31,9 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    ".next-e2e/types/**/*.ts",
+    ".next-e2e/types/**/*.ts",
+    ".next-phase1-build/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
     ".next-e2e/types/**/*.ts"

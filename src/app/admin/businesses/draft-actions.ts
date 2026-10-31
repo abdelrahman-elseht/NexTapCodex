@@ -3,21 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { requireOwner } from "@/lib/auth/owner";
+import { saveContactDraftWorkflow } from "@/lib/business/draft-workflow";
 import { parseDraftPayload, type ParsedDraft } from "@/lib/business/draft";
-import { resolveContactPhoto } from "@/lib/media/resolve-contact-photo";
 import { captureOperationError } from "@/lib/observability/operations";
+import { persistContactDraft } from "@/lib/supabase/contact-draft-persistence";
 
 export async function parseDraft(fd: FormData) {
   return parseDraftPayload(String(fd.get("draft") || "{}"));
 }
 
 async function persistDraft(supabase: Awaited<ReturnType<typeof requireOwner>>["supabase"], draft: ParsedDraft, publish = false) {
-  if (!Number.isSafeInteger(draft.expectedPageRevision) || !Number.isSafeInteger(draft.expectedBusinessRevision)) throw new Error("Reload the editor before saving. Your local edits are preserved.");
-  if (draft.contact?.enabled) await resolveContactPhoto(supabase, draft.businessId, draft.contact, draft.sections);
-  const { data, error } = await supabase.rpc("save_contact_draft", { draft, expected_page_revision: draft.expectedPageRevision, expected_business_revision: draft.expectedBusinessRevision, publish });
-  if (error) throw new Error(error.code === "40001" ? "This draft changed in another session. Your local edits are preserved; reload in another tab to compare." : "Could not save. Check contact fields and retry.");
-  if (!data?.ok || !Number.isSafeInteger(data.pageRevision) || !Number.isSafeInteger(data.businessRevision)) throw new Error("The draft was not committed. Your edits are preserved.");
-  return data as { ok: true; pageRevision: number; businessRevision: number; version?: number };
+  return saveContactDraftWorkflow(draft, publish, (parsedDraft, shouldPublish) => persistContactDraft(supabase, parsedDraft, shouldPublish));
 }
 
 /** Persist a complete local editor draft without redirecting or publishing it. */

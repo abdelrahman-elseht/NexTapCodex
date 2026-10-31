@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { createRequire } from "node:module";
 import sharp from "sharp";
+import { contactProjectionV1Schema } from "@/lib/contracts/contact-projection-v1";
 import { compileContact, contactConfigSchema, emptyContact, type ContactConfig, type ContactProjection } from "@/lib/business/contact";
 import { serializeVCard } from "@/lib/business/vcard";
 import { prepareContactPhoto } from "@/lib/media/contact-photo";
@@ -14,6 +15,14 @@ const config = (): ContactConfig => ({ ...emptyContact(), enabled: true, display
 const contact = (): ContactProjection => compileContact(config(), {})!;
 
 describe("contact configuration and projection", () => {
+  it("validates the published Contact Projection v1 contract and rejects unknown fields or versions", () => {
+    const projection = contact();
+
+    expect(contactProjectionV1Schema.parse(projection)).toEqual(projection);
+    expect(contactProjectionV1Schema.safeParse({ ...projection, version: 2 }).success).toBe(false);
+    expect(contactProjectionV1Schema.safeParse({ ...projection, adminOnly: true }).success).toBe(false);
+  });
+
   it("defaults old snapshots and disabled configurations off", () => {
     expect(compileContact(emptyContact(), {})).toBeUndefined();
   });
@@ -108,5 +117,22 @@ describe("Quick Actions reference placement", () => {
   });
   it("preserves action tiles when Contacts is disabled", () => {
     const html = render([actions()], false); expect(html).toContain("tel:"); expect(html).not.toContain('class="contact-download-button"');
+  });
+});
+
+describe("PublicSnapshot managed images", () => {
+  const renderLogo = (logoUrl: string) => renderToStaticMarkup(React.createElement(PublicSnapshot, {
+    snapshot: { business: { name: "Nivo" }, sections: [{ kind: "hero", title: "", position: 0, enabled: true, content: { logoUrl } }] },
+  }));
+
+  it("renders managed images served by local Supabase over loopback HTTP", () => {
+    const html = renderLogo("http://127.0.0.1:56321/storage/v1/object/public/business-media/business/logo.webp");
+
+    expect(html).toContain('alt="Nivo logo"');
+    expect(html).toContain("127.0.0.1:56321");
+  });
+
+  it("continues to reject non-loopback HTTP images", () => {
+    expect(renderLogo("http://images.example.test/logo.webp")).not.toContain('alt="Nivo logo"');
   });
 });

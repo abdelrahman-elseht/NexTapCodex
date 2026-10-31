@@ -2,6 +2,7 @@ import { z } from "zod";
 import { dialablePhone, phoneTypes, type PhoneType } from "./phone";
 import { isPaymentProvider } from "./providers";
 import { contactCropSchema } from "./contact-crop";
+import type { ContactProjectionV1 } from "@/lib/contracts/contact-projection-v1";
 
 const bytes = (value: string) => new TextEncoder().encode(value).length;
 const text = z.string().max(2000).refine(value => bytes(value) <= 8192 && !/[\u0000-\u0008\u000b-\u001f\u007f]/.test(value), "Use plain text without control characters.");
@@ -20,7 +21,7 @@ export const contactConfigSchema = z.object({
   if (new Set(value.fields.map(field => field.id)).size !== value.fields.length) ctx.addIssue({ code: "custom", path: ["fields"], message: "Contact field IDs must be unique." });
 });
 export type ContactConfig = z.infer<typeof contactConfigSchema>;
-export type ContactProjection = { version: 1; enabled: true; displayName: string; organization: string; primaryPhone: string; primaryPhoneType?: PhoneType; fields: { kind: typeof contactKinds[number]; label: string; value: string; phoneType?: PhoneType }[]; photoPath?: string; showDownloadLink?: boolean };
+export type ContactProjection = ContactProjectionV1;
 export const emptyContact = (): ContactConfig => ({ enabled: false, displayName: "", organization: "", primaryPhone: "", nameFromPage: false, phoneFromPage: false, photoUrl: "", showDownloadLink: true, fields: [] });
 export function contactPhone(value: string) { return dialablePhone(value) ? value : ""; }
 export function contactWeb(value: string) { try { const url = new URL(value); return value.length <= 2048 && !/[\u0000-\u0020\u007f]/.test(value) && ["https:", "http:"].includes(url.protocol) && !url.username && !url.password; } catch { return false; } }

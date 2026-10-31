@@ -5,7 +5,7 @@ const ownerResult = { supabase: {
   rpc: mocks.rpc, from: () => ({ delete: mocks.delete, insert: mocks.insert }),
 } };
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-import { parseDraft, saveDraftState } from "../../src/app/admin/businesses/actions";
+import { parseDraft, publishDraftState, saveDraftState } from "../../src/app/admin/businesses/actions";
 const fd = () => { const form = new FormData(); form.set("draft", JSON.stringify({ businessId: "biz", pageId: "page", name: "QA", expectedPageRevision: 0, expectedBusinessRevision: 0, slug: "qa-test", template: "professional", sections: [{ section_key: "hero_1", kind: "hero", content: {}, enabled: true }] })); return form; };
 beforeEach(() => { vi.clearAllMocks(); mocks.owner.mockResolvedValue(ownerResult); mocks.rpc.mockResolvedValue({ data: { ok: true, pageRevision: 1, businessRevision: 1 }, error: null }); });
 it("preserves unique editor section keys and supports the provider RPC", async () => {
@@ -30,6 +30,16 @@ it("rejects an incomplete committed result without attempting repair", async () 
 it("a network failure never retries with a legacy contract", async () => {
   mocks.rpc.mockResolvedValue({ error: { code: "NETWORK", message: "network unavailable" } });
   expect((await saveDraftState(fd())).ok).toBe(false); expect(mocks.rpc).toHaveBeenCalledTimes(1);
+});
+it("keeps the stale-revision message when the persistence adapter reports a transaction conflict", async () => {
+  mocks.rpc.mockResolvedValue({ error: { code: "40001", message: "private database detail" } });
+  const result = await saveDraftState(fd());
+  expect(result.error).toContain("changed in another session");
+  expect(result.error).not.toContain("private database detail");
+});
+it("passes the publish intent and expected revisions through the existing action", async () => {
+  expect((await publishDraftState(fd())).ok).toBe(true);
+  expect(mocks.rpc.mock.calls[0][1]).toMatchObject({ publish: true, expected_page_revision: 0, expected_business_revision: 0 });
 });
 it("does not expose Next redirect sentinels when authorization redirects", async () => {
   mocks.owner.mockRejectedValue({ digest: "NEXT_REDIRECT;replace;/403;307;", message: "NEXT_REDIRECT" });

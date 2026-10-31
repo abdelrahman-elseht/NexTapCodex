@@ -18,7 +18,16 @@ export type Snapshot = PublicationSnapshot;
 const iconFiles: Record<string, string> = { whatsapp: "whatsapp", facebook: "facebook", instagram: "instagram", tiktok: "tiktok", snapchat: "snapchat", youtube: "youtube", x: "x", twitter: "x", telegram: "telegram", linkedin: "linkedin", talabat: "talabat", fast: "fast", github: "github", behance: "behance", artstation: "artstation", dribbble: "dribbble", medium: "medium", pinterest: "pinterest", messenger: "messenger", google: "google" };
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function validWebUrl(value: unknown) { const source = text(value); if (!safeUrl(source)) return ""; try { return new URL(source).protocol === "https:" ? source : ""; } catch { return ""; } }
-function imageUrl(value: unknown) { const source = text(value); return source.startsWith("/") && !source.startsWith("//") ? source : validWebUrl(source); }
+function imageUrl(value: unknown) {
+  const source = text(value);
+  if (source.startsWith("/") && !source.startsWith("//")) return source;
+  if (!safeUrl(source)) return "";
+  try {
+    const url = new URL(source);
+    const localHttp = url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) && !url.username && !url.password;
+    return url.protocol === "https:" || localHttp ? source : "";
+  } catch { return ""; }
+}
 function phoneUrl(value: unknown) { return typeof value === "string" ? telephoneHref(value) : ""; }
 function isPhoneItem(item: Item) { return ["phone", "call"].includes(providerFor(item)); }
 function hasPhoneDisplay(item: Item) { return isPhoneItem(item) && typeof item.value === "string" && item.value.length > 0; }

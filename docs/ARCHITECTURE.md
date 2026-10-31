@@ -29,6 +29,17 @@ NexTap is a Next.js App Router modular monolith. The source tree is organized by
 | `assets/` | Source artwork and design references; runtime-served files belong in `public/`. |
 | `artifacts/` | Generated screenshots and QA evidence. |
 
+## Cloudflare migration foundation
+
+Approved Main is authoritative for application code and intended schema. Staging must converge to the reviewed Main release through approved promotion and forward migrations; environment configuration and sanitized test data remain isolated. This foundation does not authorize alignment execution.
+
+- [Current architecture audit](architecture/current-architecture.md): verified source/environment flows, security boundaries, deployment compatibility and blockers.
+- [Codebase structure](architecture/codebase-structure.md): actual source layout and proposed dependency boundaries.
+- [Migration plan](migration/migration-plan.md): two-deployment target, publication consistency, cache/revocation, data-copy and performance/cost model.
+- [Migration phases and gates](migration/migration-spec.md): scoped prerequisites, acceptance and rollback through cutover/retirement.
+- [Migration status](migration/migration-status.md): approved baseline, evidence, validation and approval ledger.
+- [Cloudflare platform evidence](research/CLOUDFLARE_WORKERS_PLATFORM_EVIDENCE.md): official platform research checked 2026-10-30.
+
 ## Import and placement rules
 
 - Use the `@/*` alias for imports from `src/`; it resolves to `src/*`.

@@ -19,6 +19,26 @@ it("rejects cross-origin saves before authentication", async () => {
   expect((await POST(request("save", "https://other.example"))).status).toBe(403);
   expect(mocks.claims).not.toHaveBeenCalled();
 });
+it("accepts the browser host when Next reconstructs a local request URL", async () => {
+  const previousVercelEnv = process.env.VERCEL_ENV;
+  process.env.VERCEL_ENV = "development";
+  try {
+    const proxied = request("unknown", "http://127.0.0.1:3137");
+    proxied.headers.set("host", "127.0.0.1:3137");
+    const response = await POST(proxied);
+    expect(response.status).toBe(400);
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.publish).not.toHaveBeenCalled();
+
+    mocks.claims.mockClear();
+    proxied.headers.set("origin", "https://other.example");
+    expect((await POST(proxied)).status).toBe(403);
+    expect(mocks.claims).not.toHaveBeenCalled();
+  } finally {
+    if (previousVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = previousVercelEnv;
+  }
+});
 it("rejects anonymous saves", async () => {
   mocks.claims.mockResolvedValue({ data: null, error: null });
   expect((await POST(request())).status).toBe(401);

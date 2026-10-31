@@ -8,6 +8,7 @@
 - [Integration handover](handovers/INTEGRATION_HANDOFF.md): environment and preproduction integration evidence.
 - [Observability handover](handovers/OBSERVABILITY_HANDOFF.md): telemetry and performance evidence.
 - [Architecture and capacity handoff](handovers/ARCHITECTURE_CAPACITY_HANDOFF.md): read-only schema, request-path, cache, quota, and analytics audit.
+- [Phase 1 closeout handoff](handovers/PHASE1_REMAINING_HANDOFF.md): remaining Phase 1 acceptance review, evidence checks, and status closeout boundaries.
 - [Launch architecture handoff](handovers/LAUNCH_ARCHITECTURE_HANDOFF.md): security, cache parity, analytics, and operational launch gates.
 - [Staging schema reconciliation handoff](handovers/STAGING_SCHEMA_RECONCILIATION_HANDOFF.md): Staging migration history, rollout evidence, and hosted validation gates.
 - [Staging validation and production release handoff](handovers/STAGING_VALIDATION_AND_PRODUCTION_RELEASE_HANDOFF.md): current DNS/TLS and Preview state, remaining Auth and hosted tests, first release, rollback, and ongoing staging workflow.
