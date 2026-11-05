@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "objective": "Repair and verify the Phase 1 integration diff without restarting Phase 1 or implementing Phase 2.",
+  "ownerDecisions": [
+    "Approved base is 230adeca680c0fe7e22b3ece0fd9169764b84ffe.",
+    "Supabase retains core records, Auth, RLS and owner writes.",
+    "Work only in this integration worktree; do not alter the candidate, dirty original main or historical trial.",
+    "Do not commit, push, merge, provision or begin Phase 2."
+  ],
+  "constraints": [
+    "No hosted resources, credentials, schema changes, Production data, DNS, hosting, deployment, or R2 work.",
+    "Do not delete files or dependencies based only on scanner output.",
+    "Never store credentials, secrets, customer content, or raw transcripts here."
+  ],
+  "worktree": "F:/projects/NexTap-contacts-phase1-integration-review",
+  "baseSha": "230adeca680c0fe7e22b3ece0fd9169764b84ffe",
+  "reviewedFiles": [
+    "docs/program/PHASE_1_RECONCILIATION_REVIEW.md",
+    "reports/phase1-integration-repair/README.md",
+    "scripts/continuity/packet.mjs",
+    "scripts/continuity/continuation.mjs",
+    "tests/unit/continuation.test.ts",
+    ".github/workflows/ci.yml",
+    "package.json",
+    "package-lock.json"
+  ],
+  "changedFiles": [
+    "scripts/continuity/",
+    "tests/unit/continuation.test.ts",
+    ".github/workflows/ci.yml",
+    "package.json",
+    "package-lock.json",
+    "reports/mutation/",
+    "reports/phase1-closeout/",
+    "reports/phase1-integration-repair/",
+    "docs/program/",
+    "docs/CODEBOOK.md",
+    "GATES.md",
+    ".agent-continuity/phase-1.json"
+  ],
+  "checks": [
+    {
+      "name": "clean npm install and full lock/installed graphs",
+      "status": "pass",
+      "details": "Stryker 9.6.1 resolves Babel 7.29.13; no unsupported optional peer or added override. Existing unrelated override is unchanged."
+    },
+    {
+      "name": "controlled-clock continuity tests",
+      "status": "pass",
+      "details": "9 tests; historical contract remains valid after expiry while session validation is stale."
+    },
+    {
+      "name": "full unit suite",
+      "status": "pass",
+      "details": "44 files; 290 tests."
+    },
+    {
+      "name": "lint",
+      "status": "pass",
+      "details": "0 errors, 13 warnings."
+    },
+    {
+      "name": "mutation",
+      "status": "pass",
+      "details": "Publication 17/18 killed (94.44%), break 94; inventory 31/31, break 100."
+    },
+    {
+      "name": "runtime audit",
+      "status": "pass",
+      "details": "High threshold passes; five moderate findings remain. Full development-inclusive audit has 14 moderate."
+    },
+    {
+      "name": "identified synthetic browser journey",
+      "status": "pass",
+      "details": "Retained desktop owner-card 1/1; source/fixture inputs unchanged and not rerun."
+    },
+    {
+      "name": "earlier direct desktop/mobile assertions",
+      "status": "unverified",
+      "details": "No retained reports; not claimed independently verified."
+    },
+    {
+      "name": "Codex/Claude host loading and trust",
+      "status": "unverified",
+      "details": "Only contract-shaped local harness evidence is available."
+    },
+    {
+      "name": "publication negative control",
+      "status": "pass",
+      "details": "Fresh Stryker 9.6.1 run exits 1 at 94.44% below 95; accepted configuration remains 94."
+    },
+    {
+      "name": "typecheck and production build",
+      "status": "pass",
+      "details": "Typecheck passes before/after fresh build using test environment, loopback URL and dummy public key."
+    },
+    {
+      "name": "maintenance checks",
+      "status": "pass",
+      "details": "File budgets and dependency metadata pass; Knip report-only findings retained."
+    }
+  ],
+  "unresolved": [
+    "Actual host hook loading and trust remain unverified.",
+    "Earlier direct desktop/mobile assertions have no retained reports; rely on the identified synthetic desktop report."
+  ],
+  "nextAction": "Review the repaired staged diff and final evidence. Land Phase 1 on the intended branch/worktree only in a separately authorized task; Phase 2 is separate.",
+  "updatedAt": "2026-11-05T23:15:37.791Z",
+  "expiresAt": "2026-12-05T00:00:00.000Z"
+}

@@ -1,0 +1,108 @@
+﻿COMMAND: npm run build (NEXTAP_ENV=test, Supabase URL=http://127.0.0.1:56321, dummy publishable key)
+
+> nextap-mvp@1.0.0 build
+> next build
+
+   ▲ Next.js 15.5.28
+   - Experiments (use with caution):
+     · clientTraceMetadata
+
+   Creating an optimized production build ...
+node.exe : <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (215kiB) impacts deserialization 
+performance (consider using Buffer instead and decode when needed)
+At line:1 char:1
++ & "C:\Users\elseh\AppData\Local\pi-node\current/node.exe" "C:\Users\e ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<w> [webpack.ca...de when needed):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ✓ Compiled successfully in 25.1s
+   Linting and checking validity of types ...
+
+./src/app/admin/businesses/[id]/page.tsx
+8:7  Warning: 'labels' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/admin/businesses/_components/business-editor.tsx
+122:341  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/admin/businesses/_components/contact-photo-editor.tsx
+17:127  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+45:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/admin/businesses/_components/image-field.tsx
+61:142  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/admin/businesses/_components/item-editor.tsx
+25:40  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/page.tsx
+10:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/business/payment-logo.tsx
+26:10  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/business/public-snapshot.tsx
+54:20  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/business/social-links.tsx
+31:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/ui/brand-logo.tsx
+5:5  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/15) ...
+   Generating static pages (3/15) 
+   Generating static pages (7/15) 
+   Generating static pages (11/15) 
+ ✓ Generating static pages (15/15)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                         Size  First Load JS
+┌ ƒ /                                              176 B         107 kB
+├ ○ /_not-found                                    186 B         103 kB
+├ ○ /403                                           176 B         107 kB
+├ ƒ /admin                                         167 B         107 kB
+├ ƒ /admin/businesses                            1.71 kB         108 kB
+├ ƒ /admin/businesses/[id]                         25 kB         173 kB
+├ ƒ /admin/businesses/[id]/preview                 206 B         148 kB
+├ ƒ /admin/businesses/new                        1.86 kB         108 kB
+├ ƒ /admin/cards                                 5.21 kB         112 kB
+├ ƒ /admin/cards/batches/[id]                    2.95 kB         109 kB
+├ ƒ /admin/cards/batches/[id]/manufacturing.zip    186 B         103 kB
+├ ƒ /admin/cards/export                            186 B         103 kB
+├ ƒ /api/admin/businesses/contact-preview          186 B         103 kB
+├ ƒ /api/admin/businesses/draft                    186 B         103 kB
+├ ƒ /api/admin/cards/[id]/history                  186 B         103 kB
+├ ƒ /api/admin/cards/assignment                    186 B         103 kB
+├ ƒ /api/admin/cards/deletion                      186 B         103 kB
+├ ƒ /api/admin/media                               186 B         103 kB
+├ ƒ /api/admin/operations                          186 B         103 kB
+├ ƒ /api/deployment                                186 B         103 kB
+├ ƒ /api/media/[...path]                           186 B         103 kB
+├ ƒ /api/sentry-example-api                        186 B         103 kB
+├ ƒ /auth/callback                                 186 B         103 kB
+├ ƒ /auth/signout                                  186 B         103 kB
+├ ƒ /b/[slug]                                      515 B         145 kB
+├ ƒ /b/[slug]/contact.vcf                          186 B         103 kB
+├ ƒ /c/[token]                                     186 B         103 kB
+├ ƒ /c/[token]/contact.vcf                         186 B         103 kB
+├ ƒ /card/unavailable                              176 B         107 kB
+├ ○ /demo                                          206 B         148 kB
+├ ○ /icon.svg                                        0 B            0 B
+├ ƒ /login                                       1.86 kB         108 kB
+└ ƒ /sentry-example-page                           582 B         104 kB
++ First Load JS shared by all                     103 kB
+  ├ chunks/1255-2852a4053a4d747a.js              46.3 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js          54.2 kB
+  └ other shared chunks (total)                  2.48 kB
+
+
+ƒ Middleware                                      135 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+EXIT_CODE=0

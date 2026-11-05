@@ -1,0 +1,9 @@
+﻿COMMAND: npm run test:db:concurrency
+
+> nextap-mvp@1.0.0 test:db:concurrency
+> node scripts/database/test-concurrency.mjs
+
+PASS real PostgreSQL: representative pre-contact draft survives upgrade with Contacts off
+PASS real PostgreSQL: contact contracts and concurrent save/publish reject stale writer
+PASS real PostgreSQL: SQL security contracts; concurrent issuance; creation retry; assignment/delete contention; delete/delete receipt; audit-failure rollback
+EXIT_CODE=0

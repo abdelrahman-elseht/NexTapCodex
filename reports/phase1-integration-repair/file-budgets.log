@@ -1,0 +1,7 @@
+$ npm run check:file-budgets -- --base 230adeca680c0fe7e22b3ece0fd9169764b84ffe
+
+> nextap-mvp@1.0.0 check:file-budgets
+> node scripts/ci/check-file-budgets.mjs --base 230adeca680c0fe7e22b3ece0fd9169764b84ffe
+
+FILE_BUDGETS_OK: 11 changed source file(s), 0 unchanged legacy overage(s).
+exit: 0

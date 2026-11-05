@@ -1,0 +1,34 @@
+﻿COMMAND: npm run check:file-budgets -- --base 230adeca680c0fe7e22b3ece0fd9169764b84ffe
+
+> nextap-mvp@1.0.0 check:file-budgets
+> node scripts/ci/check-file-budgets.mjs --base 230adeca680c0fe7e22b3ece0fd9169764b84ffe
+
+node.exe : warning: in the working copy of '.github/pull_request_template.md', LF will be replaced by CRLF the next 
+time Git touches it
+At line:1 char:1
++ & "C:\Users\elseh\AppData\Local\pi-node\current/node.exe" "C:\Users\e ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of '.github/workflows/ci.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'AGENTS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/ARCHITECTURE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'eslint.config.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/admin/cards/page.tsx', LF will be replaced by CRLF the next time Git touches 
+it
+warning: in the working copy of 'src/app/api/admin/businesses/draft/route.ts', LF will be replaced by CRLF the next 
+time Git touches it
+warning: in the working copy of 'src/lib/business/public-publication.ts', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'tests/e2e/owner-card-journey.e2e.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'tests/unit/draft-route.test.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'tests/unit/public-publication.test.ts', LF will be replaced by CRLF the next time Git 
+touches it
+FILE_BUDGETS_OK: 11 changed source file(s), 0 unchanged legacy overage(s).
+EXIT_CODE=0

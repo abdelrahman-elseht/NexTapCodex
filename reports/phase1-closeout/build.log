@@ -1,0 +1,18 @@
+﻿COMMAND: npm run build
+
+> nextap-mvp@1.0.0 build
+> next build
+
+node.exe :  ⨯ Failed to load next.config.ts, see more info here https://nextjs.org/docs/messages/next-config-error
+At line:1 char:1
++ & "C:\Users\elseh\AppData\Local\pi-node\current/node.exe" "C:\Users\e ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ⨯ Failed to lo...xt-config-error:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> Build error occurred
+Error: A valid NEXT_PUBLIC_SUPABASE_URL is required.
+    at assertSupabaseEnvironment (F:\projects\NexTap-contacts-phase1\src\lib\config\environment.mjs:42:15)
+    at Object.<anonymous> (F:\projects\NexTap-contacts-phase1\next.config.compiled.js:159:44)
+EXIT_CODE=1

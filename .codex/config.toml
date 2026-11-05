@@ -1,0 +1,16 @@
+[[hooks.PreCompact]]
+matcher = "^(manual|auto)$"
+
+[[hooks.PreCompact.hooks]]
+type = "command"
+command = "node scripts/continuity/hook.mjs --platform codex"
+timeout = 3
+
+[[hooks.SessionStart]]
+matcher = "^compact$"
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "node scripts/continuity/hook.mjs --platform codex"
+timeout = 3
+additionalContextLimit = 2500

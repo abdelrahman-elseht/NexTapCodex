@@ -1,0 +1,106 @@
+// Run from the candidate root:
+// Get-Content -Raw reports/phase1-closeout/local-browser-runner.mjs.txt | node --input-type=module
+// Local credentials are loaded into memory, never written to the evidence.
+import fs from "node:fs";
+import { spawnSync } from "node:child_process";
+import { randomBytes, randomUUID } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
+import pg from "pg";
+
+const out = "reports/phase1-closeout";
+const command = "npx --no-install e2e run tests/e2e/owner-card-journey.e2e.ts --config e2e.phase1-closeout.config.ts --target desktop --workers 1 --retries 0 --output reports/phase1-closeout/browser-local";
+const expectedApi = "http://127.0.0.1:56321";
+const config = fs.readFileSync("supabase/config.toml", "utf8");
+if (!config.includes('project_id = "nextap-contacts-local"')) throw new Error("Local project identity mismatch");
+const statusResult = spawnSync("supabase", ["status", "-o", "json"], { encoding: "utf8", windowsHide: true });
+if (statusResult.error || statusResult.status !== 0) throw new Error("Local Supabase status failed");
+const local = JSON.parse(statusResult.stdout);
+if (local.API_URL !== expectedApi) throw new Error("Local API URL mismatch");
+const dbUrl = new URL(local.DB_URL);
+if (dbUrl.hostname !== "127.0.0.1" || dbUrl.port !== "56322") throw new Error("Local database URL mismatch");
+if (!local.SERVICE_ROLE_KEY || !(local.PUBLISHABLE_KEY || local.ANON_KEY)) throw new Error("Local test keys unavailable");
+
+const fixtureId = randomUUID();
+const email = `phase1-closeout-${fixtureId}@example.test`;
+const password = randomBytes(32).toString("base64url");
+const admin = createClient(expectedApi, local.SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+});
+const db = new pg.Client({ connectionString: local.DB_URL });
+await db.connect();
+try {
+  const { rows: versions } = await db.query("select version() as database_version, (select count(*)::int from supabase_migrations.schema_migrations) as applied_migrations");
+  if (versions[0].applied_migrations !== 31) throw new Error("Local migration count mismatch");
+  const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+  if (created.error || !created.data.user) throw new Error("Synthetic local Auth fixture creation failed");
+  const ownerId = created.data.user.id;
+  await db.query("begin");
+  try {
+    await db.query("insert into private.admin_admissions(user_id,role,reason) values($1,'administrator','Synthetic Phase 1 closeout browser fixture; local project only')", [ownerId]);
+    await db.query("insert into public.owner_users(user_id) values($1)", [ownerId]);
+    await db.query("commit");
+  } catch (error) {
+    await db.query("rollback");
+    throw error;
+  }
+  const identity = {
+    capturedAtUtc: new Date().toISOString(),
+    candidateHead: spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).stdout.trim(),
+    branch: "phase1/codebase-foundation",
+    projectId: "nextap-contacts-local",
+    apiOrigin: expectedApi,
+    dbHost: "127.0.0.1",
+    dbPort: 56322,
+    appOrigin: "http://127.0.0.1:3137",
+    fixtureId,
+    syntheticOwnerId: ownerId,
+    syntheticAccountDomain: "example.test",
+    dataPolicy: "Only newly created synthetic records on the already-running loopback Supabase project",
+    ...versions[0],
+    command,
+  };
+  fs.writeFileSync(`${out}/browser-local-identity.json`, JSON.stringify(identity, null, 2) + "\n");
+  const env = {
+    ...process.env,
+    NEXTAP_ENV: "test",
+    NEXT_PUBLIC_SUPABASE_URL: expectedApi,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: local.PUBLISHABLE_KEY || local.ANON_KEY,
+    NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3137",
+    E2E_USER_OWNER_USERNAME: email,
+    E2E_USER_OWNER_PASSWORD: password,
+    E2E_ALLOW_MUTATIONS: "true",
+    SENTRY_DSN: "",
+    NEXT_PUBLIC_SENTRY_DSN: "",
+    SENTRY_AUTH_TOKEN: "",
+    SENTRY_TEST_ERRORS_ENABLED: "0",
+    NEXT_TELEMETRY_DISABLED: "1",
+    DO_NOT_TRACK: "1",
+  };
+  delete env.VERCEL_ENV;
+  fs.writeFileSync(`${out}/browser-local.log`, `COMMAND: ${command}\nLocal target and synthetic fixture: browser-local-identity.json\n`);
+  const log = fs.openSync(`${out}/browser-local.log`, "a");
+  let result;
+  try {
+    result = spawnSync(process.execPath, ["node_modules/e2e/dist/cli/bin.js", "run", "tests/e2e/owner-card-journey.e2e.ts", "--config", "e2e.phase1-closeout.config.ts", "--target", "desktop", "--workers", "1", "--retries", "0", "--output", `${out}/browser-local`], {
+      env, windowsHide: true, stdio: ["ignore", log, log],
+    });
+  } finally { fs.closeSync(log); }
+  identity.exitCode = result.status;
+  identity.finishedAtUtc = new Date().toISOString();
+  const reportPath = `${out}/browser-local/report.json`;
+  if (fs.existsSync(reportPath)) {
+    const report = JSON.parse(fs.readFileSync(reportPath, "utf8")).run;
+    identity.runId = report.id;
+    identity.summary = report.summary;
+  }
+  const appLog = fs.readFileSync(`${out}/browser-local-app.log`, "utf8");
+  const businessIds = [...new Set([...appLog.matchAll(/\/admin\/businesses\/([0-9a-f-]{36})\?created=1/g)].map(match => match[1]))];
+  identity.businesses = (await db.query("select id,name from public.businesses where id=any($1::uuid[]) order by id", [businessIds])).rows;
+  identity.pages = (await db.query("select id,business_id,slug from public.business_pages where business_id=any($1::uuid[]) order by id", [businessIds])).rows;
+  identity.batches = (await db.query("select id,name,quantity from public.card_batches where created_by=$1 order by id", [ownerId])).rows;
+  identity.cards = (await db.query("select c.id,c.batch_id,c.serial,c.status from public.cards c join public.card_batches b on b.id=c.batch_id where b.created_by=$1 order by c.id", [ownerId])).rows;
+  fs.writeFileSync(`${out}/browser-local-identity.json`, JSON.stringify(identity, null, 2) + "\n");
+  fs.appendFileSync(`${out}/browser-local.log`, `\nEXIT_CODE=${result.status}\n`);
+  console.log(JSON.stringify({ command, apiOrigin: expectedApi, fixtureId, ownerId, runId: identity.runId, summary: identity.summary, exitCode: result.status }, null, 2));
+  process.exitCode = result.status ?? 1;
+} finally { await db.end(); }

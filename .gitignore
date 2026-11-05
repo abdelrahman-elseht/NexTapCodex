@@ -13,6 +13,8 @@ coverage
 install.log
 .playwright-mcp/
 .e2e/
+.stryker-tmp/
+stryker.log
 %SystemDrive%/
 artifacts/
 supabase/.temp/

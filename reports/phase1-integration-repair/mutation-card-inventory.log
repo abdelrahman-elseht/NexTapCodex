@@ -1,0 +1,31 @@
+Command: npm.cmd run test:mutation:card-inventory
+Exit code: 0
+
+
+> nextap-mvp@1.0.0 test:mutation:card-inventory
+> stryker run stryker.card-inventory.config.mjs
+
+[32m01:04:58 (17968) INFO ProjectReader[39m Found 1 of 503 file(s) to be mutated.
+[32m01:04:58 (17968) INFO ProjectReader[39m Found 1 test file(s) matching --testFiles patterns.
+[32m01:04:58 (17968) INFO Instrumenter[39m Instrumented 1 source file(s) with 31 mutant(s)
+[32m01:04:59 (17968) INFO ConcurrencyTokenProvider[39m Creating 2 test runner process(es).
+[32m01:05:01 (17968) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "all" coverage analysis). This may take a while.
+[32m01:05:02 (17968) INFO DryRunExecutor[39m Initial test run succeeded. Ran 4 tests in 0 seconds (net 6.89429999999993 ms, overhead 334.10570000000007 ms).
+
+All tests/card-inventory.test.ts
+  ✓ admin card inventory query parsing uses safe defaults when filters are omitted or blank (killed 14)
+  ✓ admin card inventory query parsing keeps valid filters and decodes both pagination cursors (killed 7)
+  ✓ admin card inventory query parsing drops unsafe filters and malformed cursors before they reach PostgREST (killed 8)
+  ✓ admin card inventory query parsing caps raw search lengths while retaining the validated display value (killed 2)
+
+Ran 1.74 tests per mutant on average.
+-------------------|------------------|----------|-----------|------------|----------|----------|
+                   | % Mutation score |          |           |            |          |          |
+File               |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+-------------------|--------|---------|----------|-----------|------------|----------|----------|
+All files          | 100.00 |  100.00 |       31 |         0 |          0 |        0 |        0 |
+ card-inventory.ts | 100.00 |  100.00 |       31 |         0 |          0 |        0 |        0 |
+-------------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m01:05:29 (17968) INFO MutationTestReportHelper[39m Final mutation score of 100.00 is greater than or equal to break threshold 100
+[32m01:05:29 (17968) INFO JsonReporter[39m Your report can be found at: file:///F:/projects/NexTap-contacts-phase1-integration-review/reports/mutation/card-inventory.json
+[32m01:05:29 (17968) INFO MutationTestExecutor[39m Done in 31 seconds.

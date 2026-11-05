@@ -10,12 +10,10 @@ import { CopyNfcUrl } from "@/components/admin/copy-nfc-url";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { CardHistory } from "./_components/card-history";
-import { ADMIN_PAGE_SIZE, cursorFilter, cursorForRow, decodePageCursor, encodePageCursor, pageUrl } from "@/lib/admin/pagination";
+import { pageUrl } from "@/lib/admin/pagination";
+import { loadCardInventory } from "@/lib/admin/card-inventory";
 
 export const dynamic = "force-dynamic";
-
-const cardStatuses = ["unassigned", "active", "disabled", "replaced"] as const;
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export default async function Cards({
   searchParams,
@@ -24,80 +22,13 @@ export default async function Cards({
 }) {
   const query = await searchParams;
   const { supabase } = await requireOwner();
+  const inventory = await loadCardInventory(supabase, query);
   const requestOrigin = getCardOrigin(undefined, await headers());
-  const searchText = (query.search || "").trim().slice(0, 64);
-  const searchIsSafe = !searchText || /^[A-Za-z0-9_-]+$/.test(searchText);
-  const search = searchIsSafe ? searchText : "";
-  const status = cardStatuses.includes(query.status as (typeof cardStatuses)[number])
-    ? query.status
-    : "";
-  const batchId = query.batch && uuidPattern.test(query.batch) ? query.batch : "";
-  const pageId = query.page_id && uuidPattern.test(query.page_id) ? query.page_id : "";
-  const pageSearch = (query.page_search || "").trim().slice(0, 80);
-  const batchDirection = query.batch_direction === "previous" ? "previous" : "next";
-  const batchCursor = decodePageCursor(query.batch_cursor);
-  const direction = query.direction === "previous" ? "previous" : "next";
-  const cursor = decodePageCursor(query.cursor);
-
-  let batchQuery = supabase.from("card_batches").select("id,name,quantity,batch_code,created_at,cards(count)")
-    .order("created_at", { ascending: batchDirection === "previous" }).order("id", { ascending: batchDirection === "previous" }).limit(ADMIN_PAGE_SIZE + 1);
-  if (batchCursor) batchQuery = batchQuery.or(cursorFilter(batchCursor, batchDirection));
-  const [{ data: batches }, { data: pages }] = await Promise.all([
-    batchQuery,
-    supabase.from("business_pages").select("id,slug,branch_name,is_active,published_snapshot_id,businesses!inner(name,status)").ilike("slug", `%${pageSearch.replace(/[%_]/g, "")}%`).order("slug").limit(101),
-  ]);
-  let batchRows = batches || [];
-  const batchesHasMore = batchRows.length > ADMIN_PAGE_SIZE;
-  if (batchesHasMore) batchRows = batchRows.slice(0, ADMIN_PAGE_SIZE);
-  if (batchDirection === "previous") batchRows.reverse();
-  if (batchId && !batchRows.some((batch: any) => batch.id === batchId)) {
-    const { data: selectedBatch } = await supabase.from("card_batches").select("id,name,quantity,batch_code,created_at,cards(count)").eq("id", batchId).maybeSingle();
-    if (selectedBatch) batchRows = [selectedBatch, ...batchRows];
-  }
-  const firstBatch = batchRows[0];
-  const lastBatch = batchRows[batchRows.length - 1];
-  const nextBatchesHref = batchesHasMore && lastBatch ? pageUrl("/admin/cards", { search: search || undefined, status: status || undefined, batch: batchId || undefined, page_id: pageId || undefined, batch_cursor: encodePageCursor(cursorForRow(lastBatch)), batch_direction: "next" }) : undefined;
-  const previousBatchesHref = batchCursor && firstBatch ? pageUrl("/admin/cards", { search: search || undefined, status: status || undefined, batch: batchId || undefined, page_id: pageId || undefined, batch_cursor: encodePageCursor(cursorForRow(firstBatch)), batch_direction: "previous" }) : undefined;
-
-  let cardQuery = supabase
-    .from("cards")
-    .select("id,serial,token,page_id,batch_id,status,created_at")
-    .order("created_at", { ascending: direction === "previous" })
-    .order("id", { ascending: direction === "previous" })
-    .limit(ADMIN_PAGE_SIZE + 1);
-
-  if (search) {
-    // The search alphabet excludes PostgREST filter syntax characters.
-    cardQuery = cardQuery.or(`serial.ilike.%${search}%,token.ilike.%${search}%`);
-  }
-  if (status) cardQuery = cardQuery.eq("status", status);
-  if (batchId) cardQuery = cardQuery.eq("batch_id", batchId);
-  if (pageId) cardQuery = cardQuery.eq("page_id", pageId);
-  if (cursor) cardQuery = cardQuery.or(cursorFilter(cursor, direction));
-
-  const { data: cards } = await cardQuery;
-  let cardRows = cards || [];
-  const cardsHasMore = cardRows.length > ADMIN_PAGE_SIZE;
-  if (cardsHasMore) cardRows = cardRows.slice(0, ADMIN_PAGE_SIZE);
-  if (direction === "previous") cardRows.reverse();
-  let allPages = (pages || []) as any[];
-  const visiblePageIds = new Set(cardRows.map((card: any) => card.page_id).filter(Boolean));
-  const missingPageIds = [...visiblePageIds].filter((id) => !allPages.some((page) => page.id === id));
-  if (missingPageIds.length) {
-    const { data: assignedPages } = await supabase.from("business_pages").select("id,slug,branch_name,is_active,published_snapshot_id,businesses!inner(name,status)").in("id", missingPageIds);
-    allPages = allPages.concat(assignedPages || []);
-  }
-  const pageFilterParams = { search: search || undefined, status: status || undefined, batch: batchId || undefined, page_id: pageId || undefined, page_search: pageSearch || undefined };
-  const eligiblePages = allPages.filter((page: any) =>
-    page.is_active && page.published_snapshot_id && page.businesses?.status === "active",
-  );
-  const pageById = new Map(allPages.map((page: any) => [page.id, page]));
-  const filtersActive = Boolean(search || status || batchId || pageId);
-  const firstCard = cardRows[0];
-  const lastCard = cardRows[cardRows.length - 1];
-  const cardFilters = pageFilterParams;
-  const nextCardsHref = cardsHasMore && lastCard ? pageUrl("/admin/cards", { ...cardFilters, cursor: encodePageCursor(cursorForRow(lastCard)), direction: "next" }) : undefined;
-  const previousCardsHref = cursor && firstCard ? pageUrl("/admin/cards", { ...cardFilters, cursor: encodePageCursor(cursorForRow(firstCard)), direction: "previous" }) : undefined;
+  const {
+    searchText, searchIsSafe, status, batchId, pageId, pageSearch, batchCursor, cursor,
+    batchRows, nextBatchesHref, previousBatchesHref, cardRows, allPages, eligiblePages, pageById,
+    cardFilters, filtersActive, nextCardsHref, previousCardsHref,
+  } = inventory;
   const errorMessages: Record<string, string> = {
     name: "اكتب اسماً صالحاً للدفعة.",
     quantity: "اختر كمية بين 1 و1,000 بطاقة.",

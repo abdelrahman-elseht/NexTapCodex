@@ -1,0 +1,45 @@
+Command: npm.cmd run test:mutation:publication
+Exit code: 0
+
+
+> nextap-mvp@1.0.0 test:mutation:publication
+> stryker run stryker.config.mjs
+
+[32m01:04:37 (15448) INFO ProjectReader[39m Found 1 of 501 file(s) to be mutated.
+[32m01:04:37 (15448) INFO ProjectReader[39m Found 1 test file(s) matching --testFiles patterns.
+[32m01:04:37 (15448) INFO Instrumenter[39m Instrumented 1 source file(s) with 18 mutant(s)
+[32m01:04:38 (15448) INFO ConcurrencyTokenProvider[39m Creating 2 test runner process(es).
+[32m01:04:40 (15448) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "all" coverage analysis). This may take a while.
+[32m01:04:41 (15448) INFO DryRunExecutor[39m Initial test run succeeded. Ran 7 tests in 0 seconds (net 11.212400000000116 ms, overhead 457.7875999999999 ms).
+
+All tests/public-publication.test.ts
+  ✓ public publication resolver resolves the live pointer, then reads the immutable snapshot (killed 4)
+  ✓ public publication resolver falls back to the existing live RPC when the snapshot read misses (killed 2)
+  ✓ public publication resolver does not attempt a snapshot read when the live pointer is absent (killed 6)
+  ~ public publication resolver falls back when a pointer contains a malformed publication id (covered 12)
+  ✓ public publication resolver reports a pointer error when compatibility fallback also fails (killed 1)
+  ✓ public publication resolver reuses compatibility fallback after the pointer RPC is unavailable (killed 4)
+  ✘ public publication resolver rejects malformed and overlong slugs before touching Supabase (covered 0)
+
+[Survived] ConditionalExpression
+src/lib/business/public-publication.ts:51:9
+-       if (pointerResult.error) pointerError = pointerResult.error;
++       if (true) pointerError = pointerResult.error;
+Tests ran:
+    public publication resolver falls back to the existing live RPC when the snapshot read misses
+    public publication resolver does not attempt a snapshot read when the live pointer is absent
+    public publication resolver falls back when a pointer contains a malformed publication id
+  and 2 more tests!
+
+
+Ran 2.33 tests per mutant on average.
+-----------------------|------------------|----------|-----------|------------|----------|----------|
+                       | % Mutation score |          |           |            |          |          |
+File                   |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+-----------------------|--------|---------|----------|-----------|------------|----------|----------|
+All files              |  94.44 |   94.44 |       17 |         0 |          1 |        0 |        0 |
+ public-publication.ts |  94.44 |   94.44 |       17 |         0 |          1 |        0 |        0 |
+-----------------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m01:04:56 (15448) INFO MutationTestReportHelper[39m Final mutation score of 94.44 is greater than or equal to break threshold 94
+[32m01:04:56 (15448) INFO JsonReporter[39m Your report can be found at: file:///F:/projects/NexTap-contacts-phase1-integration-review/reports/mutation/public-publication.json
+[32m01:04:56 (15448) INFO MutationTestExecutor[39m Done in 18 seconds.

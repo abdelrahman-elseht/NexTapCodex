@@ -1,0 +1,16 @@
+Command: npm.cmd test -- --run tests/unit/continuation.test.ts
+Exit code: 0
+
+
+> nextap-mvp@1.0.0 test
+> vitest run --run tests/unit/continuation.test.ts
+
+
+ RUN  v4.1.12 F:/projects/NexTap-contacts-phase1-integration-review
+
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  01:16:04
+   Duration  2.04s (transform 46ms, setup 0ms, import 72ms, tests 1.75s, environment 0ms)
+

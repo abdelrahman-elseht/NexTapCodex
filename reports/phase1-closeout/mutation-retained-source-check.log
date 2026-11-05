@@ -1,0 +1,5 @@
+﻿COMMAND: compare retained JSON files[].source against normalized current source; count mutant statuses
+{"path":"reports/mutation/public-publication.json","sourceMatches":true,"thresholds":{"high":95,"low":94,"break":94},"statuses":{"Killed":17,"Survived":1},"version":"10.1.1"}
+{"path":"reports/mutation/card-inventory.json","sourceMatches":true,"thresholds":{"high":100,"low":99,"break":100},"statuses":{"Killed":31},"version":"10.1.1"}
+{"path":"reports/phase1-closeout/stryker-negative-control.json","sourceMatches":true,"thresholds":{"high":95,"low":94,"break":95},"statuses":{"Killed":17,"Survived":1},"version":"10.1.1"}
+EXIT_CODE=0

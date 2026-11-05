@@ -1,6 +1,13 @@
 # Documentation index
 
 - [Architecture and repository map](ARCHITECTURE.md): where to locate code and place new modules.
+- [Codebook](CODEBOOK.md): module ownership, runtime/import rules, verification, budgets and safe removal.
+- [Migration program PRD](program/NEXTAP_MIGRATION_PROGRAM_PRD.md): owner decisions, phase boundaries and current verified status.
+- [Phase 1 foundation packet](program/PHASE_1_CODEBASE_FOUNDATION.md): accepted Phase 1 scope and exit evidence.
+- [Phase 1 implementation tasks](program/phase-1-tasks/README.md): ordered, task-sized implementation packets and acceptance gates.
+- [Phase 1 reconciliation review](program/PHASE_1_RECONCILIATION_REVIEW.md): independent baseline review and integration decisions.
+- [Phase 1 closeout evidence](../reports/phase1-closeout/README.md): exact candidate checks, mutation control and local synthetic browser evidence.
+- [Project-local Codex hooks setup prompt](program/CODEX_PROJECT_HOOKS_SETUP_PROMPT.md): configure narrow lifecycle hooks, deterministic lint/check evidence and bounded task continuity without repeatedly loading full documents.
 - [Known issues and regression guards](KNOWN_ISSUES.md): recurring failure modes and the checks that prevent them returning.
 - [Product contract](product/PRODUCT.md): product behavior and constraints.
 - [User and admin stories](specs/USER_ADMIN_STORIES.md): acceptance criteria and corresponding browser journeys.
@@ -22,6 +29,7 @@
 - [Admin UX, card deletion, provider links and mobile email handoff](handovers/ADMIN_UX_CARD_DELETION_PROVIDER_EMAIL_HANDOFF.md): feature scope, acceptance criteria, database/browser guardrails, and promotion sequence.
 - [Implementation reports](implementation/): detailed reports for completed changes.
 - [Research](research/): provider documentation and technical findings.
+- [Phase 1 hook contract research](research/PHASE_1_HOOK_CONTRACTS.md): current Codex and Claude compact/resume hook contracts and their tested limits.
 
 `handovers/` preserves dated reports and task instructions. Use current source, configuration, and test results to establish present behavior; historical reports retain their original dates and verification scope. Add new handovers here and link them from this index when they supersede existing operational guidance.
 

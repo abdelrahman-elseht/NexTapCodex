@@ -1,0 +1,15 @@
+﻿COMMAND: npm test -- --run
+
+> nextap-mvp@1.0.0 test
+> vitest run --run
+
+
+ RUN  v4.1.12 F:/projects/NexTap-contacts-phase1
+
+
+ Test Files  44 passed (44)
+      Tests  286 passed (286)
+   Start at  19:44:06
+   Duration  14.93s (transform 5.15s, setup 0ms, import 49.26s, tests 25.23s, environment 8ms)
+
+EXIT_CODE=0

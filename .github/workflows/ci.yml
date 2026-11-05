@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
       NEXTAP_ENV: test
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
@@ -27,6 +28,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -36,6 +39,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check changed-file budgets
+        run: npm run check:file-budgets -- --base "$BASE_SHA"
+
+      - name: Report changed dependency status
+        run: npm run check:dependency-status -- --base "$BASE_SHA"
+
+      - name: Report unused-code candidates
+        run: npm run check:knip
 
       - name: Runtime dependency security
         run: npm audit --omit=dev --audit-level=high
@@ -51,6 +63,15 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      - name: Focused public publication mutation ratchet
+        run: npm run test:mutation:publication
+
+      - name: Focused admin card inventory mutation ratchet
+        run: npm run test:mutation:card-inventory
+
+      - name: Validate committed continuation packet contract
+        run: node scripts/continuity/continuation.mjs validate-contract
 
       - name: Migration and RLS contracts (disposable PostgreSQL)
         run: npm run test:db

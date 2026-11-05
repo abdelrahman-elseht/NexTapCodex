@@ -1,0 +1,6 @@
+{
+  "command": "Compare evidence bytes to local private key/database URL values in memory; print paths only",
+  "filesScanned": 34,
+  "filesContainingPrivateValues": [],
+  "exitCode": 0
+}

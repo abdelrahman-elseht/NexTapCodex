@@ -1,0 +1,11 @@
+﻿Command: Get-Content -LiteralPath 'reports/phase1-integration-repair/future-clock-runner.mjs.txt' -Raw | node --input-type=module
+Exit code: 0
+Executable: C:\Users\elseh\AppData\Local\pi-node\current\node.exe
+Arguments: ["--import","data:text/javascript,const%20RealDate%20%3D%20Date%3B%20globalThis.Date%20%3D%20class%20extends%20RealDate%20%7B%0A%20%20constructor(...args)%20%7B%20super(...(args.length%20%3F%20args%20%3A%20%5B%222030-01-01T00%3A00%3A00.000Z%22%5D))%3B%20%7D%0A%20%20static%20now()%20%7B%20return%20new%20RealDate(%222030-01-01T00%3A00%3A00.000Z%22).getTime()%3B%20%7D%0A%7D%3B","scripts/continuity/continuation.mjs","validate-contract"]
+Exit code: 0
+valid
+Executable: C:\Users\elseh\AppData\Local\pi-node\current\node.exe
+Arguments: ["--import","data:text/javascript,const%20RealDate%20%3D%20Date%3B%20globalThis.Date%20%3D%20class%20extends%20RealDate%20%7B%0A%20%20constructor(...args)%20%7B%20super(...(args.length%20%3F%20args%20%3A%20%5B%222030-01-01T00%3A00%3A00.000Z%22%5D))%3B%20%7D%0A%20%20static%20now()%20%7B%20return%20new%20RealDate(%222030-01-01T00%3A00%3A00.000Z%22).getTime()%3B%20%7D%0A%7D%3B","scripts/continuity/continuation.mjs","validate"]
+Exit code: 1
+stale
+Controlled-clock assertions: PASS

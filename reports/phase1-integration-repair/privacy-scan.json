@@ -1,0 +1,60 @@
+{
+  "purpose": "Sanitized audit of excluded unidentified-target browser artifacts and retained integration evidence",
+  "excludedInputs": [
+    "historical unidentified-target browser application log",
+    "historical unidentified-target browser report JSON",
+    "local lookup log containing unidentified database identifiers"
+  ],
+  "inspection": {
+    "unidentifiedReportParsed": true,
+    "unidentifiedApplicationLogInspected": true,
+    "fixtureLookupLogInspected": true,
+    "identifiedSyntheticReportParsed": true
+  },
+  "identifierComparison": {
+    "method": "Extract UUIDs, batch/page/page_search query values, preproduction labels and card-route components from the excluded inputs into memory; compare values of at least eight characters, case-insensitively, against documentation and evidence text. Values are neither retained nor printed.",
+    "workingTreeFilesScanned": 126,
+    "matchingFiles": 0,
+    "scope": "Readable tracked and untracked documentation and report files in the integration worktree; excludes the removed inputs. This working-tree scan preceded the final staged-index scan."
+  },
+  "secretPatterns": {
+    "scope": "Staged documentation and report files at the initial review, excluding the three historical inputs",
+    "patterns": [
+      "JWT",
+      "private-key header",
+      "password-bearing PostgreSQL URL",
+      "bearer token",
+      "AWS access-key format"
+    ],
+    "matchingFiles": 0
+  },
+  "syntheticReport": {
+    "loopbackUrlCount": 2,
+    "sensitiveNamedCredentialFields": 0,
+    "note": "Token-named fields refer to model token usage and limits."
+  },
+  "limitations": [
+    "Pattern and exact-value matching cannot prove that all private values are absent.",
+    "The original target was not identified; its report and logs are not evidence of the later local synthetic run.",
+    "The historical candidate input fingerprint describes the pre-repair candidate, not the repaired integration tree."
+  ],
+  "finalStagedScan": {
+    "pathsScanned": 123,
+    "scope": "All paths in the staged diff, including documentation, reports, source and configuration. The large lockfile was scanned in consecutive 1000-line chunks.",
+    "matchingExtractedIdentifierFiles": 0,
+    "matchingSecretPatternFiles": 0,
+    "unreadableFiles": 0,
+    "excludedHistoricalPathsPresent": 0,
+    "excludedHistoricalPathsChecked": 3,
+    "excludedArtifactHashOrUnchangedAssertionFieldsInPublishedIdentityCopies": 0,
+    "sanitizedCopyNotesPresent": true,
+    "secretPatterns": [
+      "JWT",
+      "private-key header",
+      "password-bearing PostgreSQL URL",
+      "bearer token",
+      "AWS access-key format"
+    ],
+    "limitations": "Exact-value and pattern matching do not prove the absence of every possible private value."
+  }
+}

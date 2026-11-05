@@ -1,0 +1,85 @@
+{
+  "capturedAtUtc": "2026-11-05T18:05:45.659Z",
+  "candidateHead": "230adeca680c0fe7e22b3ece0fd9169764b84ffe",
+  "branch": "phase1/codebase-foundation",
+  "projectId": "nextap-contacts-local",
+  "apiOrigin": "http://127.0.0.1:56321",
+  "dbHost": "127.0.0.1",
+  "dbPort": 56322,
+  "appOrigin": "http://127.0.0.1:3137",
+  "fixtureId": "d3560d47-1ea7-41ec-b9c9-7ee8a71e1be5",
+  "syntheticOwnerId": "6c8d32a0-e70f-4784-9a98-49c4e71b936d",
+  "syntheticAccountDomain": "example.test",
+  "dataPolicy": "Only newly created synthetic records on the already-running loopback Supabase project",
+  "database_version": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+  "applied_migrations": 31,
+  "command": "npx --no-install e2e run tests/e2e/owner-card-journey.e2e.ts --config e2e.phase1-closeout.config.ts --target desktop --workers 1 --retries 0 --output reports/phase1-closeout/browser-local",
+  "exitCode": 0,
+  "finishedAtUtc": "2026-11-05T18:07:03.165Z",
+  "runId": "01a1ace3-6598-78ce-8232-a3cb95675fdc",
+  "summary": {
+    "discovered": 45,
+    "selected": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "interrupted": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "businesses": [
+    {
+      "id": "4c62f2c4-a8a2-4e1b-9620-90a5cedd0ade",
+      "name": "E2E Target mw3ux1ix-g53o0"
+    },
+    {
+      "id": "97373b3e-f31a-4a49-855f-041e08333a2d",
+      "name": "E2E Renamed mw3ux1ix-g53o0"
+    }
+  ],
+  "pages": [
+    {
+      "id": "7c16dc38-6a8d-42c7-a8f5-df8f4cb50594",
+      "business_id": "97373b3e-f31a-4a49-855f-041e08333a2d",
+      "slug": "e2e-renamed-mw3ux1ix-g53o0"
+    },
+    {
+      "id": "f5ef0b26-6cda-4092-99cb-c40eeebfcb63",
+      "business_id": "4c62f2c4-a8a2-4e1b-9620-90a5cedd0ade",
+      "slug": "e2e-target-mw3ux1ix-g53o0"
+    }
+  ],
+  "batches": [
+    {
+      "id": "80d0f3a1-b2d9-42d7-bef0-76b280f365c6",
+      "name": "E2E batch mw3ux1ix-g53o0",
+      "quantity": 1
+    }
+  ],
+  "cards": [
+    {
+      "id": "f8aecbfc-e245-4d02-9560-a32a4661762e",
+      "batch_id": "80d0f3a1-b2d9-42d7-bef0-76b280f365c6",
+      "serial": "NT-20261105-000001",
+      "status": "disabled"
+    }
+  ],
+  "actualExecutable": "C:\\Users\\elseh\\AppData\\Local\\pi-node\\current\\node.exe",
+  "actualArguments": [
+    "node_modules/e2e/dist/cli/bin.js",
+    "run",
+    "tests/e2e/owner-card-journey.e2e.ts",
+    "--config",
+    "e2e.phase1-closeout.config.ts",
+    "--target",
+    "desktop",
+    "--workers",
+    "1",
+    "--retries",
+    "0",
+    "--output",
+    "reports/phase1-closeout/browser-local"
+  ],
+  "commandIsEquivalentNpxSpelling": true,
+  "parentInvocation": "Get-Content -LiteralPath 'reports/phase1-closeout/local-browser-runner.mjs.txt' -Raw | node --input-type=module"
+}

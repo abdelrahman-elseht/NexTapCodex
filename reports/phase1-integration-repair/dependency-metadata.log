@@ -1,0 +1,26 @@
+Dependency reconciliation, 2026-11-05
+Runtime: node v22.23.2; npm 10.9.8.
+
+Registry metadata commands:
+  npm view @stryker-mutator/core@9.6.1 version license deprecated engines dist.integrity --json
+  npm view @stryker-mutator/vitest-runner@9.6.1 version license deprecated engines peerDependencies dist.integrity --json
+  npm view @stryker-mutator/instrumenter@9.6.1 version license deprecated engines dependencies.@babel/core --json
+  npm view @sentry/bundler-plugins@11.6.0 peerDependencies peerDependenciesMeta --json
+Results: core 9.6.1 Apache-2.0, node >=20; vitest-runner 9.6.1 Apache-2.0, node >=14.18, peers core 9.6.1 and vitest >=2; instrumenter 9.6.1 Apache-2.0, node >=20, depends on @babel/core ~7.29.0. Registry returned no deprecated field for these versions. Locked Sentry bundler plugin declares optional @babel/core ^7.18.5. Babel 7.29.13 satisfies both ranges. All selected direct versions are exact pins; no Babel override or compatibility exception was introduced.
+
+  npm install --package-lock-only --save-dev --save-exact --ignore-scripts --no-audit --no-fund @stryker-mutator/core@9.6.1 @stryker-mutator/vitest-runner@9.6.1
+Exit 0. Lock graph regenerated.
+  npm ls --package-lock-only --all --offline --loglevel=error
+Exit 0. Complete output: full-lock-graph.log.
+  npm audit --package-lock-only --json
+Exit 1: 14 moderate, 0 high, 0 critical at this registry advisory snapshot. Complete output: dependency-audit.json. This all-dependency audit includes development dependencies and is not comparable to the original production-only closeout audit. Stryker core and runner are affected through minimatch; npm reports no available fix for that dependency path. The moderate findings require continued tracking; no high or critical finding was reported.
+
+  npm view @stryker-mutator/instrumenter@10.0.0 dependencies.@babel/core --json
+Result: ~8.0.0, which does not satisfy the Sentry peer. Version 9.6.1 is the latest 9.x registry release returned by npm view @stryker-mutator/core@9 version --json.
+
+  npm ci --no-audit --no-fund
+Exit 0; 625 packages added. npm reported existing eslint@9.35.0 deprecation; see npm-ci.log.
+  npm ls --all --offline --loglevel=error
+Exit 0; see installed-graph.log. The lock-only graph was rerun after npm ci and exited 0.
+  npm audit --omit=dev --audit-level=high
+Exit 0; five moderate, no high or critical vulnerabilities in production scope. See production-audit.log. The full 14-moderate result above includes development dependencies, and is not directly comparable with the production-only audit.

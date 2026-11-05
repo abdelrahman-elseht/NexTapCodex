@@ -16,8 +16,26 @@ beforeEach(() => {
   mocks.save.mockResolvedValue({ ok: true }); mocks.publish.mockResolvedValue({ ok: true, version: 1 });
 });
 it("rejects cross-origin saves before authentication", async () => {
-  expect((await POST(request("save", "https://other.example"))).status).toBe(403);
+  const crossOrigin = request("save", "https://other.example");
+  crossOrigin.headers.set("host", "localhost:3137");
+  expect((await POST(crossOrigin)).status).toBe(403);
   expect(mocks.claims).not.toHaveBeenCalled();
+});
+it("accepts the browser host when Next reconstructs a localhost URL", async () => {
+  const proxied = request("save", "http://127.0.0.1:3137");
+  proxied.headers.set("host", "127.0.0.1:3137");
+  expect((await POST(proxied)).status).toBe(200);
+});
+it("does not trust the host header in hosted environments", async () => {
+  vi.stubEnv("NEXTAP_ENV", "staging");
+  try {
+    const forged = request("save", "https://attacker.example");
+    forged.headers.set("host", "attacker.example");
+    expect((await POST(forged)).status).toBe(403);
+    expect(mocks.claims).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });
 it("rejects anonymous saves", async () => {
   mocks.claims.mockResolvedValue({ data: null, error: null });

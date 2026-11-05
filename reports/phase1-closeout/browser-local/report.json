@@ -1,0 +1,2719 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a1ace3-6598-78ce-8232-a3cb95675fdc",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.18.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-11-05T18:05:48.696Z",
+    "finishedAt": "2026-11-05T18:07:03.109Z",
+    "project": {
+      "id": "nextap-mvp",
+      "configDigest": "12cc006a457496ebd8d00041760c88727b89ac7299018ae5db04ca26fa2581d2"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "win32 10.0.19045",
+      "arch": "x64",
+      "runtime": "node v22.23.2"
+    },
+    "vcs": {
+      "commit": "230adeca680c0fe7e22b3ece0fd9169764b84ffe",
+      "branch": "phase1/codebase-foundation",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "desktop",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:3137",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.13.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      },
+      {
+        "id": "mobile",
+        "index": 1,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:3137",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.13.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "1ff4f17406058bf126fc4a63dfb0aaec8ca8a6496c69965ec629afa6af92580d",
+        "testId": "tests/e2e/admin-mutation-recovery.e2e.ts::rejected%20and%20interrupted%20admin%20mutations%20retain%20work%20and%20retry%20identity",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "rejected and interrupted admin mutations retain work and retry identity"
+        ],
+        "file": "tests/e2e/admin-mutation-recovery.e2e.ts",
+        "source": {
+          "file": "tests/e2e/admin-mutation-recovery.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f392b3ac310c0ba3e6334d45660f143b80ec448e9f67a79e4357832faf195c29",
+        "testId": "tests/e2e/admin-mutation-recovery.e2e.ts::lost%20creation%20response%20retries%20one%20committed%20batch%20without%20a%20document%20reload",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "lost creation response retries one committed batch without a document reload"
+        ],
+        "file": "tests/e2e/admin-mutation-recovery.e2e.ts",
+        "source": {
+          "file": "tests/e2e/admin-mutation-recovery.e2e.ts",
+          "line": 46,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d7e71b5d52466d37be6ce866f201b2c25da9aa6d12b97bfc1720fba09881db22",
+        "testId": "tests/e2e/admin-no-reload.e2e.ts::inventory%20filters%20preserve%20document%2C%20draft%20and%20explicit%20selection",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "inventory filters preserve document, draft and explicit selection"
+        ],
+        "file": "tests/e2e/admin-no-reload.e2e.ts",
+        "source": {
+          "file": "tests/e2e/admin-no-reload.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9db198e80fb624e29af737e912c8497c1368bee43fca216de0c005b45b0e48ba",
+        "testId": "tests/e2e/admin-no-reload.e2e.ts::assignment%20and%20disable%20preserve%20document%2C%20history%20and%20unrelated%20work",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "assignment and disable preserve document, history and unrelated work"
+        ],
+        "file": "tests/e2e/admin-no-reload.e2e.ts",
+        "source": {
+          "file": "tests/e2e/admin-no-reload.e2e.ts",
+          "line": 26,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ed97154744acab96756d7cb994a000660c2e381d733fef6abb24352c132816de",
+        "testId": "tests/e2e/admin-no-reload.e2e.ts::page%20activation%20preserves%20an%20unsaved%20business%20editor%20draft",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "page activation preserves an unsaved business editor draft"
+        ],
+        "file": "tests/e2e/admin-no-reload.e2e.ts",
+        "source": {
+          "file": "tests/e2e/admin-no-reload.e2e.ts",
+          "line": 61,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "0427f03d5de4742605759cb07209693c32ee8a23c95896d94a49065b37165f36",
+        "testId": "tests/e2e/admin-reordering.e2e.ts::an%20owner%20can%20reorder%20sections%2C%20save%20them%2C%20and%20keep%20the%20order%20on%20reload",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "an owner can reorder sections, save them, and keep the order on reload"
+        ],
+        "file": "tests/e2e/admin-reordering.e2e.ts",
+        "source": {
+          "file": "tests/e2e/admin-reordering.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1c47d651c4be68325fe7b4b3a6eac6c1925257f41ddfb9dc6c21689694b6b2d7",
+        "testId": "tests/e2e/auth-refresh.e2e.ts::expired%20cookie%20sessions%20refresh%20on%20admin%20routes%20and%20sign-out%20removes%20owner%20access",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "expired cookie sessions refresh on admin routes and sign-out removes owner access"
+        ],
+        "file": "tests/e2e/auth-refresh.e2e.ts",
+        "source": {
+          "file": "tests/e2e/auth-refresh.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2344b4236b3b0798994e03e009e6a00e55ae515d78762909f2d9eed073f10108",
+        "testId": "tests/e2e/business-editor-actions.e2e.ts::owners%20can%20configure%20provider-aware%20actions%2C%20social%20links%2C%20and%20payment%20links%20and%20fallbacks",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "owners can configure provider-aware actions, social links, and payment links and fallbacks"
+        ],
+        "file": "tests/e2e/business-editor-actions.e2e.ts",
+        "source": {
+          "file": "tests/e2e/business-editor-actions.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f8086350a7a6566e085640c40726014ed65e1182472a20ca479c9fab2e39b8e2",
+        "testId": "tests/e2e/businesses-loading.e2e.ts::owners%20can%20browse%20businesses%2C%20open%20an%20editor%2C%20and%20return%20through%20preview",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "owners can browse businesses, open an editor, and return through preview"
+        ],
+        "file": "tests/e2e/businesses-loading.e2e.ts",
+        "source": {
+          "file": "tests/e2e/businesses-loading.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "33533e3416d6e23231fedd72e9a47e6b17c37fbc9ffd1e58d1638c93e4b40a6e",
+        "testId": "tests/e2e/card-deletion.e2e.ts::single%2C%20selected%20and%20whole-batch%20deletion%20preserve%20the%20document%20and%20empty%20exports",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "single, selected and whole-batch deletion preserve the document and empty exports"
+        ],
+        "file": "tests/e2e/card-deletion.e2e.ts",
+        "source": {
+          "file": "tests/e2e/card-deletion.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ffc6f1302b8111c4cd38e03ab9dd6a6fce93da6fa32808ca9f160c608c466d8e",
+        "testId": "tests/e2e/card-manufacturing.e2e.ts::owner%20creates%20a%20manufacturing%20batch%2C%20previews%20its%20QR%2C%20and%20downloads%20its%20archive",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "owner creates a manufacturing batch, previews its QR, and downloads its archive"
+        ],
+        "file": "tests/e2e/card-manufacturing.e2e.ts",
+        "source": {
+          "file": "tests/e2e/card-manufacturing.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6ab6b4d5a609abda21211cd2af6e9b7088b4c705f1b91220c8493091f6e8c623",
+        "testId": "tests/e2e/card-state.e2e.ts::card%20confirmation%20finishes%20in%20a%20production%20build",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "card confirmation finishes in a production build"
+        ],
+        "file": "tests/e2e/card-state.e2e.ts",
+        "source": {
+          "file": "tests/e2e/card-state.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "facb54b593b4d754d4f48ebf259ed4d62de733773582691537d29d6039ba2466",
+        "testId": "tests/e2e/card-state.e2e.ts::unassigned%20card%20displays%20only%20its%20printed%20serial",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "unassigned card displays only its printed serial"
+        ],
+        "file": "tests/e2e/card-state.e2e.ts",
+        "source": {
+          "file": "tests/e2e/card-state.e2e.ts",
+          "line": 21,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ce1e4ad385a6be84d1b2328b177a36e988c6abc9fa17ada28c2d88505642fb60",
+        "testId": "tests/e2e/contacts.e2e.ts::Contacts%20configure%2C%20preview%2C%20save%2Freload%2C%20publish%2C%20download%20and%20disable%20on%20main%20and%20branch",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Contacts configure, preview, save/reload, publish, download and disable on main and branch"
+        ],
+        "file": "tests/e2e/contacts.e2e.ts",
+        "source": {
+          "file": "tests/e2e/contacts.e2e.ts",
+          "line": 21,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "512b4f59b317cbb6688c73572119fc9c78aa0fc6020278ebe3baf457ecc2d288",
+        "testId": "tests/e2e/contacts.e2e.ts::anonymous%20draft%20preview%20and%20invalid%20contact%20routes%20are%20denied",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "anonymous draft preview and invalid contact routes are denied"
+        ],
+        "file": "tests/e2e/contacts.e2e.ts",
+        "source": {
+          "file": "tests/e2e/contacts.e2e.ts",
+          "line": 76,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "7cb53dc6322386cf5da339b93328660b8b2240ed3286a18dcc0f76c3b92c953f",
+        "testId": "tests/e2e/editor-reliability.e2e.ts::hours%2C%20repeated%20providers%2C%20services%20and%20optional%20text%20survive%20draft%20and%20publication",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "hours, repeated providers, services and optional text survive draft and publication"
+        ],
+        "file": "tests/e2e/editor-reliability.e2e.ts",
+        "source": {
+          "file": "tests/e2e/editor-reliability.e2e.ts",
+          "line": 21,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9c411524136c504da52209341c58c109f78d93d781263ddfa1827c57f35eda52",
+        "testId": "tests/e2e/media-rendering.e2e.ts::public%20media%20has%20responsive%20variants%2C%20eager%20hero%2Flogo%2C%20lazy%20gallery%20and%20stable%20geometry",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "public media has responsive variants, eager hero/logo, lazy gallery and stable geometry"
+        ],
+        "file": "tests/e2e/media-rendering.e2e.ts",
+        "source": {
+          "file": "tests/e2e/media-rendering.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "bcf542a3501dceb6188098a3a30d23e1793a4747e18d9195fdc28843c823fd98",
+        "testId": "tests/e2e/media-rendering.e2e.ts::broken%20optimized%20images%20preserve%20actions%20and%20recover%20after%20reload",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "broken optimized images preserve actions and recover after reload"
+        ],
+        "file": "tests/e2e/media-rendering.e2e.ts",
+        "source": {
+          "file": "tests/e2e/media-rendering.e2e.ts",
+          "line": 32,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "3e6f9ff768a47c27ba6a350dbb7f3c9b042f135b492d23b152836680efc8d8cd",
+        "testId": "tests/e2e/media-upload.e2e.ts::managed%20images%20survive%20upload%2C%20draft%20reload%20and%20publication%2C%20with%20pending-work%20guards",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "managed images survive upload, draft reload and publication, with pending-work guards"
+        ],
+        "file": "tests/e2e/media-upload.e2e.ts",
+        "source": {
+          "file": "tests/e2e/media-upload.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "df24d84c47166b0e39e568d121aa5f5f2fe7381b8d9ca2dc36b361d6aa5eb75d",
+        "testId": "tests/e2e/media-upload.e2e.ts::newer%20edits%20remain%20dirty%20during%20save%3B%20failures%20retry%20without%20losing%20input",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "newer edits remain dirty during save; failures retry without losing input"
+        ],
+        "file": "tests/e2e/media-upload.e2e.ts",
+        "source": {
+          "file": "tests/e2e/media-upload.e2e.ts",
+          "line": 71,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "5e368ef5bc5f17c8788ec9fe4b25efc153778ad24421153535756addad12b921",
+        "testId": "tests/e2e/non-owner-access.e2e.ts::authenticated%20non-owners%20cannot%20enter%20the%20dashboard%2C%20read%20owner%20rows%20or%20upload%20media",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "authenticated non-owners cannot enter the dashboard, read owner rows or upload media"
+        ],
+        "file": "tests/e2e/non-owner-access.e2e.ts",
+        "source": {
+          "file": "tests/e2e/non-owner-access.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "918c47a270d10d41fc7dff1d27937ae8c91e678b0f8d3761327bc305ac3ed5be",
+        "testId": "tests/e2e/observability-baseline.e2e.ts::baseline%20published%20synthetic%20business%20keeps%20its%20media%20and%20actions%20usable",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "baseline published synthetic business keeps its media and actions usable"
+        ],
+        "file": "tests/e2e/observability-baseline.e2e.ts",
+        "source": {
+          "file": "tests/e2e/observability-baseline.e2e.ts",
+          "line": 11,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "5b0e6c03d50fa394c51d23c32ee988ae26a969eed071f2e04dcbe36ea77deb90",
+        "testId": "tests/e2e/observability-baseline.e2e.ts::baseline%20owner%20dashboard%20and%20editor%20update%20the%20live%20preview%20without%20saving",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "baseline owner dashboard and editor update the live preview without saving"
+        ],
+        "file": "tests/e2e/observability-baseline.e2e.ts",
+        "source": {
+          "file": "tests/e2e/observability-baseline.e2e.ts",
+          "line": 32,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "23c6cbe7e95d79e088748f1189887bc2d50420b14498605246159e1d8ed9a7c8",
+        "testId": "tests/e2e/owner-card-journey.e2e.ts::an%20owner%20creates%2C%20publishes%2C%20activates%2C%20scans%2C%20renames%2C%20and%20reassigns%20a%20card",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "an owner creates, publishes, activates, scans, renames, and reassigns a card"
+        ],
+        "file": "tests/e2e/owner-card-journey.e2e.ts",
+        "source": {
+          "file": "tests/e2e/owner-card-journey.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1ace3-b58d-77a0-8115-0b45078da16f",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-11-05T18:06:06.733Z",
+            "durationMs": 56184,
+            "artifacts": [
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/tests_e2e_owner-card-journey.e2e.ts__an_20owner_20creates_2C_20publishes_2C_20activates_2C_20scans_2C_20renames-317865ea/default/attempt-0/trace/trace.zip",
+                "size": 543253,
+                "sha256": "9b577e237dba532fc6df842095a042deb6a11cf347c7a5a515e99124498a7559"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/login",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:07.146Z",
+                "durationMs": 3733,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:1",
+                "index": 1,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"البريد الإلكتروني\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:10.881Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"كلمة المرور\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:10.988Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"دخول آمن\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:11.017Z",
+                "durationMs": 61,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveURL",
+                "label": "/\\/admin(?:\\?.*)?$/",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:11.078Z",
+                "durationMs": 2418,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/businesses/new",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:13.497Z",
+                "durationMs": 2533,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"اسم النشاط\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:16.030Z",
+                "durationMs": 89,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"التصنيف\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:16.120Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"رابط الصفحة\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:16.155Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"إنشاء النشاط والصفحة\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:16.181Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveURL",
+                "label": "/\\/admin\\/businesses\\/[0-9a-f-]+\\?created=1/",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:16.287Z",
+                "durationMs": 3797,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.084Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"a[href*=\\\"/preview?page=\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.095Z",
+                "durationMs": 579,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.674Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: /About/)",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.681Z",
+                "durationMs": 68,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.749Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:16",
+                "index": 16,
+                "kind": "locator",
+                "api": "locator.check",
+                "label": "getByRole(\"checkbox\", name: \"Hidden\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.755Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:17",
+                "index": 17,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"About copy\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.861Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.912Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:19",
+                "index": 19,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Save draft\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.923Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:20.978Z",
+                "durationMs": 3604,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/businesses/97373b3e-f31a-4a49-855f-041e08333a2d/preview?page=7c16dc38-6a8d-42c7-a8f5-df8f4cb50594",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:24.583Z",
+                "durationMs": 2881,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: /E2E Business mw3ux1ix-g53o0/)",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:27.464Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:23",
+                "index": 23,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Draft content mw3ux1ix-g53o0\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:27.497Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:24",
+                "index": 24,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/b/e2e-mw3ux1ix-g53o0",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:27.503Z",
+                "durationMs": 3204,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:30.708Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:26",
+                "index": 26,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/businesses/97373b3e-f31a-4a49-855f-041e08333a2d",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:30.713Z",
+                "durationMs": 1161,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:27",
+                "index": 27,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Publish\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:31.874Z",
+                "durationMs": 135,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:32.011Z",
+                "durationMs": 241,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:29",
+                "index": 29,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/b/e2e-mw3ux1ix-g53o0",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:35.126Z",
+                "durationMs": 802,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Draft content mw3ux1ix-g53o0\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:35.928Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:31",
+                "index": 31,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/cards",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:35.962Z",
+                "durationMs": 2028,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:32",
+                "index": 32,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[name=\\\"name\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:37.990Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:33",
+                "index": 33,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByRole(\"spinbutton\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:38.061Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:34",
+                "index": 34,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"إنشاء دفعة\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:38.086Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toHaveURL",
+                "label": "/\\/admin\\/cards\\/batches\\/[0-9a-f-]+\\?created=1/",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:38.146Z",
+                "durationMs": 2001,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:36",
+                "index": 36,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:40.147Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:37",
+                "index": 37,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6&page_search=e2e-mw3ux1ix-g53o0",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:40.155Z",
+                "durationMs": 1905,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:38",
+                "index": 38,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:42.061Z",
+                "durationMs": 2234,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"tr\").filter({ hasText: \"NT-20261105-000001\" }) >> getByRole(\"combobox\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:44.296Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:40",
+                "index": 40,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:44.331Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"tr\").filter({ hasText: \"NT-20261105-000001\" }) >> getByRole(\"button\", name: \"تفعيل / نقل\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:44.336Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:42",
+                "index": 42,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"تأكيد التعيين\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:44.405Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:43",
+                "index": 43,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\".card-assignment-form .mutation-result\").first()",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:44.480Z",
+                "durationMs": 1104,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:44",
+                "index": 44,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\".mutation-result\").first()",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:45.585Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:45",
+                "index": 45,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/c/7gjiyfhQRojJElDLNCnLhFqHB8wb-5ik?via=qr",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:47.833Z",
+                "durationMs": 1022,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:46",
+                "index": 46,
+                "kind": "assertion",
+                "api": "expect.toHaveURL",
+                "label": "/b/e2e-mw3ux1ix-g53o0?via=qr",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:48.855Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:47",
+                "index": 47,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/businesses/97373b3e-f31a-4a49-855f-041e08333a2d",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:48.855Z",
+                "durationMs": 1141,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:48",
+                "index": 48,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"Business name\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:49.998Z",
+                "durationMs": 112,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:49",
+                "index": 49,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"Public slug\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:50.110Z",
+                "durationMs": 50,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:50",
+                "index": 50,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Save draft\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:50.160Z",
+                "durationMs": 969,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:51",
+                "index": 51,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:51.129Z",
+                "durationMs": 118,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:52",
+                "index": 52,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Publish\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:51.247Z",
+                "durationMs": 299,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:53",
+                "index": 53,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:51.547Z",
+                "durationMs": 137,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:54",
+                "index": 54,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/b/e2e-mw3ux1ix-g53o0",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:51.685Z",
+                "durationMs": 830,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:55",
+                "index": 55,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Draft content mw3ux1ix-g53o0\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:52.515Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:56",
+                "index": 56,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/businesses/new",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:52.603Z",
+                "durationMs": 923,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:57",
+                "index": 57,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"اسم النشاط\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:53.526Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:58",
+                "index": 58,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"التصنيف\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:53.607Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:59",
+                "index": 59,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"رابط الصفحة\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:53.633Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:60",
+                "index": 60,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"إنشاء النشاط والصفحة\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:53.657Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:61",
+                "index": 61,
+                "kind": "assertion",
+                "api": "expect.toHaveURL",
+                "label": "/\\/admin\\/businesses\\/[0-9a-f-]+\\?created=1/",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:53.713Z",
+                "durationMs": 301,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:62",
+                "index": 62,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:54.014Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:63",
+                "index": 63,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"a[href*=\\\"/preview?page=\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:54.023Z",
+                "durationMs": 276,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:64",
+                "index": 64,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:54.299Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:65",
+                "index": 65,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"Publish\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:54.306Z",
+                "durationMs": 82,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:66",
+                "index": 66,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:54.388Z",
+                "durationMs": 127,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:67",
+                "index": 67,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6&page_search=e2e-target-mw3ux1ix-g53o0",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:54.515Z",
+                "durationMs": 928,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:68",
+                "index": 68,
+                "kind": "locator",
+                "api": "locator.selectOption",
+                "label": "locator(\"tr\").filter({ hasText: \"NT-20261105-000001\" }) >> getByRole(\"combobox\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:55.444Z",
+                "durationMs": 72,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:69",
+                "index": 69,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"tr\").filter({ hasText: \"NT-20261105-000001\" }) >> getByRole(\"button\", name: \"تفعيل / نقل\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:55.516Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:70",
+                "index": 70,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"تأكيد التعيين\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:55.562Z",
+                "durationMs": 83,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:71",
+                "index": 71,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\".card-assignment-form .mutation-result\").first()",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:55.645Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:72",
+                "index": 72,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/c/7gjiyfhQRojJElDLNCnLhFqHB8wb-5ik?via=nfc",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:55.854Z",
+                "durationMs": 1017,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:73",
+                "index": 73,
+                "kind": "assertion",
+                "api": "expect.toHaveURL",
+                "label": "/b/e2e-target-mw3ux1ix-g53o0?via=nfc",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:56.871Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:74",
+                "index": 74,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/businesses/4c62f2c4-a8a2-4e1b-9620-90a5cedd0ade",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:56.872Z",
+                "durationMs": 988,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:75",
+                "index": 75,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"إدارة E2E Target mw3ux1ix-g53o0\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:57.860Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:76",
+                "index": 76,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:57.906Z",
+                "durationMs": 872,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:77",
+                "index": 77,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"tr\").filter({ hasText: \"NT-20261105-000001\" }) >> getByRole(\"button\", name: \"تعطيل\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:58.778Z",
+                "durationMs": 100,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:78",
+                "index": 78,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"تعطيل البطاقة\")",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:58.878Z",
+                "durationMs": 82,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a1ace3-b58d-77a0-8115-0b45078da16f:79",
+                "index": 79,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\".mutation-result\").first()",
+                "status": "passed",
+                "startedAt": "2026-11-05T18:06:58.961Z",
+                "durationMs": 112,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "0b156986194be54716807630ee36a672b3f99c67272690cb5862f23b573aa287",
+        "testId": "tests/e2e/owner-cards.e2e.ts::the%20only%20eligible%20published%20page%20is%20selected%20for%20card%20activation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "the only eligible published page is selected for card activation"
+        ],
+        "file": "tests/e2e/owner-cards.e2e.ts",
+        "source": {
+          "file": "tests/e2e/owner-cards.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "beefb6459d362e08ffcde6df61b5b273d68a39ab0635d137492aadedb678fcb6",
+        "testId": "tests/e2e/phase5-incremental-saves.e2e.ts::phase%205%20keeps%20section%20edits%20and%20order%20across%20incremental%20saves",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "phase 5 keeps section edits and order across incremental saves"
+        ],
+        "file": "tests/e2e/phase5-incremental-saves.e2e.ts",
+        "source": {
+          "file": "tests/e2e/phase5-incremental-saves.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e51f3389ce330354bb71657a736665e7d7c199163b4a15dabc8c889bc5eaf945",
+        "testId": "tests/e2e/provider-links.e2e.ts::delivery%20destinations%20survive%20save%2C%20preview%2C%20publication%20and%20override",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "delivery destinations survive save, preview, publication and override"
+        ],
+        "file": "tests/e2e/provider-links.e2e.ts",
+        "source": {
+          "file": "tests/e2e/provider-links.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "442960973f020acac2f4a4fe335c13efdef98abee0a7dc710fba12ad64d033e4",
+        "testId": "tests/e2e/public-journey.e2e.ts::landing%20page%20links%20to%20the%20demo%20and%20uses%20a%20sample%20fallback%20when%20no%20contact%20number%20is%20configured",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "landing page links to the demo and uses a sample fallback when no contact number is configured"
+        ],
+        "file": "tests/e2e/public-journey.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-journey.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "4166dfe786fb6636f8ffadb835aa763d0294b954985026443ea38cd720ce6154",
+        "testId": "tests/e2e/public-journey.e2e.ts::public%20landing%20navigation%20has%20no%20owner%20entry%20points%20in%20either%20language",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "public landing navigation has no owner entry points in either language"
+        ],
+        "file": "tests/e2e/public-journey.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-journey.e2e.ts",
+          "line": 21,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "38a42721ec3a1e2021d04cdd5280c313c62fe95a3fe920936f16a7754be8a3f2",
+        "testId": "tests/e2e/public-journey.e2e.ts::demo%20presents%20its%20map%20action%20and%20returns%20to%20the%20landing%20page",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "demo presents its map action and returns to the landing page"
+        ],
+        "file": "tests/e2e/public-journey.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-journey.e2e.ts",
+          "line": 37,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "0d7af4727053bf3c32925d49998d47ad3fb9ed1be4bfe2a8c4891908f1a51ada",
+        "testId": "tests/e2e/public-journey.e2e.ts::demo%20consolidates%20social%20links%20into%20official%20brand%20icons%20and%20a%20Google%20Reviews%20prompt",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "demo consolidates social links into official brand icons and a Google Reviews prompt"
+        ],
+        "file": "tests/e2e/public-journey.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-journey.e2e.ts",
+          "line": 53,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e01812652ce90b222bae277541ec23488d3896f8e76341544dc1e2a8f52f9263",
+        "testId": "tests/e2e/public-journey.e2e.ts::demo%20keeps%20the%20business%20profile%20within%20a%20mobile%20viewport",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "demo keeps the business profile within a mobile viewport"
+        ],
+        "file": "tests/e2e/public-journey.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-journey.e2e.ts",
+          "line": 79,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e08964261f275f2d68be69df078cb49856a830afc1a06caf24eba61a759705b3",
+        "testId": "tests/e2e/public-journey.e2e.ts::team%20login%20supports%20Arabic%20and%20English",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "team login supports Arabic and English"
+        ],
+        "file": "tests/e2e/public-journey.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-journey.e2e.ts",
+          "line": 93,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "a3d68989380d887238646dd8659510aa6b1d4635c3807148acca3d2a3bebe0f7",
+        "testId": "tests/e2e/public-security.e2e.ts::anonymous%20users%20are%20redirected%20from%20owner%20pages%20and%20card%20exports%20to%20login",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "anonymous users are redirected from owner pages and card exports to login"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ead6d68d5870c3a725a3818f3e549645dc7b91f5b93f5fb946dd23baddf22bd6",
+        "testId": "tests/e2e/public-security.e2e.ts::invalid%20card%20tokens%20reach%20a%20branded%20unavailable%20state%20without%20exposing%20data",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "invalid card tokens reach a branded unavailable state without exposing data"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 19,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b620f3377fd962b609345a29f1a8a0571ed914e5dcb20fb3dc68380fbd77db16",
+        "testId": "tests/e2e/public-security.e2e.ts::unknown%20business%20slugs%20show%20a%20not-found%20page%20instead%20of%20a%20blank%20profile",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "unknown business slugs show a not-found page instead of a blank profile"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 29,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "edaee1d8281c30e27cc1ff85f3e4d15a6c2e987dce80d3c2cb4ae0840a130ffc",
+        "testId": "tests/e2e/public-security.e2e.ts::unknown%20routes%20show%20the%20branded%20not-found%20recovery",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "unknown routes show the branded not-found recovery"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 39,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "df6deff8ce8ea260d5a447d943986b7e95937781036637a50c25698ce563c7a5",
+        "testId": "tests/e2e/public-security.e2e.ts::access-denied%20page%20offers%20a%20sign-in%20recovery",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "access-denied page offers a sign-in recovery"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 47,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "77f7a3f2102b1595e260c641d246a5ad375f5a76cd9de25cee9d6a366347ea09",
+        "testId": "tests/e2e/public-security.e2e.ts::public%20pages%20declare%20Arabic%20RTL%20and%20remain%20usable%20at%20the%20active%20viewport",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "public pages declare Arabic RTL and remain usable at the active viewport"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 54,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "919e068aecfe0ced756c85234dd6ea336f6754836832314840a459dc27545ada",
+        "testId": "tests/e2e/public-security.e2e.ts::public%20primary%20actions%20can%20receive%20keyboard%20focus",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "public primary actions can receive keyboard focus"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 68,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c5229ce036709820e575a8903eb8b6227b19de07af8cf9a54f546e24e5e82398",
+        "testId": "tests/e2e/public-security.e2e.ts::payment%20cards%20keep%20recipient%20details%20private%20and%20guide%20the%20payer%20through%20the%20fallback",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "payment cards keep recipient details private and guide the payer through the fallback"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 75,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "65f629380de88521fdb05d1e429fb68f431f5b9bf42a4447a8f6ab4133a7e6f4",
+        "testId": "tests/e2e/public-security.e2e.ts::clipboard%20denial%20keeps%20payment%20instructions%20usable%20and%20local%20logo%20failures%20recover",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "clipboard denial keeps payment instructions usable and local logo failures recover"
+        ],
+        "file": "tests/e2e/public-security.e2e.ts",
+        "source": {
+          "file": "tests/e2e/public-security.e2e.ts",
+          "line": 107,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "aa2575b8cb7d0c4b4614f5bfa683d3ee6d04432ca02dfa9350a292d2b57048fc",
+        "testId": "tests/e2e/quick-actions-layout.e2e.ts::configured%20Quick%20Actions%20keep%20four%20columns%20on%20mobile%20and%20in%20the%20phone%20preview",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "configured Quick Actions keep four columns on mobile and in the phone preview"
+        ],
+        "file": "tests/e2e/quick-actions-layout.e2e.ts",
+        "source": {
+          "file": "tests/e2e/quick-actions-layout.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "7e79e49f5958a51e083a2ddcbc5585a727799b1a8040dce7396b77a5e7a80a5c",
+        "testId": "tests/e2e/sentry-observability.e2e.ts::controlled%20Sentry%20client%20and%20server%20checks%20stay%20isolated%20to%20the%20diagnostics%20route",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "controlled Sentry client and server checks stay isolated to the diagnostics route"
+        ],
+        "file": "tests/e2e/sentry-observability.e2e.ts",
+        "source": {
+          "file": "tests/e2e/sentry-observability.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "617068d3e778fbf2ce5ab6b9d7650c13c3935cb026e7cd966e77534a63ab366b",
+        "testId": "tests/e2e/wallet-payment.e2e.ts::wallet%20payment%20actions%20open%20an%20amount-only%20modal%20with%20sandbox%20codes%20behind%20the%20staging%20flag",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "wallet payment actions open an amount-only modal with sandbox codes behind the staging flag"
+        ],
+        "file": "tests/e2e/wallet-payment.e2e.ts",
+        "source": {
+          "file": "tests/e2e/wallet-payment.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 45,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 45,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 543253,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

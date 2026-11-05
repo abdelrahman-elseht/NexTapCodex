@@ -1,0 +1,361 @@
+{
+  "capturedAtUtc": "2026-11-05T17:57:12.8598068Z",
+  "branch": "phase1/codebase-foundation",
+  "head": "230adeca680c0fe7e22b3ece0fd9169764b84ffe",
+  "dirty": true,
+  "trackedDiffSha256": "a50b0ef9b7df73dbe8d9d2a296c4a9a8900add1d6d4c95945f44a3c7a1b373b7",
+  "nonEvidenceUntrackedFileCount": 87,
+  "nonEvidenceUntrackedManifestSha256": "900f97b5340512d94d81cc70e8c577cc287338dfa825821d160a9e999a20ae6c",
+  "candidateInputFingerprintSha256": "403d1152f4c9a1238cc96605cefad02c8427aa6c443b4bffe10a25711ee4e84a",
+  "nonEvidenceUntrackedFiles": [
+    {
+      "path": ".agent-continuity/phase-1.json",
+      "sha256": "1e728e119074db336801471c51c4848bcb7a973760385a00d10735b62ccf40a9"
+    },
+    {
+      "path": ".claude/settings.json",
+      "sha256": "c5bdbee287c084bc726911c4e8a2a8b245dc533fee67fc802f8b34764798ae61"
+    },
+    {
+      "path": ".codex/config.toml",
+      "sha256": "b6293bdbc2b9712d2aa145ca1248c15c6f4042e07cabdf822a2db5047ad906b9"
+    },
+    {
+      "path": ".github/workflows/maintenance-report.yml",
+      "sha256": "927879e58810122ac6fa942ab1490405549742537a5fc039cc9c0144cf479569"
+    },
+    {
+      "path": "docs/CODEBOOK.md",
+      "sha256": "b954f31c239c5dd05f0551baebe8c24c2770f9d719ec7daf00ced49d7dcb3165"
+    },
+    {
+      "path": "docs/program/CODEX_PROJECT_HOOKS_SETUP_PROMPT.md",
+      "sha256": "c8947d68f67ef7112d97313ef7f3651c56b839c3dcc34c8f53f366155f0756ab"
+    },
+    {
+      "path": "docs/program/PHASE_1_CONTINUATION.md",
+      "sha256": "d6f1e96cb3192609ec55cf61a9e47eb63aa2ee61286707055b772bdf9bdf91c4"
+    },
+    {
+      "path": "docs/program/PHASE_2_CAPACITY_COST_RESEARCH.md",
+      "sha256": "937a4e9eaa167095d50b0f65559ba1e2e708bac5ad3a8a3e6768bac0cd155f4b"
+    },
+    {
+      "path": "docs/program/PHASE_2_CLOUDFLARE_STAGING_VALIDATION.md",
+      "sha256": "98a7f73acfc86bc8c057fda1a352099e2524534234e50328312b575912760894"
+    },
+    {
+      "path": "docs/program/PHASE_2_CONTINUATION.md",
+      "sha256": "97523eb3387810ae7511e27d86b86d828e967109f8f99823dda63450553c251c"
+    },
+    {
+      "path": "docs/program/PHASE_2_DISCOVERY_DECISIONS.md",
+      "sha256": "897242722caba4aa0fbd7025a48975ac950a509b16ab70a9b84fa50e6d0f1bb1"
+    },
+    {
+      "path": "docs/program/PHASE_2_DISCOVERY_EVIDENCE.md",
+      "sha256": "ea970274901093a672121a3b5d2ff4a82009359f558baf0e28837243cee67bfc"
+    },
+    {
+      "path": "docs/program/PHASE_2_ORCHESTRATOR_PROMPT.md",
+      "sha256": "6e53b2ee87562d3af09b8563d1d64f496c9eab0262e2d39f2d3bb2c69fda4383"
+    },
+    {
+      "path": "docs/program/PHASE_2_PRD_GRILL_WITH_DOCS_PROMPT.md",
+      "sha256": "6296d1a46ea6bd30b714812d75115f001dc3afd22b8a523fd398358480a2fdea"
+    },
+    {
+      "path": "docs/program/PHASE_2_RUNTIME_OSS_RESEARCH.md",
+      "sha256": "9b324f367e71892d0d4d08932df583dbb3b9e6628f025696382b6d4dc72d1013"
+    },
+    {
+      "path": "docs/program/phase-1-tasks/agent-continuity.md",
+      "sha256": "c5547a1ad2b07834164561ad266bcaf509299fa9de4fd6b98aab266afb784bb9"
+    },
+    {
+      "path": "docs/program/phase-1-tasks/bounded-refactor.md",
+      "sha256": "81f297d697b8669210135d3730f6c89a37c719ee572e8ec758ffede500e1ef92"
+    },
+    {
+      "path": "docs/program/phase-1-tasks/codebook.md",
+      "sha256": "8beaba586dfcbbdf9ea3ee2b195fae27467a494bc4570ad2210ec0a97a0f35c0"
+    },
+    {
+      "path": "docs/program/phase-1-tasks/maintenance-guardrails.md",
+      "sha256": "be20a26f4bdbe39f0f23df07587656cb6d695d956ac48374bd0d1ab68716d1d1"
+    },
+    {
+      "path": "docs/program/phase-1-tasks/mutation-baseline.md",
+      "sha256": "7824bee930f63d8273fea50c5fa647294bf25f3e45607dae97595d5e28af27a0"
+    },
+    {
+      "path": "docs/program/phase-1-tasks/README.md",
+      "sha256": "57f31968ad81d2e4aa17db6a52cb9be4280ff7bb0c4d40a1d966afe42a662c77"
+    },
+    {
+      "path": "docs/program/phase-1-tasks/responsibility-map.md",
+      "sha256": "7bd6d861ea919e3acfefee021af39e27d21d7f4aa8bf81a9d0cb3d31e22b6084"
+    },
+    {
+      "path": "docs/program/phase-2-phases/2A-foundation-runtime.md",
+      "sha256": "275cd205040ec124f4c6aa495584604282d4e17c7972ea44a623b7f1209ae17a"
+    },
+    {
+      "path": "docs/program/phase-2-phases/2B-staging-baselines.md",
+      "sha256": "64cd3ab9b0b15404b244245c6322dff6441c7d3656bf93634e53a970e83b5480"
+    },
+    {
+      "path": "docs/program/phase-2-phases/2C-product-safeguards.md",
+      "sha256": "56b69c405cb69caf4e2ede0134d85b66be6262157f021b67555239adea363907"
+    },
+    {
+      "path": "docs/program/phase-2-phases/2D-validation-acceptance.md",
+      "sha256": "78c29336af7fb3c8de600c3602e79702261d6b2dc4369244f6be2f5ab11f5b18"
+    },
+    {
+      "path": "docs/program/phase-2-phases/README.md",
+      "sha256": "8db458b013cca99d2b5cf3bab98398c7a9845a22ba1d36ef8cda7676a9ccdb4e"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/01-candidate-closeout.md",
+      "sha256": "bf858809d815d4f34d94ec576cdb2fdd42c3fb50fb29a528d7b8224edcedc33f"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/02-coverage-inventory.md",
+      "sha256": "7e0c73acb6515b9adfc415293676bcf2825dd62e483cc68a2ac32401b6066b5c"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/03-resource-cost-proposal.md",
+      "sha256": "ff1dd83a4304817105263683c18100bbaac78dec4ff41580014cb1b99e846383"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/04-migration-fixtures.md",
+      "sha256": "ce89a59a60655a57a2c955b744384eb9d5f4ce73a61e88dfa4aaf0ec982588fb"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/05-opennext-first-attempt.md",
+      "sha256": "7683174b9185443959f1ea61c133ba1c12a99a195c696515cf2b76d73dfb4ae0"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/06-image-transform-parity.md",
+      "sha256": "960546a04cbd860c3b15b59494714619379790c34f6fcc528e2ebac5f199cc11"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/07-adapter-comparison-decision.md",
+      "sha256": "44d3b7186516c387bc07ef7c9730a8904a52195605a1336b88495077d998d3a1"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/08-runtime-origin-identity.md",
+      "sha256": "e7cfba99f2fa3cc40053be47424de289576a2b8302e2e1ac58c3b0e4ece906db"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/09-isolated-staging-setup.md",
+      "sha256": "8ffd679f554df9ad313f771aef3d299d595fac067c8287151431830d5679e13c"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/10-first-worker-deployment.md",
+      "sha256": "8742956d34c73d994dc361be84855109944b0d8de630c1198625e2d0b9dffb65"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/11-hosted-auth-outbound.md",
+      "sha256": "346987c99e3e8ee25ac3a023e97e1aa81c2e615add9d7dc197d12fb3795ae6a3"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/12-r2-media-journey.md",
+      "sha256": "eddfc65ead3a722fcae8c6d3265ce98b22fe27bb4ca364d01444e5a1e4584725"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/13-observable-worker.md",
+      "sha256": "057d80052bf613c0bb3e51b4027d7826829baf03eeffaffcda4151bc49255372"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/14-public-read-baseline.md",
+      "sha256": "2ebd7f6e0c33ebf3e25123a8e577e2ac1830678d5c1da5c04b3dd070691e5ffe"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/15-public-read-safety.md",
+      "sha256": "4d87777daae977d7e9c60942aaff1bad987eb074789acc5497d708f7ab131208"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/16-purge-contract.md",
+      "sha256": "1f4e638dd2ee326ee91d717786eaba4812e47360c281293cb5c3a1560f8ed28a"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/17-single-business-purge.md",
+      "sha256": "2c760fcc7b38583cd57fcc8ea3182f9a479723b936beed48f866164762815a6a"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/18-bulk-business-purge.md",
+      "sha256": "a2e7a8236c17c2e8b4f95e76e752eefffd6d1d5e856f2d39e22d81d7048a32bc"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/19-public-journey-proof.md",
+      "sha256": "ba5b6c3589b709c70ef6ec54543f01bd8464f4e69ef2156ff20dfc61c25e6dc6"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/20-owner-editor-proof.md",
+      "sha256": "c7241612501f81b814ad698d80428f80a98812d5e7b07fb970c2908a8a4ed9a7"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/21-card-export-proof.md",
+      "sha256": "85c75c815b7575ff81de9c3583c0e205f946b90df6ea9c1a16e45e66c5174806"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/22-contact-download-proof.md",
+      "sha256": "4b1a9ed7adf12cb54406aacd1393ade80cbb080a50acf82c450f66e2f2bf8da3"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/23-page-transfer-baseline.md",
+      "sha256": "7c979a60a4b3db3157faef63415e7565f9976f5a73ebb835665858f3e753b802"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/24-page-transfer-reduction.md",
+      "sha256": "e801f6dc55527321629783b06cf70f28c302eff0384b764645e1b45884fe45fe"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/25-scale-cost-run-plan.md",
+      "sha256": "3d3c10647234ccc7df9633d9b2c5b4156a16e1a57a023d86406c07a440730286"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/26-distributed-abuse-controls.md",
+      "sha256": "0ad798c144370cf0c223bb551475c942bf187ce019c41ef610eb79cf90aae190"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/27-negative-security-proof.md",
+      "sha256": "ea483c62fb46fc2e1f62befa2a8ca4df150f707431a5851d2293dbdf0053a448"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/28-scale-billing-proof.md",
+      "sha256": "b32ef81e9107c16b7bfb7912a2621a6c12674e078cbb3cc6eee8861dd36bc455"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/29-failure-rollback-proof.md",
+      "sha256": "a0da4b9c51b1a62f6f6f03f92bb653f8a807556b6eb405d05fd89b93a338b68c"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/30-integrated-regression.md",
+      "sha256": "77c2ea01a7eb246eec0bdeb3b753f5d75cdc9c4a438f4c0e2b75c3103102a51e"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/31-physical-device-acceptance.md",
+      "sha256": "8b0c9ac7c6296a89307ae53271636b934a567ffb50a9fcab357c4bdacb1986da"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/32-independent-exit-review.md",
+      "sha256": "a1ad58988dd09d68525da1f5372f778e96f4b46dac1248a26ea168b210f787da"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/33-owner-exit-handoff.md",
+      "sha256": "d688e54f70f5a0268d238ea40c444f5e3adf54ed204f7a935030a9ae56e46e66"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/COVERAGE.md",
+      "sha256": "1816b34ea7c606bf8d7aef4a6911e3e9ac70356fac1644fe5609234a2a6dcd2d"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/DECISIONS.md",
+      "sha256": "198e06e2140be15f1772da3c4471d25fdc18b5f85854d774c80a5daaadb4c733"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/OWNERSHIP.md",
+      "sha256": "3b6a60f0134f100cbe594142ac2b96f9bd9df73e19d29bbe06a83f7f1bf9a6e0"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/PACKET_REVIEW.md",
+      "sha256": "cd15d69293cc89a9b98e6868ad493fae22108337a522808d5c7b02fb36368b52"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/README.md",
+      "sha256": "54ff079b4158c0163d3b0eb5311c3c21628ba2ffeebc96b0a8dc861b79a638ed"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/STATUS.md",
+      "sha256": "dd0cdc2584e216cb2bd31b4dad12804171d5381bd45dc821260a01471868172d"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/TESTING.md",
+      "sha256": "7170ec697e201311616205b245fe4eb5a4376504dfb0dc6a6f91b3affc215cef"
+    },
+    {
+      "path": "docs/program/phase-2-tasks/WORKER.md",
+      "sha256": "b4781f3a657480f48a41dee4530f0b793b5313f1971411b906f5c334c9424a42"
+    },
+    {
+      "path": "docs/research/PHASE_1_HOOK_CONTRACTS.md",
+      "sha256": "5d1c7574006f98141768e0e1ee282227d2309d8b133d45c9e9eae968fa4fcd7c"
+    },
+    {
+      "path": "docs/research/PHASE_1_MAINTENANCE_BASELINE.md",
+      "sha256": "c5e9c9afb66165f572ecb7c3065089334f6baad3eec941fc777ee5829ae0935b"
+    },
+    {
+      "path": "GATES.md",
+      "sha256": "259ed27a1e6bd5798e32cd29afbfb293c223ac870710af2eeedfccced5a5840f"
+    },
+    {
+      "path": "knip.json",
+      "sha256": "106e40a283386f07eecd5c4bbd1a786c7c83cdf76029b055f7c73c683cbbf060"
+    },
+    {
+      "path": "reports/mutation/card-inventory.json",
+      "sha256": "79f66d83c8ce7378e62e130fbfeef6d686ea6841252c5a50fa6e8f72facc0d8f"
+    },
+    {
+      "path": "reports/mutation/public-publication.json",
+      "sha256": "1d6d3dcb21f92359750b27ed7e8edd8d4ff95bbb5b41265b0e7890b5609ebd54"
+    },
+    {
+      "path": "scripts/ci/check-file-budgets.mjs",
+      "sha256": "8d8be0a0eb689ca9d671322b20b1f7277405e0d99290f481c16cc553888e1d95"
+    },
+    {
+      "path": "scripts/ci/dependency-status.mjs",
+      "sha256": "910b375555a4b0078340e0812323dbd4d912791253f0a710044dbf4bfac4e0ff"
+    },
+    {
+      "path": "scripts/continuity/continuation.mjs",
+      "sha256": "d46c5daa2738866a9e5e2251311478ba2428465c877b419c95090d7fff8137b0"
+    },
+    {
+      "path": "scripts/continuity/hook.mjs",
+      "sha256": "254a6ecae7ea82a9cd328ca7963bb98c3dc48f45691c8d072b98094cdbe2242b"
+    },
+    {
+      "path": "scripts/continuity/packet.mjs",
+      "sha256": "4b8337384f1b2b789f7cb03dbf00f17b2f45fb7d64a69b4be501fd9c69b498b7"
+    },
+    {
+      "path": "src/lib/admin/card-inventory.ts",
+      "sha256": "172563cd31b897d88e7c0a127b3093d72acb30d37bc56fba1bef053fda63cf19"
+    },
+    {
+      "path": "stryker.card-inventory.config.mjs",
+      "sha256": "9bb578fb69a09d62f56838d6c56ace259af33cf1e06d05679d637550483fa02d"
+    },
+    {
+      "path": "stryker.config.mjs",
+      "sha256": "9e2c16cbf35f50a727cec88ed9257e5ac8c0816e335c3aea5c4cc75129f849ce"
+    },
+    {
+      "path": "tests/unit/card-inventory.test.ts",
+      "sha256": "ffbf5088cb07924872b5f37e3aa936da2b9ce5e557eb5b9c20e9825d24b230a4"
+    },
+    {
+      "path": "tests/unit/continuation.test.ts",
+      "sha256": "8dd223f9fe7dcfd5abc4b04245ac9187533db4e7d625b90cb658a947a66643a4"
+    },
+    {
+      "path": "tests/unit/dependency-status.test.ts",
+      "sha256": "f63d86d0639252593a41fbb69e1db6cac8370d798c0c313c8adbb3d33fdf6880"
+    },
+    {
+      "path": "tests/unit/file-budgets.test.ts",
+      "sha256": "c1d3f9098b829dca66675cfb25c8aeaaa34ab5f2f1cebd115aee21f2196c1532"
+    },
+    {
+      "path": "tests/unit/import-boundaries.test.ts",
+      "sha256": "f0e45cfe525a7ae154005293cef75f4e3cecb72631b6dd143be4fa78768fd267"
+    }
+  ],
+  "integrationPublicationNote": "Sanitized metadata copy: unidentified-target browser artifact hashes are excluded. Candidate input fingerprint and non-evidence manifest remain historical candidate records, not the repaired integration tree identity."
+}

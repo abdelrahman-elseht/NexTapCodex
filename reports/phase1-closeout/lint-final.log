@@ -1,0 +1,46 @@
+﻿COMMAND: npm run lint
+
+> nextap-mvp@1.0.0 lint
+> eslint .
+
+
+F:\projects\NexTap-contacts-phase1\scripts\observability\optimization-measure.mjs
+  3:10  warning  'createClient' is defined but never used  @typescript-eslint/no-unused-vars
+
+F:\projects\NexTap-contacts-phase1\src\app\admin\businesses\[id]\page.tsx
+  8:7  warning  'labels' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+F:\projects\NexTap-contacts-phase1\src\app\admin\businesses\_components\business-editor.tsx
+  122:341  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\src\app\admin\businesses\_components\contact-photo-editor.tsx
+  17:127  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  45:19   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\src\app\admin\businesses\_components\image-field.tsx
+  61:142  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\src\app\admin\businesses\_components\item-editor.tsx
+  25:40  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\src\app\page.tsx
+  10:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\src\components\business\payment-logo.tsx
+  26:10  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\src\components\business\public-snapshot.tsx
+  54:20  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\src\components\business\social-links.tsx
+  31:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\src\components\ui\brand-logo.tsx
+  5:5  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+F:\projects\NexTap-contacts-phase1\tests\unit\card-manufacturing.test.ts
+  6:66  warning  'nfcCsv' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 13 problems (0 errors, 13 warnings)
+
+EXIT_CODE=0

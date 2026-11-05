@@ -1,0 +1,43 @@
+﻿COMMAND: npx --no-install stryker run reports/phase1-closeout/stryker-negative-control.config.mjs; expected threshold break at 95
+[32m19:49:54 (46500) INFO ProjectReader[39m Found 1 of 732 file(s) to be mutated.
+[32m19:49:54 (46500) INFO ProjectReader[39m Found 1 test file(s) matching --testFiles patterns.
+[32m19:49:55 (46500) INFO Instrumenter[39m Instrumented 1 source file(s) with 18 mutant(s)
+[32m19:49:58 (46500) INFO ConcurrencyTokenProvider[39m Creating 2 test runner process(es).
+[32m19:50:03 (46500) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "all" coverage analysis). This may take a while.
+[32m19:50:03 (46500) INFO DryRunExecutor[39m Initial test run succeeded. Ran 7 tests in 0 seconds (net 11.958499999999958 ms, overhead 531.0415 ms).
+
+All tests/public-publication.test.ts
+  ✓ public publication resolver resolves the live pointer, then reads the immutable snapshot [line 15] (killed 4)
+  ✓ public publication resolver falls back to the existing live RPC when the snapshot read misses [line 22] (killed 2)
+  ✓ public publication resolver does not attempt a snapshot read when the live pointer is absent [line 30] (killed 6)
+  ~ public publication resolver falls back when a pointer contains a malformed publication id [line 37] (covered 12)
+  ✓ public publication resolver reports a pointer error when compatibility fallback also fails [line 51] (killed 1)
+  ✓ public publication resolver reuses compatibility fallback after the pointer RPC is unavailable [line 58] (killed 4)
+  ✘ public publication resolver rejects malformed and overlong slugs before touching Supabase [line 71] (covered 0)
+
+[Survived] ConditionalExpression
+src/lib/business/public-publication.ts:51:9
+-       if (pointerResult.error) pointerError = pointerResult.error;
+
++       if (true) pointerError = pointerResult.error;
+
+Tests ran:
+    public publication resolver falls back to the existing live RPC when the snapshot read misses
+    public publication resolver does not attempt a snapshot read when the live pointer is absent
+    public publication resolver falls back when a pointer contains a malformed publication id
+  and 2 more tests!
+
+
+Ran 2.33 tests per mutant on average.
+-----------------------|------------------|----------|-----------|------------|----------|----------|
+                       | % Mutation score |          |           |            |          |          |
+File                   |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+-----------------------|--------|---------|----------|-----------|------------|----------|----------|
+All files              |  94.44 |   94.44 |       17 |         0 |          1 |        0 |        0 |
+ public-publication.ts |  94.44 |   94.44 |       17 |         0 |          1 |        0 |        0 |
+-----------------------|--------|---------|----------|-----------|------------|----------|----------|
+[91m19:50:17 (46500) ERROR MutationTestReportHelper[39m Final mutation score 94.44 under breaking threshold 95, setting exit code to 1 (failure).
+[32m19:50:17 (46500) INFO MutationTestReportHelper[39m (improve mutation score or set `thresholds.break = null` to prevent this error in the future)
+[32m19:50:17 (46500) INFO JsonReporter[39m Your report can be found at: file:///F:/projects/NexTap-contacts-phase1/reports/phase1-closeout/stryker-negative-control.json
+[32m19:50:17 (46500) INFO MutationTestExecutor[39m Done in 23 seconds.
+EXIT_CODE=1

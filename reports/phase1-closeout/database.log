@@ -1,0 +1,48 @@
+﻿COMMAND: npm run test:db
+
+> nextap-mvp@1.0.0 test:db
+> node scripts/database/test-database.mjs
+
+Applied 202610080001_initial_schema.sql
+Applied 202610080002_publish_and_slugs.sql
+Applied 202610080003_publish_page.sql
+Applied 202610080004_constraints_indexes.sql
+Applied 202610080005_immutable_publications.sql
+Applied 202610080006_owner_audit_insert.sql
+Applied 202610080007_atomic_section_reordering.sql
+Applied 202610080008_template_presets.sql
+Applied 202610080009_atomic_draft_save.sql
+Applied 20261008171345_external_printer_batches.sql
+Applied 202610090001_quick_actions.sql
+Applied 202610090002_provider_profiles.sql
+Applied 20261010042706_unambiguous_provider_draft_contract.sql
+Applied 20261010043000_unambiguous_private_legacy_draft_contract.sql
+Applied 20261010050000_phase4_admin_indexes.sql
+Applied 20261010060000_phase5_incremental_atomic_saves.sql
+Applied 20261010122933_phase6_publication_cache.sql
+Applied 20261010132029_preprod_contract_repairs.sql
+Applied 20261012201228_launch_architecture_security.sql
+Applied 20261013000000_staging_schema_acl_reconciliation.sql
+Applied 20261014065007_unassigned_card_serial.sql
+Applied 20261014210855_admin_inventory_operations.sql
+Applied 20261020063654_contacts.sql
+Applied 20261020102737_contacts_ux.sql
+Applied 20261020110950_contacts_url_bindings.sql
+Applied 20261024000000_landline_multiline_about.sql
+Applied 20261024010000_legacy_relationship_guards.sql
+Applied 20261024020834_internal_admin_capabilities.sql
+Applied 20261024021635_publication_media_privacy.sql
+Applied 20261024204354_fix_media_upload_policy.sql
+Applied 20261028070727_allow_avif_business_media.sql
+Passed phase123-contracts.sql
+Passed phase5-incremental-saves.sql
+Passed phase6-publication-cache.sql
+Passed preprod-publication-security.sql
+Passed launch-architecture-security.sql
+Passed inventory-deletion.sql
+Passed contacts.sql
+Passed contacts-ux.sql
+Passed internal-admin-capabilities.sql
+Passed publication-media-privacy.sql
+PASS: 31 migrations, SQL contracts, anonymous publication RPC execution
+EXIT_CODE=0

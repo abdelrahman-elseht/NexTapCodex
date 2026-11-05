@@ -50,7 +50,7 @@ test("an owner creates, publishes, activates, scans, renames, and reassigns a ca
     const pane = heading?.closest(".editor-form-pane");
     return Boolean(pane?.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked);
   });
-  if (!aboutVisible) await screen.getByRole("checkbox").check();
+  if (!aboutVisible) await screen.getByRole("checkbox", "Hidden").check();
   await screen.getByLabel("About copy").fill(draftDescription);
   expect(await browser.evaluate((description) => document.querySelector<HTMLTextAreaElement>('textarea[aria-label="About copy"], textarea')?.value === description, draftDescription)).toBe(true);
   await screen.getByRole("button", "Save draft").tap();

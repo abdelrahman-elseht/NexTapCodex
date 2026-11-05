@@ -1,0 +1,34 @@
+$ npm run check:knip
+
+> nextap-mvp@1.0.0 check:knip
+> knip --reporter compact --no-exit-code
+
+Unused files (10)
+scripts/continuity/hook.mjs: scripts/continuity/hook.mjs
+scripts/media/media-orphan-audit.mjs: scripts/media/media-orphan-audit.mjs
+scripts/observability/editor-reliability-evidence.mjs: scripts/observability/editor-reliability-evidence.mjs
+scripts/observability/instapay-browser-check.mjs: scripts/observability/instapay-browser-check.mjs
+scripts/observability/observability-baseline.mjs: scripts/observability/observability-baseline.mjs
+scripts/observability/optimization-measure.mjs: scripts/observability/optimization-measure.mjs
+src/app/admin/businesses/_components/section-content-editor.tsx: src/app/admin/businesses/_components/section-content-editor.tsx
+src/app/admin/businesses/_components/section-order-list.tsx: src/app/admin/businesses/_components/section-order-list.tsx
+src/components/business/social-links.tsx: src/components/business/social-links.tsx
+tests/e2e/contacts.local.config.ts: tests/e2e/contacts.local.config.ts
+Unused devDependencies (1)
+package.json: eslint-config-next, playwright-core, vcard-parser
+Unused exports (10)
+scripts/ci/self-review.mjs: runSelfReview
+scripts/continuity/packet.mjs: PACKET_PATH, validatePacketContract, validatePacket
+src/app/admin/businesses/actions.ts: createBusiness, saveBusiness, saveSection, addSection, removeSection, reorderSections, publishPage, setPageActive, createBranch, createBatch
+src/lib/business/contact-download.ts: contactHeaders
+src/lib/business/content.ts: safeContentUrl, providerSchema, itemSchema, hoursItemSchema, galleryItemSchema, sectionContentSchema, templateValues
+src/lib/business/providers.ts: phoneHref
+src/lib/business/public-publication.ts: publicSlugPattern
+src/lib/business/section-text.ts: sectionTextDefaults
+src/lib/business/vcard.ts: foldVCardLine
+src/lib/cards/card-manufacturing.ts: CARD_ORIGIN, sanitizeSerial, csv, qrIndexHtml, PRINT_INSTRUCTIONS
+Unused exported types (3)
+src/lib/business/content.ts: HoursItem
+src/lib/business/providers.ts: ProviderValueKind
+src/lib/business/publication.ts: PublicationSection
+exit: 0

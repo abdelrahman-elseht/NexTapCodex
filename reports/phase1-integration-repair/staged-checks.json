@@ -1,0 +1,70 @@
+{
+  "commands": {
+    "invocation": "Get-Content -LiteralPath 'reports/phase1-integration-repair/verify-staged.mjs.txt' -Raw | node --input-type=module",
+    "stagedPaths": [
+      "git diff --cached --name-only --diff-filter=ACM -z",
+      "git ls-files -z",
+      "git show :<enumerated path>"
+    ]
+  },
+  "relativeTargets": {
+    "markdownFiles": 25,
+    "checked": 183,
+    "missing": [],
+    "scope": "Inline Markdown relative file/directory targets in changed staged Markdown only, checked against the index; anchors and external URLs not verified."
+  },
+  "whitespace": {
+    "sourceDocsAndStructuredEvidence": {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check",
+        "--",
+        ".",
+        ":(exclude,glob)reports/**/*.log"
+      ],
+      "exitCode": 0,
+      "findings": 0,
+      "paths": []
+    },
+    "fullIncludingRawLogs": {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "exitCode": 2,
+      "findings": 160,
+      "paths": [
+        "reports/phase1-closeout/build-final.log",
+        "reports/phase1-closeout/build-local-only.log",
+        "reports/phase1-closeout/build.log",
+        "reports/phase1-closeout/diff-check-final.log",
+        "reports/phase1-closeout/file-budgets.log",
+        "reports/phase1-closeout/tool-versions.log",
+        "reports/phase1-integration-repair/build.log",
+        "reports/phase1-integration-repair/continuity-focused-after-packet.log",
+        "reports/phase1-integration-repair/continuity-focused-final.log",
+        "reports/phase1-integration-repair/continuity-focused.log",
+        "reports/phase1-integration-repair/lint.log",
+        "reports/phase1-integration-repair/mutation-card-inventory.log",
+        "reports/phase1-integration-repair/mutation-negative-control.log",
+        "reports/phase1-integration-repair/mutation-publication.log",
+        "reports/phase1-integration-repair/typecheck-after-build.log",
+        "reports/phase1-integration-repair/typecheck-before-build.log",
+        "reports/phase1-integration-repair/unit-all.log",
+        "reports/phase1-integration-repair/versions-node.log"
+      ]
+    }
+  },
+  "exclusions": {
+    "absentFromIndex": true,
+    "staleMetadataFields": []
+  },
+  "limitations": [
+    "Raw logs intentionally retain CLI whitespace; source/docs check excludes only reports/**/*.log.",
+    "This check does not establish absence of secrets; separate targeted privacy audit is retained."
+  ]
+}

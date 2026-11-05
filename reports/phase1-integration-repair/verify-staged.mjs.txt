@@ -1,0 +1,49 @@
+﻿import { execFileSync, spawnSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import path from 'node:path';
+const git = (args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 20_000_000 });
+const tracked = git(['ls-files', '-z']).split('\0').filter(Boolean);
+const paths = new Set(tracked);
+const changed = git(['diff', '--cached', '--name-only', '--diff-filter=ACM', '-z']).split('\0').filter(Boolean);
+const markdown = changed.filter((p) => p.endsWith('.md'));
+const missing = [];
+let relativeTargets = 0;
+for (const file of markdown) {
+  const text = git(['show', `:${file}`]);
+  const inline = /!?\[[^\]\n]*\]\((<[^>\n]+>|[^)\s]+)(?:\s+"[^"]*")?\)/g;
+  for (const match of text.matchAll(inline)) {
+    let target = match[1].replace(/^<|>$/g, '');
+    if (/^[a-z][a-z\d+.-]*:/i.test(target) || target.startsWith('//') || target.startsWith('#')) continue;
+    target = decodeURIComponent(target.split('#')[0].split('?')[0]);
+    if (!target) continue;
+    relativeTargets++;
+    const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(file), target));
+    if (!paths.has(resolved) && !tracked.some((p) => p.startsWith(`${resolved.replace(/\/$/, '')}/`))) missing.push({file, target});
+  }
+}
+const whitespace = (args) => {
+  const result = spawnSync('git', args, {encoding:'utf8', maxBuffer:20_000_000});
+  if (![0,2].includes(result.status)) throw new Error(`Unexpected whitespace check exit: ${result.status}`);
+  const findings = [...result.stdout.matchAll(/^(.+?):(\d+): (trailing whitespace|new blank line at EOF)\./gm)];
+  return { command: ['git', ...args], exitCode: result.status, findings: findings.length, paths: [...new Set(findings.map((m) => m[1]))] };
+};
+const full = whitespace(['diff', '--cached', '--check']);
+const sourceDocs = whitespace(['diff', '--cached', '--check', '--', '.', ':(exclude,glob)reports/**/*.log']);
+const excludedPaths = [
+ 'reports/phase1-closeout/browser-original-unidentified/app.log',
+ 'reports/phase1-closeout/browser-original-unidentified/report.json',
+ 'reports/phase1-closeout/browser-fixture-local-query.log'
+];
+const forbiddenFields = ['passingBrowserReportSha256','browserAppLogSha256','originalBrowserReportUnchanged','originalBrowserAppLogUnchanged'];
+const metadata = ['reports/phase1-closeout/candidate-identity.json','reports/phase1-closeout/candidate-final-verification.json'];
+const staleFields = metadata.flatMap((file) => forbiddenFields.filter((field) => Object.hasOwn(JSON.parse(git(['show',`:${file}`]).replace(/^\uFEFF/,'')),field)).map((field) => ({file,field})));
+const result = {
+ commands: { invocation: "Get-Content -LiteralPath 'reports/phase1-integration-repair/verify-staged.mjs.txt' -Raw | node --input-type=module", stagedPaths: ['git diff --cached --name-only --diff-filter=ACM -z','git ls-files -z','git show :<enumerated path>'] },
+ relativeTargets: { markdownFiles:markdown.length, checked:relativeTargets, missing, scope:'Inline Markdown relative file/directory targets in changed staged Markdown only, checked against the index; anchors and external URLs not verified.' },
+ whitespace: {sourceDocsAndStructuredEvidence:sourceDocs, fullIncludingRawLogs:full},
+ exclusions: {absentFromIndex:excludedPaths.every((p)=>!paths.has(p)), staleMetadataFields:staleFields},
+ limitations:['Raw logs intentionally retain CLI whitespace; source/docs check excludes only reports/**/*.log.','This check does not establish absence of secrets; separate targeted privacy audit is retained.']
+};
+writeFileSync('reports/phase1-integration-repair/staged-checks.json', JSON.stringify(result,null,2)+'\n');
+console.log(JSON.stringify({markdownFiles:markdown.length,relativeTargets,missing,sourceDocsExit:sourceDocs.exitCode,fullWhitespaceExit:full.exitCode,rawWhitespaceFindings:full.findings,rawWhitespacePaths:full.paths,excludedAbsent:result.exclusions.absentFromIndex,staleFields},null,2));
+if (missing.length || sourceDocs.exitCode || !result.exclusions.absentFromIndex || staleFields.length) process.exitCode=1;

@@ -1,0 +1,35 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+const git = (args, encoding='utf8') => execFileSync('git',args,{encoding,maxBuffer:30_000_000});
+const files=git(['ls-files','-z']).split('\0').filter(Boolean).sort();
+const inputPaths=files.filter((p)=> !p.startsWith('reports/') && !p.startsWith('docs/') && !/\.(md|txt)$/i.test(p));
+const sha=(bytes)=>createHash('sha256').update(bytes).digest('hex');
+const inputManifest=Object.fromEntries(inputPaths.map((p)=>[p,sha(git(['show',`:${p}`],null))]));
+const fingerprint=sha(Object.entries(inputManifest).map(([p,h])=>`${p}\0${h}\n`).join(''));
+const evidencePaths=files.filter((p)=>(p.startsWith('reports/phase1-integration-repair/') && /\.(log|json|txt)$/.test(p) && !/(privacy-scan|staged-checks|verified-inputs)\.json$/.test(p)) || p.startsWith('reports/mutation/') || p==='reports/phase1-closeout/browser-local/report.json' || p==='reports/phase1-closeout/browser-local-identity.json');
+const evidenceManifest=Object.fromEntries(evidencePaths.map((p)=>[p,sha(git(['show',`:${p}`],null))]));
+const versions=Object.fromEntries(['typescript','eslint','vitest','next','knip','@stryker-mutator/core','@stryker-mutator/vitest-runner','@stryker-mutator/instrumenter','@babel/core'].map((name)=>[name,JSON.parse(readFileSync(`node_modules/${name}/package.json`,'utf8')).version]));
+const npmVersion=readFileSync('reports/phase1-integration-repair/versions-npm.log','utf8').match(/^\d+\.\d+\.\d+\s*$/m)?.[0].trim();
+if (!npmVersion) throw new Error('Retained npm version output missing');
+const mutationReportChecks=['reports/mutation/public-publication.json','reports/mutation/card-inventory.json','reports/phase1-integration-repair/mutation-negative-control.json'].map((report)=>{
+ const data=JSON.parse(git(['show',`:${report}`]).replace(/^\uFEFF/,''));
+ const counts={};
+ const normalize=(text)=>text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n');
+ const currentSourceMatches=Object.entries(data.files).every(([file,details])=>normalize(details.source)===normalize(git(['show',`:${file}`])));
+ for (const file of Object.values(data.files)) for (const mutant of file.mutants) counts[mutant.status]=(counts[mutant.status]||0)+1;
+ if (!currentSourceMatches) throw new Error(`Mutation source mismatch: ${report}`);
+ return {report,thresholds:data.thresholds,currentSourceMatches,counts};
+});
+const result={
+ approvedBase:git(['rev-parse','HEAD']).trim(),locallyKnownApprovedMain:git(['rev-parse','origin/main']).trim(),
+ historicalCandidateFingerprint:'403d1152f4c9a1238cc96605cefad02c8427aa6c443b4bffe10a25711ee4e84a',
+ scope:'Repaired integration inputs from the staged index, excluding documentation, reports, and text-only retained scripts. This is distinct from the original candidate fingerprint. Hashes describe staged Git blob bytes after Git line-ending normalization.',
+ fingerprintAlgorithm:'SHA256 of sorted path + NUL + staged blob SHA256 + LF entries',inputFingerprint:fingerprint,inputCount:inputPaths.length,inputManifest,
+ evidenceScope:'Current retained command outputs/config text, mutation JSON, and identified synthetic browser report/identity in the staged index; excludes self and final scan summaries to avoid circular hashes.',evidenceManifest,
+ versions:{node:process.version,npm:npmVersion,...versions},
+ mutationReportChecks,
+ limitations:['Build/dependency/unit/mutation commands were run before final documentation-only edits.','Database/concurrency and identified browser report are retained historical evidence; unchanged application, database and journey inputs were not rerun.','The final full staged tree SHA is reported outside this tree to avoid self-reference.']
+};
+writeFileSync('reports/phase1-integration-repair/verified-inputs.json',JSON.stringify(result,null,2)+'\n');
+console.log(JSON.stringify({base:result.approvedBase,approvedMain:result.locallyKnownApprovedMain,inputCount:inputPaths.length,inputFingerprint:fingerprint,evidenceCount:evidencePaths.length,versions:result.versions},null,2));

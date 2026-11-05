@@ -1,0 +1,97 @@
+   ▲ Next.js 15.5.28
+   - Local:        http://127.0.0.1:3137
+   - Network:      http://127.0.0.1:3137
+   - Experiments (use with caution):
+     · clientTraceMetadata
+
+ ✓ Starting...
+ ○ Compiling /instrumentation ...
+ ✓ Compiled /instrumentation in 1966ms (1056 modules)
+ ✓ Ready in 10.5s
+ ○ Compiling / ...
+ ✓ Compiled / in 2.9s (2376 modules)
+ GET / 200 in 2525ms
+ GET / 200 in 138ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 858ms (579 modules)
+ ○ Compiling /login ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (215kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled /login in 950ms (2462 modules)
+ GET /login 200 in 1422ms
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 993ms (2486 modules)
+ GET /admin 200 in 1350ms
+ POST /login 303 in 2303ms
+ ○ Compiling /admin/businesses/new ...
+ ✓ Compiled /admin/businesses/new in 1366ms (2596 modules)
+ GET /admin/businesses/new 200 in 1818ms
+ ✓ Compiled /api/admin/operations in 454ms (2609 modules)
+ POST /api/admin/operations 200 in 813ms
+ ○ Compiling /admin/businesses/[id] ...
+ ✓ Compiled /admin/businesses/[id] in 1253ms (2905 modules)
+ GET /admin/businesses/97373b3e-f31a-4a49-855f-041e08333a2d?created=1 200 in 3062ms
+ ○ Compiling /api/admin/businesses/draft ...
+ ✓ Compiled /api/admin/businesses/draft in 2.5s (3521 modules)
+ POST /api/admin/businesses/draft 200 in 3567ms
+ ○ Compiling /admin/businesses/[id]/preview ...
+ ✓ Compiled /admin/businesses/[id]/preview in 794ms (3533 modules)
+ GET /admin/businesses/97373b3e-f31a-4a49-855f-041e08333a2d/preview?page=7c16dc38-6a8d-42c7-a8f5-df8f4cb50594 200 in 2178ms
+ ○ Compiling /b/[slug] ...
+ ✓ Compiled /b/[slug] in 657ms (3540 modules)
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 2552ms
+ GET /admin/businesses/97373b3e-f31a-4a49-855f-041e08333a2d 200 in 393ms
+ POST /api/admin/businesses/draft 200 in 146ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 105ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 94ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 88ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 86ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 108ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 111ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 109ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 101ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 108ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 95ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 96ms
+ GET /b/e2e-mw3ux1ix-g53o0 404 in 107ms
+ GET /b/e2e-mw3ux1ix-g53o0 200 in 153ms
+ GET /b/e2e-mw3ux1ix-g53o0 200 in 98ms
+ ○ Compiling /admin/cards ...
+ ✓ Compiled /admin/cards in 807ms (3624 modules)
+ GET /admin/cards 200 in 1362ms
+ POST /api/admin/operations 200 in 118ms
+ ○ Compiling /admin/cards/batches/[id] ...
+ ✓ Compiled /admin/cards/batches/[id] in 784ms (3630 modules)
+ GET /admin/cards/batches/80d0f3a1-b2d9-42d7-bef0-76b280f365c6?created=1 200 in 2437ms
+ GET /admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6&page_search=e2e-mw3ux1ix-g53o0 200 in 661ms
+ ○ Compiling /admin/cards/export ...
+ ✓ Compiled /admin/cards/export in 2s (3632 modules)
+ GET /admin/cards/export?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6 200 in 2208ms
+ ○ Compiling /api/admin/cards/assignment ...
+ ✓ Compiled /api/admin/cards/assignment in 780ms (3634 modules)
+ POST /api/admin/cards/assignment 200 in 1011ms
+ GET /admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6&page_search=e2e-mw3ux1ix-g53o0 200 in 253ms
+ ○ Compiling /c/[token] ...
+ ✓ Compiled /c/[token] in 753ms (3636 modules)
+ GET /c/7gjiyfhQRojJElDLNCnLhFqHB8wb-5ik?via=qr 302 in 2206ms
+ GET /c/7gjiyfhQRojJElDLNCnLhFqHB8wb-5ik?via=qr 302 in 37ms
+ GET /b/e2e-mw3ux1ix-g53o0?via=qr 200 in 237ms
+ GET /admin/businesses/97373b3e-f31a-4a49-855f-041e08333a2d 200 in 426ms
+ POST /api/admin/businesses/draft 200 in 101ms
+ POST /api/admin/businesses/draft 200 in 115ms
+ GET /b/e2e-mw3ux1ix-g53o0 200 in 159ms
+ GET /c/7gjiyfhQRojJElDLNCnLhFqHB8wb-5ik?via=qr 302 in 48ms
+ GET /admin/businesses/new 200 in 200ms
+ POST /api/admin/operations 200 in 81ms
+ GET /admin/businesses/4c62f2c4-a8a2-4e1b-9620-90a5cedd0ade?created=1 200 in 144ms
+ POST /api/admin/businesses/draft 200 in 96ms
+ GET /admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6&page_search=e2e-target-mw3ux1ix-g53o0 200 in 253ms
+ POST /api/admin/cards/assignment 200 in 64ms
+ GET /c/7gjiyfhQRojJElDLNCnLhFqHB8wb-5ik?via=nfc 302 in 54ms
+ GET /admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6&page_search=e2e-target-mw3ux1ix-g53o0 200 in 190ms
+ GET /c/7gjiyfhQRojJElDLNCnLhFqHB8wb-5ik?via=nfc 302 in 53ms
+ GET /b/e2e-target-mw3ux1ix-g53o0?via=nfc 200 in 240ms
+ GET /admin/businesses/4c62f2c4-a8a2-4e1b-9620-90a5cedd0ade 200 in 258ms
+ GET /admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6 200 in 227ms
+ POST /api/admin/cards/assignment 200 in 61ms
+ GET /c/7gjiyfhQRojJElDLNCnLhFqHB8wb-5ik?via=nfc 302 in 69ms
+ GET /admin/cards?batch=80d0f3a1-b2d9-42d7-bef0-76b280f365c6 200 in 149ms

@@ -1,0 +1,29 @@
+﻿COMMAND: git diff --check
+git : warning: in the working copy of '.github/pull_request_template.md', LF will be replaced by CRLF the next time 
+Git touches it
+At line:4 char:1
++ git diff --check 2>&1 | Out-File -LiteralPath $log -Append -Encoding  ...
++ ~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of '.github/workflows/ci.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'AGENTS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/ARCHITECTURE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'eslint.config.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/admin/cards/page.tsx', LF will be replaced by CRLF the next time Git touches 
+it
+warning: in the working copy of 'src/app/api/admin/businesses/draft/route.ts', LF will be replaced by CRLF the next 
+time Git touches it
+warning: in the working copy of 'src/lib/business/public-publication.ts', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'tests/e2e/owner-card-journey.e2e.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'tests/unit/draft-route.test.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'tests/unit/public-publication.test.ts', LF will be replaced by CRLF the next time Git 
+touches it
+EXIT_CODE=0

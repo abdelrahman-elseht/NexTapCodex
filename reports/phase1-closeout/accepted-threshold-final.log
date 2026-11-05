@@ -1,0 +1,6 @@
+﻿COMMAND: import stryker.config.mjs and inspect thresholds.break and mutation scope
+ACCEPTED_PUBLICATION_BREAK=94
+MUTATION_SCOPE=["src/lib/business/public-publication.ts:47-60"]
+NEGATIVE_CONTROL_BREAK=95
+NEGATIVE_CONTROL_STATUSES={"Killed":17,"Survived":1}
+EXIT_CODE=0

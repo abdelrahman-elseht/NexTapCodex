@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
   const url = new URL(request.url);
   const expectedOrigin = expectedRequestOrigin(request);
-  const localOrigin = url.origin;
+  const localOrigin = `${url.protocol}//${request.headers.get("host") || url.host}`;
   if (request.headers.get("origin") !== (process.env.NEXTAP_ENV === "staging" || process.env.NEXTAP_ENV === "production" || process.env.VERCEL_ENV ? expectedOrigin : localOrigin)) return response("Forbidden", 403);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();

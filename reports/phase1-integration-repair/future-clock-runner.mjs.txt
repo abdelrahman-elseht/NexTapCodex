@@ -1,0 +1,20 @@
+﻿import { spawnSync } from "node:child_process";
+
+const source = `const RealDate = Date; globalThis.Date = class extends RealDate {
+  constructor(...args) { super(...(args.length ? args : ["2030-01-01T00:00:00.000Z"])); }
+  static now() { return new RealDate("2030-01-01T00:00:00.000Z").getTime(); }
+};`;
+const preload = `data:text/javascript,${encodeURIComponent(source)}`;
+let failed = false;
+for (const [command, expectedExit, expectedOutput] of [["validate-contract", 0, "valid"], ["validate", 1, "stale"]]) {
+  const args = ["--import", preload, "scripts/continuity/continuation.mjs", command];
+  const child = spawnSync(process.execPath, args, { encoding: "utf8" });
+  console.log(`Executable: ${process.execPath}`);
+  console.log(`Arguments: ${JSON.stringify(args)}`);
+  console.log(`Exit code: ${child.status}`);
+  process.stdout.write(child.stdout);
+  process.stderr.write(child.stderr);
+  if (child.status !== expectedExit || child.stdout.trim() !== expectedOutput || child.error) failed = true;
+}
+console.log(failed ? "Controlled-clock assertions: FAIL" : "Controlled-clock assertions: PASS");
+if (failed) process.exitCode = 1;

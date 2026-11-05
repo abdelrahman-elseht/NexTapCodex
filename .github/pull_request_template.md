@@ -6,6 +6,8 @@
 
 <!-- Link the exact CI, browser, database, hosted, or release evidence. -->
 
+Dependency changes (when applicable): exact version, lockfile, license, security and registry deprecation/status evidence.
+
 ## Self-review
 
 Self-review owner: @

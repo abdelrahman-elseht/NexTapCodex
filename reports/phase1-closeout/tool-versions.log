@@ -1,0 +1,37 @@
+﻿COMMANDS: node --version; npm --version; git --version; npx --no-install stryker --version; npx --no-install knip --version; npx --no-install vitest --version; npx --no-install next --version; npx --no-install eslint --version; supabase --version; local DB/browser package versions
+v22.23.2
+10.9.8
+git version 2.55.0.windows.3
+10.1.1
+6.44.1
+vitest/4.1.12 win32-x64 node-v22.23.2
+Next.js v15.5.28
+v9.35.0
+2.122.0
+supabase : A new version of Supabase CLI is available: v3.0.0 (currently installed v2.122.0)
+At line:12 char:1
++ supabase --version 2>&1 | Out-File -LiteralPath $log -Append -Encodin ...
++ ~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (A new version o...alled v2.122.0):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+We recommend updating regularly for new features and bug fixes: 
+https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+@electric-sql/pglite=0.5.8
+embedded-postgres=17.10.0-beta.17
+@e2e-dev/web=0.13.0
+e2e=0.18.0
+ACCEPTED_PUBLICATION_BREAK_THRESHOLD:
+break: 94,
+COMMAND: node_modules/@embedded-postgres/windows-x64/native/bin/postgres.exe --version
+postgres (PostgreSQL) 17.10
+COMMAND: new PGlite().query("select version()") (fresh in-memory database)
+PostgreSQL 18.3 (PGlite 0.5.8) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit
+LOCAL_SUPABASE_DB_VERSION: PostgreSQL 17.11 (recorded from loopback DB in browser-local-identity.json)
+COMMAND: npx --no-install tsc --version
+Version 5.9.2
+COMMAND: installed Supabase/Playwright/pg package versions
+@supabase/supabase-js=2.100.1
+@supabase/ssr=0.10.0
+playwright-core=1.63.0
+pg=8.23.1

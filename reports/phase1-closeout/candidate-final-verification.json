@@ -1,0 +1,10 @@
+{
+  "capturedAtUtc": "2026-11-05T18:09:52.0296075Z",
+  "branch": "phase1/codebase-foundation",
+  "head": "230adeca680c0fe7e22b3ece0fd9169764b84ffe",
+  "candidateInputFingerprintSha256": "403d1152f4c9a1238cc96605cefad02c8427aa6c443b4bffe10a25711ee4e84a",
+  "matchesPreBrowserFingerprint": true,
+  "newBrowserReportSha256": "b171aa396ecd844f6d0e37acb178e2ac07deebfa282a396f949391d460f5763e",
+  "acceptedThreshold94": true,
+  "integrationPublicationNote": "Sanitized metadata copy: assertions about excluded unidentified-target browser files are omitted. The identified local synthetic report hash is retained; the candidate fingerprint describes the pre-repair candidate."
+}

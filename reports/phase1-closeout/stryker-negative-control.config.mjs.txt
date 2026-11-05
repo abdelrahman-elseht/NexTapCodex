@@ -1,0 +1,14 @@
+// Materialized temporarily at this path without the .txt extension for the run.
+import accepted from "../../stryker.config.mjs";
+
+export default {
+  ...accepted,
+  jsonReporter: {
+    ...accepted.jsonReporter,
+    fileName: "reports/phase1-closeout/stryker-negative-control.json",
+  },
+  thresholds: {
+    ...accepted.thresholds,
+    break: 95,
+  },
+};

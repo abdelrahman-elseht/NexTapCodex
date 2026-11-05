@@ -1,0 +1,15 @@
+import config from "./e2e.config";
+
+export default {
+  ...config,
+  targets: config.targets.map(target => ({
+    ...target,
+    app: {
+      ...target.app,
+      command: {
+        ...target.app.command,
+        log: "reports/phase1-closeout/browser-local-app.log",
+      },
+    },
+  })),
+};

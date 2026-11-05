@@ -1,0 +1,8 @@
+Command: npm.cmd run continuity:validate
+Exit code: 0
+
+
+> nextap-mvp@1.0.0 continuity:validate
+> node scripts/continuity/continuation.mjs validate
+
+valid
