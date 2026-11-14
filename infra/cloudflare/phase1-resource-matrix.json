@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-13T19:15:02+08:00",
+  "candidateRevision": "181f634025b8bb3962778b846f383dd8ae4e8c93",
+  "status": "provisioned-empty-not-bound",
+  "environments": {
+    "development": {
+      "status": "provisioned-empty",
+      "d1": {
+        "name": "nextap-dev-core",
+        "id": "a64cabf6-b8f4-41aa-84fc-b7fed5d2dde7",
+        "binding": "NEXTAP_DB",
+        "region": "WEUR"
+      },
+      "r2": {
+        "name": "nextap-dev-public",
+        "binding": "NEXTAP_PUBLIC_MEDIA"
+      },
+      "kv": {
+        "name": "nextap-dev-slug-cache",
+        "id": "58df600b88a94da7806deb7ad5bc90c2",
+        "binding": "NEXTAP_SLUG_CACHE"
+      },
+      "runtimeSecrets": "not-configured"
+    },
+    "staging": {
+      "status": "provisioned-empty",
+      "d1": {
+        "name": "nextap-staging-core",
+        "id": "98f7be19-5ab8-47c3-9e36-f7df99d83089",
+        "binding": "NEXTAP_DB",
+        "region": "EEUR"
+      },
+      "r2": {
+        "name": "nextap-staging-public",
+        "binding": "NEXTAP_PUBLIC_MEDIA"
+      },
+      "kv": {
+        "name": "nextap-staging-slug-cache",
+        "id": "d0154043f05a495c8e5e0ef5dbb81dc1",
+        "binding": "NEXTAP_SLUG_CACHE"
+      },
+      "runtimeSecrets": "not-configured"
+    },
+    "production": {
+      "status": "not-authorized",
+      "d1": null,
+      "r2": null,
+      "kv": null
+    }
+  },
+  "observedInventory": {
+    "pagesProjects": [
+      "nextap-phase0-proof-20261113",
+      "nextap-phase0-menu-20261113"
+    ],
+    "d1Databases": [
+      "nextap-dev-core",
+      "nextap-staging-core"
+    ],
+    "kvNamespaces": [
+      "nextap-dev-slug-cache",
+      "nextap-staging-slug-cache"
+    ],
+    "r2Buckets": [
+      "app-name-opennext-cache",
+      "nextap",
+      "nextap-dev-public",
+      "nextap-phase0-media",
+      "nextap-staging-public"
+    ]
+  },
+  "notes": [
+    "The pre-existing R2 buckets nextap and app-name-opennext-cache remain unclassified and are not Phase 1 targets.",
+    "The phase0 Pages projects and nextap-phase0-media bucket are disposable proof fixtures, not Phase 1 environment resources.",
+    "The dev and staging D1 databases were checked with SELECT 1 and have zero application-owned tables; Cloudflare exposes an internal _cf_KV metadata table. KV namespaces list no keys; R2 buckets have no objects.",
+    "D1 selected different default locations (WEUR and EEUR); assess regional parity before using staging to validate latency or residency assumptions.",
+    "An empty D1 SQL export/import was rehearsed from development to staging; it does not prove application data integrity or satisfy the data restore gate. See docs/research/PHASE_1_FOUNDATION_EVIDENCE_20261113.json."
+  ]
+}

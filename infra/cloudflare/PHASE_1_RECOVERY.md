@@ -1,0 +1,117 @@
+# Phase 1 Recovery Procedure
+
+Status: a synthetic, application-shaped D1/R2 export and staging restore passed on 2026-11-14, and all owned fixture data was cleaned up. No Cloudflare Workflow is configured. The local GitHub Actions candidate enables fixed development and staging backups using the existing `CLOUDFLARE_R2_ID_DEV` / `CLOUDFLARE_R2_SECRET_ACCESS_DEV` pair from the protected `staging` GitHub Environment; owner authorization covers both targets. Manual dispatch can select one target; scheduled runs include both. Effective permissions remain unverified, and no live run has been made. The Environment's required-reviewer rule is unchanged, so neither scheduled job is unattended. The workflow now contains code that will configure Cron monitors and the organization Sentry email workflow before backup, then require API readback confirmation. Live Sentry configuration and delivery remain pending until an authorized workflow run succeeds. The approved 24-hour RPO therefore remains unproven. The four-hour RTO also remains unproven, and retention is not configured or approved.
+
+## Scheduled non-production backup candidate
+
+`.github/workflows/phase1-backup.yml` has a daily schedule at 00:15 UTC and manual dispatch with a `development` or `staging` choice. Manual dispatch runs only the selected job; scheduled runs continue to run both. Each job passes its fixed respective target to `scripts/cloudflare/phase1-scheduled-backup.mjs`. Both source the existing DEV R2 S3 pair from the protected `staging` GitHub Environment; owner authorization for using this pair with both targets was confirmed. This is a configured candidate only: effective permissions remain unverified and the workflow has not been run. The runner rejects production and verifies the D1 migration ledger before export. Both jobs use the same protected `staging` Environment, whose required-reviewer rule is unchanged; approvals therefore prevent unattended scheduled execution. The jobs also expect `CLOUDFLARE_MIGRATION_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `SENTRY_DSN`, and `SENTRY_AUTH_TOKEN`. Before backup, the workflow setup runner discovers the Sentry organization/project, upserts both Cron monitors and an organization failure-notification workflow, and requires readback confirmation. Code is configured; live Sentry setup remains pending until an authorized workflow run verifies it. Scope Cloudflare/R2 access to the specific target D1/media resources and the shared private recovery bucket. No secret values were read or copied.
+
+The runner requires all three migration ledger entries before invoking Wrangler's data-only `d1 export` with the fixed 12-table allowlist. It uses the R2 S3 API to inventory and read every source public-media object, copies each object into the private recovery bucket while preserving its content headers and custom metadata, records byte counts, SHA-256 hashes, and source metadata in the manifest, and reads each copied object back to compare body size/hash and metadata. It uploads and verifies the D1 artifact and manifest, then uploads and verifies `SUCCESS.json` last. A failed run attempts to write and readback-verify `FAILURE.json` under its unique environment/date/timestamp prefix, then returns a failing process status even if that diagnostic upload cannot be verified. No cleanup or retention policy is applied. The S3 endpoint, Wrangler account, D1 IDs, and bucket names are fixed by the script/matrix; source media is never read from another environment.
+
+Sentry Cron Monitoring setup is a required pre-backup step: missing credentials, insufficient API scope, API errors, or readback mismatches fail before backup starts. The setup code upserts development and staging monitors at `15 0 * * *` UTC and an organization workflow for `monitor_check_in_failure`; its email action targets issue owners and falls back to `AllMembers`. Monitor `alert_rule_id` is preserved only when an existing monitor already references an alert rule. The code does not create an alert rule. Live configuration is not confirmed until API readback succeeds during a workflow run. Once setup succeeds, check-ins remain best-effort telemetry: check-in transport failures are reported but do not prevent backup execution, and a successful generation alone does not prove delivery or notification.
+
+GitHub Actions is the selected scheduler and Sentry Cron Monitoring is the intended check-in service. The runner derives the Sentry HTTP ingestion URL from `SENTRY_DSN`, attempts an `in_progress` POST with the environment's UTC cron schedule, a 30-minute maximum runtime, and stable GitHub run ID, then attempts `ok` or `error` with the same ID. Check-ins are best-effort and transport failures do not stop backup execution. The public DSN key authenticates ingestion; `SENTRY_AUTH_TOKEN` is used only by the setup runner for Sentry configuration and is never logged. The development monitor slug is `nextap-phase1-development-backup`; the staging monitor slug is `nextap-phase1-staging-backup`. The same DEV pair is authorized for both fixed non-production targets, but effective permissions remain unverified. The existing `staging` Environment reviewer gate remains unchanged and applies to both jobs, so daily schedules require approval and are not unattended. No protection rule was changed. Do not claim Sentry alerting until a run confirms both monitors and the notification workflow by API readback; do not claim the schedule or 24-hour RPO operational until effective access, an unattended generation, and the alert path are demonstrated.
+
+The R2 media inventory and D1 export are collected sequentially, so this generation is not a transactional snapshot across D1 and R2. The manifest records collection time and per-object digests; recovery acceptance still requires checking that restored D1 references resolve to the selected media generation. The exporter does not use Cloudflare's full-schema REST export path; recovery remains migration-first with a data-only payload to avoid the previously reproduced `no such table: main.page_publications` failure.
+
+## Authorized Recovery Rehearsal (2026-11-14)
+
+The explicitly authorized `CLOUDFLARE_MIGRATION_API_TOKEN` was loaded from ignored `.env.migration.local` into process memory; its value was not printed or recorded. Wrangler `4.161.0` authenticated to the Cloudflare account. Both development and staging D1 databases were empty before the rehearsal. No production resource, DNS setting, or application route was accessed or changed.
+
+A dedicated R2 bucket, `nextap-recovery-backup-20261114-7f3a`, was created. Wrangler confirmed no custom domains and disabled `r2.dev` public access. The run used only this private bucket; the existing development and staging public-media buckets were not mutated. It contained four uniquely owned objects during the rehearsal: the synthetic publication artifact, synthetic media, D1 SQL export, and D1 export manifest. All four were read back and their content SHA-256 values matched their local artifacts.
+
+The rehearsal first reproduced the recorded raw full-schema-and-data import failure once on disposable local D1 databases: importing a 12,626-byte schema-plus-data export into an empty target failed with `no such table: main.page_publications: SQLITE_ERROR`. Saved evidence has no failing statement or command output, so whether the failure occurred during schema creation or `INSERT` is unproven. Dump ordering is the observed cause class; dependent rows being inserted before the referenced table was created is an inference, not a verified fact. The targeted recovery path succeeded migration-first: apply the checked-in schema migrations to the empty target, export only application data with Wrangler `--no-schema` and the explicit 12-table allowlist, then import through `phase1-d1-workflow.mjs restore`. This keeps DDL ordering out of the data import. `PRAGMA defer_foreign_keys=TRUE` allows the cyclic data rows to be inserted in one restore operation, but foreign-key enforcement was not disabled; `PRAGMA foreign_key_check` ran after restore and returned zero violations in both databases.
+
+The development fixture used business `recovery-20261114-7f3a-business`, page `recovery-20261114-7f3a-page`, canonical slug `recovery-fixture-20261114-7f3a`, alias `recovery-fixture-old-20261114-7f3a`, publication `recovery-20261114-7f3a-publication`, media asset `recovery-20261114-7f3a-media`, card batch/card/history, audit event, and operation receipt. Guarded backup produced a 4,118-byte SQL export with SHA-256 `50be667a77476a3221836788c5ece68730f4a703b58a1d769a6d35b91235535b`. Guarded restore into staging applied and verified all three migrations, populated all 12 application tables, and verified both R2 references, the media checksum, and publication manifest checksum. Per-table source and target counts and SHA-256 checksums matched. The relationship join returned both canonical and alias rows with matching SHA-256 `aca4122c71133585d0607a4f5e0ba5da4eeb138deb9f0698f38512fd7fc57ba9`.
+
+After restore verification, read-only recovery confirmed Worker version `4746c6e5-38f3-44e6-8db0-f156cacc3550` was assigned at 100% and the expected bindings were present. The bearer used by the smoke run was lost before its result could be recovered, so service health and the end-to-end read probe are **unverified**. This deployment metadata does not establish usable service. Cleanup then removed only the fixture rows from development and staging and the four owned R2 objects; all fixture row predicates returned zero, both foreign-key checks remained clean, and each object read returned Cloudflare's exact key-not-found response. The private bucket remains in place and empty.
+
+No incident was declared, and no usable-service boundary was verified. Consequently there is no incident-declaration-to-usable-service duration to compare with the four-hour RTO. The approved 24-hour RPO is also unproven: this was a one-off synthetic recovery, not a scheduled protected generation, and retention/access isolation are not configured.
+
+## Objectives and evidence
+
+The approved recovery time objective is **four hours** from the recorded incident declaration to verified usable service in the recovery environment. The 183-second local restore test and this rehearsal's command durations are not RTO measurements. There is no incident-declaration-to-usable-service duration to compare with four hours, and RTO remains unproven because the runtime health result was unavailable.
+
+The owner-approved recovery point objective is **at most 24 hours**. This is a target, not evidence that the target is currently met. The intended mechanism is a protected D1 and R2 recovery generation at least every 24 hours, with monitored completion and retries; a latest successful protected recovery point older than 24 hours is an RPO breach. Cloudflare's official D1 backup Workflow example uses a daily schedule (`0 0 * * *`) and stores exports in R2. A 35-day retention window is recommended for review, not owner-approved. The private destination and GitHub Actions candidate exist. Both fixed non-production jobs are configured with the DEV R2 pair from the protected staging Environment under owner authorization, but effective permissions and a live run remain unverified. The reviewer gate prevents unattended generations, and the failed/missed Sentry alert rule is absent. The approved objective is not met or demonstrated today.
+
+The 2026-11-14 application-shaped recovery evidence used one synthetic business/page, canonical slug and historical alias, publication, media asset/reference, card assignment, audit record, and operation receipt, plus private synthetic R2 objects. It exercised live non-production D1 export/restore and R2 reads, but not representative production volume, existing public-media buckets, scheduled backup retention, credential isolation, or a recoverable service health probe. Existing seeded or production objects were not used as fixtures.
+
+## Initial Closeout Preflight (2026-11-14)
+
+**Stopped before mutation at the first preflight.** A read-only Wrangler query using the explicitly authorized migration credential returned zero rows in all 12 application tables in both declared non-production D1 resources. The initial instruction required stopping when existing resources were empty. A later bounded authorization resumed the rehearsal using uniquely owned synthetic fixtures and a newly created private bucket; see the completed rehearsal above.
+
+At that initial preflight, no D1 rows or R2 objects had been written. The later rehearsal avoided the existing public-media buckets because their current object inventory was not available. The private bucket's four temporary objects were inventoried and hashed individually, then deleted and verified absent.
+
+The focused local D1 restore test remains useful synthetic evidence. It verifies row checksums, counts, relationships including a canonical slug and alias, foreign-key integrity, manifest hashes, R2 reference checksums, and cleanup of its temporary local database state. The live synthetic recovery adds non-production D1/R2 transport and integrity evidence; runtime health and the approved RTO/RPO gates remain open.
+
+## Guarded D1 restore
+
+## Backup cadence and artifact contract
+
+The proposed operating cadence is a D1 and R2 export at least once every 24 hours, with failed/late run alerting and retry. Retain 35 daily generations as a recommendation pending owner approval. Do not report the RPO as met unless the newest successful, protected and integrity-checked D1 and R2 recovery point is no more than 24 hours old. The current `phase1-d1-workflow.mjs backup` command creates a data-only D1 SQL export and a companion manifest with UTC export time, exact D1 identity, explicit table allowlist, checked-in migration filenames and SHA-256 hashes, and artifact byte count and SHA-256. A future approved destination should provide encryption at rest, least-privilege access, and retention that prevents an application operator or compromised runtime credential from deleting all generations. The command does not store, inventory, or back up R2; include a contemporaneous R2 inventory and object content checksums in the backup generation. Keep secrets and Wrangler's temporary signed export URL out of logs and manifests.
+
+Cloudflare documents Time Travel as D1 point-in-time recovery on production storage; its legacy snapshot backup commands are not a retention policy for this workflow. The official scheduled D1 backup example uses Cloudflare Workflows to export D1 into R2 at `0 0 * * *`. No Cloudflare Workflow is configured for these Phase 1 resources. The separate GitHub Actions schedule is only candidate code and is not live or operationally approved; no approved private backup bucket or protected retention is configured, so the proposed cadence is not current evidence. Do not repurpose the application-public R2 buckets as backup storage.
+
+```sh
+node scripts/cloudflare/phase1-d1-workflow.mjs backup \
+  --environment development \
+  --d1 a64cabf6-b8f4-41aa-84fc-b7fed5d2dde7 \
+  --r2 nextap-dev-public \
+  --kv 58df600b88a94da7806deb7ad5bc90c2 \
+  --file /secure/backup/nextap-dev-core.sql \
+  --manifest /secure/backup/nextap-dev-core.manifest.json \
+  --remote
+```
+
+The command is safe to run only when the selected environment and current Wrangler account have been independently verified. It does not configure a schedule or protected storage. Preserve the manifest with the export and verify its SHA-256 before restore. R2 inventory metadata must identify bucket, collection time, object key, byte size, and content SHA-256 for every object referenced by restored publication rows; do not use ETags as content hashes.
+
+Use an isolated, empty development or staging target declared in `infra/cloudflare/phase1-resource-matrix.json`. Confirm the backup came from the reviewed migration version and is stored in an access-controlled location. Wrangler export may print a temporary signed download URL; keep that output private and do not put it in tickets, logs, or evidence. Do not run this procedure against production.
+
+Export only application data with explicit table names and `--no-schema`, then restore into the empty target through `phase1-d1-workflow.mjs`. Its preflight verifies the environment/resource identities, applies the checked-in migration set first, and refuses targets containing application rows. The restore is not transactional: on a post-import integrity failure, keep the isolated target quarantined, record the discrepancy, and restore again to a fresh empty target after correcting the input.
+
+```sh
+npx wrangler d1 export nextap-dev-core \
+  --remote \
+  --output /secure/backup/nextap-dev-core.sql \
+  --compatibility d1 \
+  --no-schema \
+  --table businesses --table business_pages --table page_sections \
+  --table slug_registry --table page_publications --table media_assets \
+  --table publication_media --table card_batches --table cards \
+  --table card_assignment_history --table audit_events --table operation_receipts
+
+node scripts/cloudflare/phase1-d1-workflow.mjs restore \
+  --environment staging \
+  --d1 98f7be19-5ab8-47c3-9e36-f7df99d83089 \
+  --r2 nextap-staging-public \
+  --kv d0154043f05a495c8e5e0ef5dbb81dc1 \
+  --file /secure/backup/nextap-dev-core.sql \
+  --r2-inventory /secure/backup/r2-inventory.json \
+  --remote
+```
+
+The R2 inventory is an independently collected, read-only snapshot of the recovery bucket. Its JSON shape is `{ "objects": [{ "key": "publication/v1/index.html", "sha256": "<64 lowercase hex characters>" }] }`; `sha256` is required for keys referenced by `publication_media`. The verifier checks that every restored `page_publications.artifact_key` and `publication_media.object_key` exists, that each publication manifest parses and matches its stored SHA-256, and that each media reference matches the inventory SHA-256. The artifact object must be present; this schema does not record its object SHA-256. Extra inventory objects are allowed because retained publications and unreferenced objects can exist.
+
+The inventory must be built from the same consistent recovery point as the D1 export. Cloudflare R2 supports S3 `ListObjectsV2`, `HeadObject`, and `GetObject`; R2 Workers `head()` returns object metadata. Record an application SHA-256 in object custom metadata when writing objects if it must be verified without downloading and hashing the complete object. Do not treat an ETag as SHA-256. This verifier consumes supplied inventory; it does not authenticate to, list, or mutate R2.
+
+Without `--r2-inventory`, restore reports transport-only completion and explicitly says content integrity is unverified. A restore with inventory can still fail after D1 rows have been imported. Never promote that target as usable until all integrity checks and service-level smoke tests pass.
+
+## Representative rehearsal record
+
+For an acceptance rehearsal, record these UTC boundaries from a distinct isolated non-production source and target:
+
+1. Start at incident declaration, before backup selection or export. Record the selected backup timestamp and expected recovery point.
+2. Record export size and SHA-256, D1 row counts and deterministic checksums per application table, schema/migration version, and R2 object count plus referenced-object checksums.
+3. Restore into a clean isolated target. Apply the reviewed migrations, import the data-only D1 export, verify counts/checksums, foreign keys, required publication/media references, and manifest hashes.
+4. Run the staging service's read-only health and representative business/page/alias/card/publication smoke checks. Stop the clock only when those checks show usable service.
+5. Record end time, elapsed recovery time, discrepancies, excluded services/data, and whether elapsed time was at most four hours. Preserve sanitized evidence and hashes, never signed download URLs or credentials.
+
+The current local synthetic restore is not that rehearsal. The objective is not demonstrated until a representative non-empty D1 and R2 recovery point is restored, integrity checks pass, and read-only service smoke checks establish usable service. Record incident declaration, selected recovery-point time, and usable-service time; use incident-to-usable-service elapsed time for the approved four-hour RTO. Recovery acceptance and both objective demonstrations remain open.
+
+## Official Cloudflare references
+
+- [D1 import and export](https://developers.cloudflare.com/d1/best-practices/import-export-data/)
+- [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
+- [Cloudflare Workflow scheduled D1 backup example](https://developers.cloudflare.com/workflows/examples/backup-d1/)
+- [R2 S3 API compatibility](https://developers.cloudflare.com/r2/api/s3/api/) (includes `ListObjectsV2`, `HeadObject`, and `GetObject` support)
+- [R2 Workers API](https://developers.cloudflare.com/r2/api/workers/workers-api/) (`R2Bucket.head()` and object metadata)

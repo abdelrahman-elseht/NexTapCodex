@@ -1,0 +1,31 @@
+{
+  "bucket": "nextap-recovery-backup-20261114-7f3a",
+  "collectedAtUtc": "2026-11-14T00:21:00Z",
+  "status": "historical-pre-cleanup-fixture-inventory",
+  "objects": [
+    {
+      "key": "recovery-20261114-7f3a/publication/artifact.html",
+      "sizeBytes": 123,
+      "sha256": "6f7dd808ac29a285ab35144a8bbae5d112e3264c604d7c455ef0db8dd2d361e2"
+    },
+    {
+      "key": "recovery-20261114-7f3a/media/synthetic.txt",
+      "sizeBytes": 74,
+      "sha256": "4b6c4c318a9360e28f4b7f80a4f2b994e40076546f4ec052a578f222691af93b"
+    },
+    {
+      "key": "recovery-20261114-7f3a/backup/core.sql",
+      "sizeBytes": 4118,
+      "sha256": "50be667a77476a3221836788c5ece68730f4a703b58a1d769a6d35b91235535b"
+    },
+    {
+      "key": "recovery-20261114-7f3a/backup/core.manifest.json",
+      "sizeBytes": 1139,
+      "sha256": "a042fab48810106ba5b36328faa2ebe8f353a1b6bfe5272888843ea51c40fb60"
+    }
+  ],
+  "postCleanupVerification": {
+    "status": "all four listed objects deleted and verified absent",
+    "bucketRetained": true
+  }
+}
