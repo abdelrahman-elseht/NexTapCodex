@@ -33,7 +33,6 @@ function monitor(slug: string, id: string) {
       ? "NexTap Phase 1 development backup"
       : "NexTap Phase 1 staging backup",
     status: "active",
-    type: "cron_job",
     project: { slug: "nextap" },
     config: { schedule_type: "crontab", schedule: "15 0 * * *", timezone: "UTC", max_runtime: 30 },
   };
@@ -44,7 +43,7 @@ function response(body: unknown, status = 200) {
 }
 
 describe("Sentry backup alert setup", () => {
-  it("configures and verifies only the selected monitor for a staging test run", async () => {
+  it("verifies the selected staging monitor without requiring an omitted type field", async () => {
     const monitors: ReturnType<typeof monitor>[] = [];
     let workflows: typeof workflow[] = [];
     const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
@@ -162,7 +161,6 @@ describe("Sentry backup alert setup", () => {
     ["name", (value: ReturnType<typeof monitor>) => { value.name = "Unexpected monitor name"; }],
     ["status", (value: ReturnType<typeof monitor>) => { value.status = "disabled"; }],
     ["project", (value: ReturnType<typeof monitor>) => { value.project = { slug: "other" }; }],
-    ["type", (value: ReturnType<typeof monitor>) => { value.type = "other"; }],
     ["schedule_type", (value: ReturnType<typeof monitor>) => { value.config.schedule_type = "interval"; }],
     ["schedule", (value: ReturnType<typeof monitor>) => { value.config.schedule = "0 0 * * *"; }],
     ["timezone", (value: ReturnType<typeof monitor>) => { value.config.timezone = "America/Los_Angeles"; }],

@@ -44,8 +44,13 @@ For a missing scheduled run, configure the monitor's schedule and optional `chec
 
 The current pricing page lists Cron Monitoring quotas as one cron monitor on Developer, one cron monitor with additional monitors priced at $0.78/monitor on Team and Business, and a custom allowance on Enterprise. The Developer pricing row includes email alerts/notifications. Pricing does not establish that every alert delivery integration is available at every tier; check the desired notification channel against the account's plan. No docs reviewed indicated that missed-run detection itself requires a paid plan.
 
+## Monitor readback fields
+
+The monitor creation request accepts `type: "cron_job"`, but the official `MonitorSerializerResponse` does not include a `type` or `monitor_type` field. The organization monitor list endpoint returns that serializer, so client readback validation must not require either field. Validate the returned slug, name, status, project identity, schedule type, schedule, timezone, and maximum runtime instead. This is a response-shape constraint; it does not change the creation payload.
+
 ## Sources
 
 - [Sentry Cron Monitoring HTTP setup](https://docs.sentry.io/product/monitors-and-alerts/monitors/crons/getting-started/http/) — ingestion URL, GET status examples, POST/upsert payload, schedule configuration, environment and overlapping-run options, and alert setup.
 - [Sentry Create a Monitor API](https://docs.sentry.io/api/crons/create-a-monitor/) — management endpoint and bearer-token authentication, distinct from check-in ingestion.
+- [Sentry monitor response serializer](https://github.com/getsentry/sentry/blob/master/src/sentry/monitors/serializers.py#L255-L281) and [organization monitor list endpoint](https://github.com/getsentry/sentry/blob/master/src/sentry/monitors/endpoints/organization_monitor_index.py#L112-L123) — confirmed response fields and serializer used by list readback.
 - [Sentry pricing](https://sentry.io/pricing/) — plan quotas for Cron Monitoring and alert features.
