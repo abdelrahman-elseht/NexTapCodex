@@ -158,13 +158,16 @@ describe("Sentry backup alert setup", () => {
   });
 
   it.each([
-    ["monitor name", (value: ReturnType<typeof monitor>) => { value.name = "Unexpected monitor name"; }],
-    ["monitor status", (value: ReturnType<typeof monitor>) => { value.status = "disabled"; }],
-    ["monitor project", (value: ReturnType<typeof monitor>) => { value.project = { slug: "other" }; }],
-    ["monitor schedule", (value: ReturnType<typeof monitor>) => { value.config.schedule = "0 0 * * *"; }],
-    ["monitor timezone", (value: ReturnType<typeof monitor>) => { value.config.timezone = "America/Los_Angeles"; }],
-    ["monitor max runtime", (value: ReturnType<typeof monitor>) => { value.config.max_runtime = 29; }],
-  ])("rejects a structurally incorrect %s readback", async (_label, mutate) => {
+    ["slug", (value: ReturnType<typeof monitor>) => { value.slug = "unexpected-slug"; }],
+    ["name", (value: ReturnType<typeof monitor>) => { value.name = "Unexpected monitor name"; }],
+    ["status", (value: ReturnType<typeof monitor>) => { value.status = "disabled"; }],
+    ["project", (value: ReturnType<typeof monitor>) => { value.project = { slug: "other" }; }],
+    ["type", (value: ReturnType<typeof monitor>) => { value.type = "other"; }],
+    ["schedule_type", (value: ReturnType<typeof monitor>) => { value.config.schedule_type = "interval"; }],
+    ["schedule", (value: ReturnType<typeof monitor>) => { value.config.schedule = "0 0 * * *"; }],
+    ["timezone", (value: ReturnType<typeof monitor>) => { value.config.timezone = "America/Los_Angeles"; }],
+    ["max_runtime", (value: ReturnType<typeof monitor>) => { value.config.max_runtime = 29; }],
+  ])("reports the %s predicate for an incorrect monitor readback", async (predicate, mutate) => {
     const monitors: ReturnType<typeof monitor>[] = [];
     let monitorReads = 0;
     const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
@@ -189,7 +192,79 @@ describe("Sentry backup alert setup", () => {
       throw new Error(`Unexpected mocked request: ${method} ${url}`);
     });
 
-    await expect(configureSentryBackupAlerts({ dsn, token, fetcher })).rejects.toThrow(/readback/);
+    await expect(configureSentryBackupAlerts({ dsn, token, fetcher })).rejects.toThrow(`readback failed predicate ${predicate}`);
+  });
+
+  it("reports a missing monitor and keeps returned diagnostics allowlisted", async () => {
+    const monitors: ReturnType<typeof monitor>[] = [];
+    let monitorReads = 0;
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/") && method === "GET") {
+        monitorReads += 1;
+        return response(monitorReads > 1 ? [] : monitors);
+      }
+      if (url.endsWith("/workflows/") && method === "GET") return response([workflow]);
+      if (url.includes("/workflows/workflow-1/") && method === "PUT") return response(workflow);
+      if (url.endsWith("/monitors/") && method === "POST") {
+        const body = JSON.parse(String(init?.body));
+        monitors.push(Object.assign(monitor(body.slug, `id-${monitors.length}`), { name: body.name }));
+        return response(monitors.at(-1));
+      }
+      if (url.endsWith("/workflows/") && method === "POST") return response(workflow);
+      throw new Error(`Unexpected mocked request: ${method} ${url}`);
+    });
+
+    await expect(configureSentryBackupAlerts({ dsn, token, fetcher })).rejects.toThrow(/readback failed predicate missing monitor/);
+  });
+
+  it("includes only allowlisted fields in monitor mismatch diagnostics", async () => {
+    const monitors: ReturnType<typeof monitor>[] = [];
+    let monitorReads = 0;
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/") && method === "GET") {
+        monitorReads += 1;
+        if (monitorReads > 1 && monitors[0]) {
+          monitors[0].status = { token: "object-secret-token" } as unknown as string;
+          monitors[0].config.schedule = "dsn=https://public@example.ingest.sentry.io/12345?token=secret-string";
+          Object.assign(monitors[0], { token: "secret-token", dsn: "secret-dsn", secret: "private" });
+        }
+        return response(monitors);
+      }
+      if (url.endsWith("/workflows/") && method === "GET") return response([workflow]);
+      if (url.includes("/workflows/workflow-1/") && method === "PUT") return response(workflow);
+      if (url.endsWith("/monitors/") && method === "POST") {
+        const body = JSON.parse(String(init?.body));
+        monitors.push(Object.assign(monitor(body.slug, `id-${monitors.length}`), { name: body.name }));
+        return response(monitors.at(-1));
+      }
+      if (url.endsWith("/workflows/") && method === "POST") return response(workflow);
+      throw new Error(`Unexpected mocked request: ${method} ${url}`);
+    });
+
+    let failure: unknown;
+    try {
+      await configureSentryBackupAlerts({ dsn, token, fetcher });
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(Error);
+    const message = (failure as Error).message;
+    expect(message).toContain('"status":false');
+    expect(message).toContain('"schedule":false');
+    expect(message).not.toContain("object-secret-token");
+    expect(message).not.toContain("public@example.ingest.sentry.io");
+    expect(message).not.toContain("secret-string");
+    expect(message).not.toContain("secret-token");
+    expect(message).not.toContain("secret-dsn");
+    expect(message).not.toContain("private");
   });
 
   it.each([

@@ -92,16 +92,37 @@ function desiredWorkflow() {
   };
 }
 
-function isExpectedMonitor(monitor, slug, name, projectSlug) {
-  return monitor.slug === slug
-    && monitor.name === name
-    && monitor.status === "active"
-    && String(monitor.projectSlug ?? monitor.project?.slug ?? monitor.project) === String(projectSlug)
-    && monitor.type === "cron_job"
-    && monitor.config?.schedule_type === "crontab"
-    && monitor.config?.schedule === "15 0 * * *"
-    && monitor.config?.timezone === "UTC"
-    && monitor.config?.max_runtime === 30;
+function monitorReadbackFailure(monitor, slug, name, projectSlug) {
+  if (!monitor) return "missing monitor";
+  const project = monitor.projectSlug ?? monitor.project?.slug ?? monitor.project;
+  const checks = [
+    ["slug", monitor.slug, slug],
+    ["name", monitor.name, name],
+    ["status", monitor.status, "active"],
+    ["project", String(project), String(projectSlug)],
+    ["type", monitor.type, "cron_job"],
+    ["schedule_type", monitor.config?.schedule_type, "crontab"],
+    ["schedule", monitor.config?.schedule, "15 0 * * *"],
+    ["timezone", monitor.config?.timezone, "UTC"],
+    ["max_runtime", monitor.config?.max_runtime, 30],
+  ];
+  const failed = checks.find(([, actual, expected]) => actual !== expected);
+  return failed ? failed[0] : null;
+}
+
+function monitorDiagnosticMatches(monitor, slug, name, projectSlug) {
+  const project = monitor.projectSlug ?? monitor.project?.slug ?? monitor.project;
+  return {
+    slug: monitor.slug === slug,
+    name: monitor.name === name,
+    status: monitor.status === "active",
+    project: project === projectSlug,
+    type: monitor.type === "cron_job",
+    schedule_type: monitor.config?.schedule_type === "crontab",
+    schedule: monitor.config?.schedule === "15 0 * * *",
+    timezone: monitor.config?.timezone === "UTC",
+    max_runtime: monitor.config?.max_runtime === 30,
+  };
 }
 
 function isExpectedWorkflow(workflow, expected) {
@@ -179,9 +200,12 @@ export async function configureSentryBackupAlerts({ dsn, token, target = "both",
 
   const verifiedMonitors = await listAll(fetcher, token, monitorPath);
   for (const desired of selectedMonitors) {
-    const actual = verifiedMonitors.find((item) => item.slug === desired.slug);
-    if (!actual || !isExpectedMonitor(actual, desired.slug, desired.name, project.slug)) {
-      throw new Error(`Sentry monitor ${desired.slug} readback did not confirm the required project, Cron schedule, and UTC timezone.`);
+    const actual = verifiedMonitors.find((item) => item.slug === desired.slug)
+      ?? verifiedMonitors.find((item) => item.name === desired.name);
+    const failedPredicate = monitorReadbackFailure(actual, desired.slug, desired.name, project.slug);
+    if (failedPredicate) {
+      const returned = actual ? `; field matches: ${JSON.stringify(monitorDiagnosticMatches(actual, desired.slug, desired.name, project.slug))}` : "";
+      throw new Error(`Sentry monitor ${desired.slug} readback failed predicate ${failedPredicate}${returned}.`);
     }
   }
   const verifiedWorkflows = await listAll(fetcher, token, workflowPath);
