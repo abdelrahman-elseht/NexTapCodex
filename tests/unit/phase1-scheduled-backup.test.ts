@@ -65,8 +65,39 @@ describe("scheduled recovery generation", () => {
     expect(staging).toContain("refs/heads/codex/phase1-backup-staging-test-main");
     expect(workflow).toContain("inputs.target == 'development'");
     expect(workflow).toContain("inputs.target == 'staging'");
-    expect(workflow).toContain("github.event_name == 'push' && 'staging'");
+    expect(workflow).toContain("github.event_name == 'push' && github.ref == 'refs/heads/codex/phase1-backup-staging-test-main' && 'staging'");
     expect(workflow).toContain("|| 'both'");
+  });
+
+  it("evaluates workflow event routing across push, schedule, and manual targets", () => {
+    const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
+    const jobCondition = (job: string) => {
+      const section = workflow.match(new RegExp(`  ${job}:\\n([\\s\\S]*?)(?=\\n  [a-z-]+:|$)`))?.[1];
+      return section?.match(/^    if: \$\{\{ ([^\n]+) \}\}$/m)?.[1] ?? "true";
+    };
+    const sentryTargetExpression = workflow.match(/sentry-backup-alert-setup\.mjs "\$\{\{ ([^\n]+) \}\}"/)?.[1];
+    expect(sentryTargetExpression).toBeDefined();
+
+    const evaluate = (expression: string, event: string, target: string | undefined, branch = "codex/phase1-backup-staging-test-main") => {
+      const context = { event_name: event, ref: `refs/heads/${branch}` };
+      return new Function("github", "inputs", `return (${expression});`)(context, { target });
+    };
+
+    const cases = [
+      { event: "push", target: undefined, branch: "codex/phase1-backup-staging-test-main", sentrySetup: true, sentry: "staging", development: false, staging: true },
+      { event: "push", target: undefined, branch: "main", sentrySetup: false, sentry: "both", development: false, staging: false },
+      { event: "schedule", target: undefined, branch: "main", sentrySetup: true, sentry: "both", development: true, staging: true },
+      { event: "workflow_dispatch", target: "development", branch: "main", sentrySetup: true, sentry: "development", development: true, staging: false },
+      { event: "workflow_dispatch", target: "staging", branch: "main", sentrySetup: true, sentry: "staging", development: false, staging: true },
+    ];
+
+    for (const scenario of cases) {
+      const { event, target, branch } = scenario;
+      expect(evaluate(jobCondition("sentry-setup"), event, target, branch)).toBe(scenario.sentrySetup);
+      expect(evaluate(jobCondition("development"), event, target, branch)).toBe(scenario.development);
+      expect(evaluate(jobCondition("staging"), event, target, branch)).toBe(scenario.staging);
+      expect(evaluate(sentryTargetExpression!, event, target, branch)).toBe(scenario.sentry);
+    }
   });
 
   it("hashes exact bytes and rejects production or unknown environments", () => {
