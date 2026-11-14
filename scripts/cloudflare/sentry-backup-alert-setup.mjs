@@ -188,10 +188,11 @@ export async function configureSentryBackupAlerts({ target, dsn, token, fetcher 
   const expected = desiredWorkflow(organization.id);
   const workflows = await listAll(fetcher, token, workflowPath);
   const existingWorkflow = workflows.find((workflow) => workflow.name === WORKFLOW_NAME);
+  let writtenWorkflow;
   if (existingWorkflow?.id) {
-    await request(fetcher, token, `${workflowPath}${encodeURIComponent(existingWorkflow.id)}/`, { method: "PUT", body: JSON.stringify(expected) });
+    writtenWorkflow = await request(fetcher, token, `${workflowPath}${encodeURIComponent(existingWorkflow.id)}/`, { method: "PUT", body: JSON.stringify(expected) });
   } else {
-    await request(fetcher, token, workflowPath, { method: "POST", body: JSON.stringify(expected) });
+    writtenWorkflow = await request(fetcher, token, workflowPath, { method: "POST", body: JSON.stringify(expected) });
   }
 
   const verifiedMonitors = await listAll(fetcher, token, monitorPath);
@@ -199,10 +200,15 @@ export async function configureSentryBackupAlerts({ target, dsn, token, fetcher 
   if (!actual || !isExpectedMonitor(actual, desired.slug, desired.name, project.slug)) {
     throw new Error(`Sentry monitor ${desired.slug} readback did not confirm the required project, Cron schedule, and UTC timezone.`);
   }
-  const verifiedWorkflows = await listAll(fetcher, token, workflowPath);
-  const namedWorkflow = verifiedWorkflows.find((workflow) => workflow.name === WORKFLOW_NAME);
-  const workflow = namedWorkflow ?? verifiedWorkflows[0];
-  const predicates = workflowPredicates(workflow, expected, Boolean(namedWorkflow));
+  let workflow = writtenWorkflow?.id
+    ? await request(fetcher, token, `${workflowPath}${encodeURIComponent(writtenWorkflow.id)}/`)
+    : null;
+  if (!workflow || typeof workflow !== "object" || Array.isArray(workflow)) {
+    const verifiedWorkflows = await listAll(fetcher, token, workflowPath);
+    workflow = verifiedWorkflows.find((item) => item.name === WORKFLOW_NAME) ?? null;
+  }
+  const workflowFound = Boolean(workflow && workflow.name === WORKFLOW_NAME);
+  const predicates = workflowPredicates(workflowFound ? workflow : null, expected, workflowFound);
   if (Object.values(predicates).some((passed) => !passed)) {
     throw new Error(`Sentry organization workflow readback predicates: ${JSON.stringify(predicates)}.`);
   }

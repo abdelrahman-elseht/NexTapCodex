@@ -60,6 +60,7 @@ describe("Sentry backup alert setup", () => {
       if (url.endsWith("/projects/") && method === "GET") return response([project]);
       if (url.endsWith("/monitors/") && method === "GET") return response(monitors);
       if (url.endsWith("/workflows/") && method === "GET") return response({ results: workflows });
+      if (url.endsWith("/workflows/workflow-1/") && method === "GET") return response(workflows[0] ?? null);
       if (url.endsWith("/monitors/") && method === "POST") {
         const body = JSON.parse(String(init?.body));
         monitors.push(Object.assign(monitor(body.slug, `id-${monitors.length}`), { name: body.name }));
@@ -79,6 +80,10 @@ describe("Sentry backup alert setup", () => {
       monitors: [expectedSlug],
       workflow: workflow.name,
     });
+    expect(fetcher).toHaveBeenCalledWith(
+      "https://sentry.io/api/0/organizations/nextap-org/workflows/workflow-1/",
+      expect.objectContaining({ headers: expect.any(Object) }),
+    );
     const monitorBodies = fetcher.mock.calls.filter(([url, init]) => String(url).endsWith("/monitors/") && init?.method === "POST").map(([, init]) => JSON.parse(String(init?.body)));
     expect(monitorBodies).toHaveLength(1);
     expect(monitorBodies.map((body) => body.slug)).toEqual([expectedSlug]);
@@ -108,6 +113,40 @@ describe("Sentry backup alert setup", () => {
     });
   });
 
+  it.each(["POST", "PUT"] as const)("falls back to an exact-name workflow list match when %s has no usable ID", async (writeMethod) => {
+    const monitors: ReturnType<typeof monitor>[] = [];
+    const unrelated = { ...workflow, id: "unrelated-workflow", name: "Another workflow" };
+    let workflowListReads = 0;
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/organizations/") && method === "GET") return response([org]);
+      if (url.endsWith("/projects/") && method === "GET") return response([project]);
+      if (url.endsWith("/monitors/") && method === "GET") return response(monitors);
+      if (url.endsWith("/monitors/") && method === "POST") {
+        const body = JSON.parse(String(init?.body));
+        const created = Object.assign(monitor(body.slug, `id-${monitors.length}`), { name: body.name });
+        monitors.push(created);
+        return response(created);
+      }
+      if (url.endsWith("/workflows/") && method === "GET") {
+        workflowListReads += 1;
+        if (workflowListReads === 1 && writeMethod === "POST") return response([]);
+        return response(writeMethod === "PUT" && workflowListReads === 1 ? [workflow] : [unrelated, workflow]);
+      }
+      if (url.endsWith("/workflows/") && method === "POST") return response({ name: workflow.name });
+      if (url.endsWith("/workflows/workflow-1/") && method === "PUT") return response({});
+      throw new Error(`Unexpected mocked request: ${method} ${url}`);
+    });
+
+    await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).resolves.toMatchObject({
+      workflow: workflow.name,
+    });
+    expect(fetcher.mock.calls.some(([url, init]) => String(url).includes("/workflows/") && init?.method === writeMethod)).toBe(true);
+    expect(fetcher.mock.calls.some(([url, init]) => String(url).endsWith("/workflows/workflow-1/") && (init?.method ?? "GET") === "GET")).toBe(false);
+    expect(fetcher.mock.calls.some(([url]) => String(url).endsWith("/workflows/unrelated-workflow/"))).toBe(false);
+  });
+
   it.each([undefined, "production", ""])("rejects a missing or invalid target (%s) before API access", async (target) => {
     const fetcher = vi.fn();
     await expect(configureSentryBackupAlerts({ target, dsn, token, fetcher } as Parameters<typeof configureSentryBackupAlerts>[0]))
@@ -123,6 +162,7 @@ describe("Sentry backup alert setup", () => {
       if (url.endsWith("/projects/")) return response([project]);
       if (url.endsWith("/monitors/") && !init?.method) return response(monitors);
       if (url.endsWith("/workflows/") && !init?.method) return response([workflow]);
+      if (url.endsWith("/workflows/workflow-1/") && !init?.method) return response(workflow);
       if (url.includes("/monitors/") && init?.method === "PUT") return response({});
       if (url.includes("/workflows/workflow-1/") && init?.method === "PUT") return response({});
       throw new Error(`Unexpected mocked request: ${init?.method ?? "GET"} ${url}`);
@@ -207,6 +247,11 @@ describe("Sentry backup alert setup", () => {
         mutate(altered);
         return response([altered]);
       }
+      if (url.endsWith("/workflows/workflow-1/") && method === "GET") {
+        const altered: any = structuredClone(workflow);
+        mutate(altered);
+        return response(altered);
+      }
       if (url.endsWith("/monitors/") && method === "POST") {
         const body = JSON.parse(String(init?.body));
         const created = Object.assign(monitor(body.slug, `id-${monitors.length}`), { name: body.name });
@@ -241,6 +286,13 @@ describe("Sentry backup alert setup", () => {
         altered.actionFilters[0].actions[0].config.targetIdentifier = { token: secret };
         return response([altered]);
       }
+      if (url.endsWith("/workflows/workflow-1/") && method === "GET") {
+        const altered: any = structuredClone(workflow);
+        altered.name = secret;
+        altered.providerPayload = { credential: secret };
+        altered.actionFilters[0].actions[0].config.targetIdentifier = { token: secret };
+        return response(altered);
+      }
       if (url.endsWith("/monitors/") && method === "POST") {
         const body = JSON.parse(String(init?.body));
         const created = Object.assign(monitor(body.slug, `id-${monitors.length}`), { name: body.name });
@@ -267,6 +319,7 @@ describe("Sentry backup alert setup", () => {
 
   it("rejects a missing workflow readback", async () => {
     const monitors: ReturnType<typeof monitor>[] = [];
+    let workflowListReads = 0;
     const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? "GET";
@@ -279,12 +332,27 @@ describe("Sentry backup alert setup", () => {
         monitors.push(created);
         return response(created);
       }
-      if (url.endsWith("/workflows/") && method === "GET") return response({ results: [] });
+      if (url.endsWith("/workflows/") && method === "GET") {
+        workflowListReads += 1;
+        return response({ results: workflowListReads === 1 ? [] : [{ ...workflow, id: "unrelated", name: "Unrelated workflow" }] });
+      }
+      if (url.endsWith("/workflows/workflow-1/") && method === "GET") return response(null);
       if (url.endsWith("/workflows/") && method === "POST") return response(workflow);
       throw new Error(`Unexpected mocked request: ${method} ${url}`);
     });
 
-    await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).rejects.toThrow(/workflow readback/);
+    let errorMessage = "";
+    try {
+      await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher });
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : "";
+    }
+    expect(errorMessage).toContain('"workflowFound":false');
+    expect(errorMessage).toContain('"name":false');
+    expect(errorMessage).toContain('"triggerGroup":false');
+    expect(errorMessage).toContain('"emailActionFallback":false');
+    expect(errorMessage).not.toContain("Unrelated workflow");
+    expect(errorMessage).not.toContain('"triggerGroup":true');
   });
 
   it("fails with the exact API status before later setup calls when token scope is insufficient", async () => {
