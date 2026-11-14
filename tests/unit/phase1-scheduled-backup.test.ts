@@ -45,14 +45,14 @@ describe("scheduled recovery generation", () => {
     const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
 
     expect(setup).toContain("environment: staging");
-    expect(setup).toContain("inputs.target == matrix.target");
-    expect(setup).toContain("max-parallel: 1");
-    expect(workflow.match(/sentry-backup-alert-setup\.mjs/g)).toHaveLength(1);
-    expect(setup).toContain('sentry-backup-alert-setup.mjs "${{ matrix.target }}"');
-    for (const job of [development, staging]) {
-      expect(job).toContain("needs: sentry-setup");
+    expect(setup).toContain("sentry-backup-alert-setup.mjs development");
+    expect(setup).toContain("sentry-backup-alert-setup.mjs staging");
+    expect(setup).not.toContain("matrix:");
+    expect(workflow.match(/sentry-backup-alert-setup\.mjs/g)).toHaveLength(2);
+    expect(development).toContain("needs: sentry-setup");
+    expect(staging).toContain("needs: sentry-setup");
+    for (const job of [setup, development, staging]) {
       expect(job).toContain("environment: staging");
-      expect(job).not.toContain("sentry-backup-alert-setup.mjs");
     }
   });
 
@@ -65,13 +65,14 @@ describe("scheduled recovery generation", () => {
     const condition = (section: string | undefined) => section?.match(/^    if: \$\{\{ ([^\n]+) \}\}$/m)?.[1] ?? "true";
     const evaluate = (expression: string, event: string, target: string | undefined, ref: string, matrixTarget?: string) =>
       new Function("github", "inputs", "matrix", `return (${expression});`)({ event_name: event, ref }, { target }, { target: matrixTarget });
-    const setupCondition = condition(setup);
+    const setupDevelopmentCondition = setup?.match(/if: \$\{\{ ([^\n]+) \}\}\n\s+run: node scripts\/cloudflare\/sentry-backup-alert-setup\.mjs development/)?.[1] ?? "true";
+    const setupStagingCondition = setup?.match(/if: \$\{\{ ([^\n]+) \}\}\n\s+run: node scripts\/cloudflare\/sentry-backup-alert-setup\.mjs staging/)?.[1] ?? "true";
     const developmentCondition = condition(development);
     const stagingCondition = condition(staging);
 
     expect(workflow).toMatch(/push:\n\s+branches:\n\s+- codex\/phase1-backup-staging-test-main/);
-    expect(setupCondition).toContain("matrix.target == 'staging'");
-    expect(setup).toContain("max-parallel: 1");
+    expect(setup).not.toMatch(/^    if:.*matrix\./m);
+    expect(workflow).not.toMatch(/^    if:.*matrix\./m);
     const scenarios = [
       { event: "schedule", target: undefined, ref: "refs/heads/main", setup: [true, true], development: true, staging: true },
       { event: "workflow_dispatch", target: "development", ref: "refs/heads/main", setup: [true, false], development: true, staging: false },
@@ -81,7 +82,10 @@ describe("scheduled recovery generation", () => {
     ];
 
     for (const scenario of scenarios) {
-      expect(["development", "staging"].map((target) => evaluate(setupCondition, scenario.event, scenario.target, scenario.ref, target))).toEqual(scenario.setup);
+      expect([
+        evaluate(setupDevelopmentCondition, scenario.event, scenario.target, scenario.ref),
+        evaluate(setupStagingCondition, scenario.event, scenario.target, scenario.ref),
+      ]).toEqual(scenario.setup);
       expect(evaluate(developmentCondition, scenario.event, scenario.target, scenario.ref)).toBe(scenario.development);
       expect(evaluate(stagingCondition, scenario.event, scenario.target, scenario.ref)).toBe(scenario.staging);
     }

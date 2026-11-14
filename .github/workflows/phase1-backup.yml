@@ -25,11 +25,6 @@ concurrency:
 
 jobs:
   sentry-setup:
-    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == matrix.target) || (github.event_name == 'push' && github.ref == 'refs/heads/codex/phase1-backup-staging-test-main' && matrix.target == 'staging') }}
-    strategy:
-      max-parallel: 1
-      matrix:
-        target: [development, staging]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: staging
@@ -43,8 +38,12 @@ jobs:
           node-version: 22.23.5
           cache: npm
       - run: npm ci
-      - name: Configure and verify Sentry backup alerts
-        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs "${{ matrix.target }}"
+      - name: Configure and verify development Sentry backup alert
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'development') }}
+        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs development
+      - name: Configure and verify staging Sentry backup alert
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'staging') || (github.event_name == 'push' && github.ref == 'refs/heads/codex/phase1-backup-staging-test-main') }}
+        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs staging
 
   development:
     needs: sentry-setup
