@@ -64,10 +64,10 @@ function scheduleConfig() {
   return { schedule_type: "crontab", schedule: "15 0 * * *", timezone: "UTC", max_runtime: 30 };
 }
 
-function desiredWorkflow() {
+function desiredWorkflow(organizationId) {
   return {
     name: WORKFLOW_NAME,
-    logicType: "any-short",
+    organizationId: String(organizationId),
     triggers: {
       logicType: "any-short",
       conditions: [{
@@ -92,72 +92,48 @@ function desiredWorkflow() {
   };
 }
 
-function monitorReadbackFailure(monitor, slug, name, projectSlug) {
-  if (!monitor) return "missing monitor";
-  const project = monitor.projectSlug ?? monitor.project?.slug ?? monitor.project;
-  const checks = [
-    ["slug", monitor.slug, slug],
-    ["name", monitor.name, name],
-    ["status", monitor.status, "active"],
-    ["project", String(project), String(projectSlug)],
-    ["schedule_type", monitor.config?.schedule_type, "crontab"],
-    ["schedule", monitor.config?.schedule, "15 0 * * *"],
-    ["timezone", monitor.config?.timezone, "UTC"],
-    ["max_runtime", monitor.config?.max_runtime, 30],
-  ];
-  const failed = checks.find(([, actual, expected]) => actual !== expected);
-  return failed ? failed[0] : null;
-}
-
-function monitorDiagnosticMatches(monitor, slug, name, projectSlug) {
-  const project = monitor.projectSlug ?? monitor.project?.slug ?? monitor.project;
-  return {
-    slug: monitor.slug === slug,
-    name: monitor.name === name,
-    status: monitor.status === "active",
-    project: project === projectSlug,
-    schedule_type: monitor.config?.schedule_type === "crontab",
-    schedule: monitor.config?.schedule === "15 0 * * *",
-    timezone: monitor.config?.timezone === "UTC",
-    max_runtime: monitor.config?.max_runtime === 30,
-  };
+function isExpectedMonitor(monitor, slug, name, projectSlug) {
+  return monitor.slug === slug
+    && monitor.name === name
+    && monitor.status === "active"
+    && String(monitor.projectSlug ?? monitor.project?.slug ?? monitor.project) === String(projectSlug)
+    && monitor.config?.schedule_type === "crontab"
+    && monitor.config?.schedule === "15 0 * * *"
+    && monitor.config?.timezone === "UTC"
+    && monitor.config?.max_runtime === 30;
 }
 
 function isExpectedWorkflow(workflow, expected) {
+  const isFailureCondition = (condition) => condition?.type === "issue_type"
+    && condition.comparison?.value === "monitor_check_in_failure"
+    && condition.comparison?.include === true
+    && condition.conditionResult === true;
+  const hasSingleFailureCondition = (group) => group?.logicType === "any-short"
+    && Array.isArray(group.conditions)
+    && group.conditions.length === 1
+    && isFailureCondition(group.conditions[0]);
+  const actionFilter = Array.isArray(workflow.actionFilters) && workflow.actionFilters.length === 1
+    ? workflow.actionFilters[0]
+    : null;
+  const actions = actionFilter?.actions;
+  const emailAction = Array.isArray(actions) && actions.length === 1 ? actions[0] : null;
+
   return workflow.name === expected.name
-    && workflow.logicType === expected.logicType
-    && workflow.triggers?.logicType === "any-short"
-    && Array.isArray(workflow.triggers?.conditions)
-    && workflow.triggers.conditions.length === 1
-    && workflow.triggers.conditions[0]?.type === "issue_type"
-    && workflow.triggers.conditions[0]?.comparison?.value === "monitor_check_in_failure"
-    && workflow.triggers.conditions[0]?.comparison?.include === true
-    && Array.isArray(workflow.actionFilters)
-    && workflow.actionFilters.length === 1
-    && workflow.actionFilters[0]?.logicType === "any-short"
-    && Array.isArray(workflow.actionFilters[0]?.conditions)
-    && workflow.actionFilters[0].conditions.length === 1
-    && workflow.actionFilters[0].conditions[0]?.type === "issue_type"
-    && workflow.actionFilters[0].conditions[0]?.comparison?.value === "monitor_check_in_failure"
-    && workflow.actionFilters[0].conditions[0]?.comparison?.include === true
-    && Array.isArray(workflow.actionFilters[0]?.actions)
-    && workflow.actionFilters[0].actions.length === 1
-    && workflow.actionFilters[0].actions[0]?.type === "email"
-    && workflow.actionFilters[0].actions[0]?.integrationId === null
-    && workflow.actionFilters[0].actions[0]?.status === "active"
-    && workflow.actionFilters[0].actions[0]?.config?.targetType === "issue_owners"
-    && workflow.actionFilters[0].actions[0]?.config?.targetDisplay === null
-    && workflow.actionFilters[0].actions[0]?.config?.targetIdentifier === null
-    && workflow.actionFilters[0].actions[0]?.data?.fallthroughType === "AllMembers";
+    && workflow.enabled === true
+    && String(workflow.organizationId) === expected.organizationId
+    && hasSingleFailureCondition(workflow.triggers)
+    && hasSingleFailureCondition(actionFilter)
+    && emailAction?.type === "email"
+    && emailAction.status === "active"
+    && emailAction.integrationId === null
+    && emailAction.config?.targetType === "issue_owners"
+    && emailAction.config?.targetIdentifier === null
+    && emailAction.data?.fallthroughType === "AllMembers";
 }
 
-/** @param {{dsn?: string, token?: string, target?: string, fetcher?: typeof fetch}} options Configure and verify scheduled monitors and the organization failure workflow. */
-export async function configureSentryBackupAlerts({ dsn, token, target = "both", fetcher = fetch } = {}) {
+/** @param {{dsn?: string, token?: string, fetcher?: typeof fetch}} options Configure and verify both scheduled monitors and the organization failure workflow. */
+export async function configureSentryBackupAlerts({ dsn, token, fetcher = fetch } = {}) {
   if (!token) throw new Error("SENTRY_AUTH_TOKEN is required to configure Sentry backup alerts.");
-  if (target !== "both" && target !== "development" && target !== "staging") {
-    throw new Error("Sentry backup target must be development, staging, or both.");
-  }
-  const selectedMonitors = target === "both" ? MONITORS : MONITORS.filter(({ slug }) => slug.endsWith(`-${target}-backup`));
   const { orgId, projectId } = readDsn(dsn);
   const organizations = await listAll(fetcher, token, "/organizations/");
   const organization = organizations.find((item) => String(item.id) === orgId);
@@ -168,7 +144,7 @@ export async function configureSentryBackupAlerts({ dsn, token, target = "both",
 
   const monitorPath = `/organizations/${encodeURIComponent(organization.slug)}/monitors/`;
   const existingMonitors = await listAll(fetcher, token, monitorPath);
-  for (const desired of selectedMonitors) {
+  for (const desired of MONITORS) {
     const prior = existingMonitors.find((item) => item.slug === desired.slug);
     const body = {
       project: project.slug,
@@ -187,7 +163,7 @@ export async function configureSentryBackupAlerts({ dsn, token, target = "both",
   }
 
   const workflowPath = `/organizations/${encodeURIComponent(organization.slug)}/workflows/`;
-  const expected = desiredWorkflow();
+  const expected = desiredWorkflow(organization.id);
   const workflows = await listAll(fetcher, token, workflowPath);
   const existingWorkflow = workflows.find((workflow) => workflow.name === WORKFLOW_NAME);
   if (existingWorkflow?.id) {
@@ -197,13 +173,10 @@ export async function configureSentryBackupAlerts({ dsn, token, target = "both",
   }
 
   const verifiedMonitors = await listAll(fetcher, token, monitorPath);
-  for (const desired of selectedMonitors) {
-    const actual = verifiedMonitors.find((item) => item.slug === desired.slug)
-      ?? verifiedMonitors.find((item) => item.name === desired.name);
-    const failedPredicate = monitorReadbackFailure(actual, desired.slug, desired.name, project.slug);
-    if (failedPredicate) {
-      const returned = actual ? `; field matches: ${JSON.stringify(monitorDiagnosticMatches(actual, desired.slug, desired.name, project.slug))}` : "";
-      throw new Error(`Sentry monitor ${desired.slug} readback failed predicate ${failedPredicate}${returned}.`);
+  for (const desired of MONITORS) {
+    const actual = verifiedMonitors.find((item) => item.slug === desired.slug);
+    if (!actual || !isExpectedMonitor(actual, desired.slug, desired.name, project.slug)) {
+      throw new Error(`Sentry monitor ${desired.slug} readback did not confirm the required project, Cron schedule, and UTC timezone.`);
     }
   }
   const verifiedWorkflows = await listAll(fetcher, token, workflowPath);
@@ -211,11 +184,11 @@ export async function configureSentryBackupAlerts({ dsn, token, target = "both",
   if (!verifiedWorkflow || !isExpectedWorkflow(verifiedWorkflow, expected)) {
     throw new Error("Sentry organization workflow readback did not confirm monitor failure detection and issue-owner email with AllMembers fallback.");
   }
-  return { organization: organization.slug, project: project.slug, monitors: selectedMonitors.map(({ slug }) => slug), workflow: WORKFLOW_NAME };
+  return { organization: organization.slug, project: project.slug, monitors: MONITORS.map(({ slug }) => slug), workflow: WORKFLOW_NAME };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  configureSentryBackupAlerts({ dsn: process.env.SENTRY_DSN, token: process.env.SENTRY_AUTH_TOKEN, target: process.argv[2] ?? "both" })
+  configureSentryBackupAlerts({ dsn: process.env.SENTRY_DSN, token: process.env.SENTRY_AUTH_TOKEN })
     .then(({ organization, project, monitors, workflow }) => {
       process.stdout.write(`Sentry alert configuration verified for ${organization}/${project}: ${monitors.join(", ")} and ${workflow}.\n`);
     })
