@@ -8,12 +8,14 @@ const project = { id: 456, slug: "nextap" };
 const workflow = {
   id: "workflow-1",
   name: "NexTap Phase 1 backup check-in failures",
-  organizationId: "123",
   logicType: "any-short",
-  triggers: [{ type: "issue", comparison: { field: "issue_type", value: "monitor_check_in_failure", include: true } }],
+  triggers: {
+    logicType: "any-short",
+    conditions: [{ type: "issue_type", comparison: { value: "monitor_check_in_failure", include: true } }],
+  },
   actionFilters: [{
     logicType: "any-short",
-    conditions: [{ type: "issue", comparison: { field: "issue_type", value: "monitor_check_in_failure", include: true } }],
+    conditions: [{ type: "issue_type", comparison: { value: "monitor_check_in_failure", include: true } }],
     actions: [{
     type: "email",
     integrationId: null,
@@ -116,14 +118,16 @@ describe("Sentry backup alert setup", () => {
     expect(monitorBodies.map((body) => body.config.schedule)).toEqual(["15 0 * * *", "15 0 * * *"]);
     expect(monitorBodies.every((body) => body.config.max_runtime === 30)).toBe(true);
     expect(monitorBodies.every((body) => body.project === project.slug && body.config.timezone === "UTC")).toBe(true);
-    expect(fetcher.mock.calls.find(([url, init]) => String(url).endsWith("/workflows/") && init?.method === "POST")?.[1]?.body).toBe(JSON.stringify({
+    expect(JSON.parse(String(fetcher.mock.calls.find(([url, init]) => String(url).endsWith("/workflows/") && init?.method === "POST")?.[1]?.body))).toEqual({
       name: workflow.name,
-      organizationId: "123",
       logicType: "any-short",
-      triggers: [{ type: "issue", comparison: { field: "issue_type", value: "monitor_check_in_failure", include: true } }],
+      triggers: {
+        logicType: "any-short",
+        conditions: [{ type: "issue_type", comparison: { value: "monitor_check_in_failure", include: true } }],
+      },
       actionFilters: [{
         logicType: "any-short",
-        conditions: [{ type: "issue", comparison: { field: "issue_type", value: "monitor_check_in_failure", include: true } }],
+        conditions: [{ type: "issue_type", comparison: { value: "monitor_check_in_failure", include: true } }],
         actions: [{
         type: "email",
         integrationId: null,
@@ -131,7 +135,7 @@ describe("Sentry backup alert setup", () => {
         data: { fallthroughType: "AllMembers" },
         config: { targetType: "issue_owners", targetDisplay: null, targetIdentifier: null },
       }] }],
-    }));
+    });
   });
 
   it("updates existing monitors and workflow without adding alert_rule_id", async () => {
@@ -189,8 +193,10 @@ describe("Sentry backup alert setup", () => {
   });
 
   it.each([
-    ["trigger condition", (value: typeof workflow) => { value.triggers[0].comparison.value = "other"; }],
+    ["trigger condition", (value: typeof workflow) => { value.triggers.conditions[0].comparison.value = "other"; }],
+    ["trigger condition type", (value: typeof workflow) => { value.triggers.conditions[0].type = "issue"; }],
     ["action filter condition", (value: typeof workflow) => { value.actionFilters[0].conditions[0].comparison.value = "other"; }],
+    ["action filter condition type", (value: typeof workflow) => { value.actionFilters[0].conditions[0].type = "issue"; }],
     ["action recipient", (value: typeof workflow) => { value.actionFilters[0].actions[0].config.targetType = "managers"; }],
     ["fallback recipient", (value: typeof workflow) => { value.actionFilters[0].actions[0].data.fallthroughType = "none"; }],
   ])("rejects a structurally incorrect workflow %s readback", async (_label, mutate) => {

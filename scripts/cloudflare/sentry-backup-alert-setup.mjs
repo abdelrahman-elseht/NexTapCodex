@@ -64,20 +64,22 @@ function scheduleConfig() {
   return { schedule_type: "crontab", schedule: "15 0 * * *", timezone: "UTC", max_runtime: 30 };
 }
 
-function desiredWorkflow(organizationId) {
+function desiredWorkflow() {
   return {
     name: WORKFLOW_NAME,
-    organizationId: String(organizationId),
     logicType: "any-short",
-    triggers: [{
-      type: "issue",
-      comparison: { field: "issue_type", value: "monitor_check_in_failure", include: true },
-    }],
+    triggers: {
+      logicType: "any-short",
+      conditions: [{
+        type: "issue_type",
+        comparison: { value: "monitor_check_in_failure", include: true },
+      }],
+    },
     actionFilters: [{
       logicType: "any-short",
       conditions: [{
-        type: "issue",
-        comparison: { field: "issue_type", value: "monitor_check_in_failure", include: true },
+        type: "issue_type",
+        comparison: { value: "monitor_check_in_failure", include: true },
       }],
       actions: [{
         type: "email",
@@ -104,21 +106,19 @@ function isExpectedMonitor(monitor, slug, name, projectSlug) {
 
 function isExpectedWorkflow(workflow, expected) {
   return workflow.name === expected.name
-    && String(workflow.organizationId ?? workflow.organization?.id) === expected.organizationId
     && workflow.logicType === expected.logicType
-    && Array.isArray(workflow.triggers)
-    && workflow.triggers.length === 1
-    && workflow.triggers[0]?.type === "issue"
-    && workflow.triggers[0]?.comparison?.field === "issue_type"
-    && workflow.triggers[0]?.comparison?.value === "monitor_check_in_failure"
-    && workflow.triggers[0]?.comparison?.include === true
+    && workflow.triggers?.logicType === "any-short"
+    && Array.isArray(workflow.triggers?.conditions)
+    && workflow.triggers.conditions.length === 1
+    && workflow.triggers.conditions[0]?.type === "issue_type"
+    && workflow.triggers.conditions[0]?.comparison?.value === "monitor_check_in_failure"
+    && workflow.triggers.conditions[0]?.comparison?.include === true
     && Array.isArray(workflow.actionFilters)
     && workflow.actionFilters.length === 1
     && workflow.actionFilters[0]?.logicType === "any-short"
     && Array.isArray(workflow.actionFilters[0]?.conditions)
     && workflow.actionFilters[0].conditions.length === 1
-    && workflow.actionFilters[0].conditions[0]?.type === "issue"
-    && workflow.actionFilters[0].conditions[0]?.comparison?.field === "issue_type"
+    && workflow.actionFilters[0].conditions[0]?.type === "issue_type"
     && workflow.actionFilters[0].conditions[0]?.comparison?.value === "monitor_check_in_failure"
     && workflow.actionFilters[0].conditions[0]?.comparison?.include === true
     && Array.isArray(workflow.actionFilters[0]?.actions)
@@ -132,7 +132,7 @@ function isExpectedWorkflow(workflow, expected) {
     && workflow.actionFilters[0].actions[0]?.data?.fallthroughType === "AllMembers";
 }
 
-/** @param {{dsn?: string, token?: string, fetcher?: typeof fetch}} options Configure and verify both scheduled monitors and the organization failure workflow. */
+/** @param {{dsn?: string, token?: string, target?: string, fetcher?: typeof fetch}} options Configure and verify scheduled monitors and the organization failure workflow. */
 export async function configureSentryBackupAlerts({ dsn, token, target = "both", fetcher = fetch } = {}) {
   if (!token) throw new Error("SENTRY_AUTH_TOKEN is required to configure Sentry backup alerts.");
   if (target !== "both" && target !== "development" && target !== "staging") {
@@ -168,7 +168,7 @@ export async function configureSentryBackupAlerts({ dsn, token, target = "both",
   }
 
   const workflowPath = `/organizations/${encodeURIComponent(organization.slug)}/workflows/`;
-  const expected = desiredWorkflow(organization.id);
+  const expected = desiredWorkflow();
   const workflows = await listAll(fetcher, token, workflowPath);
   const existingWorkflow = workflows.find((workflow) => workflow.name === WORKFLOW_NAME);
   if (existingWorkflow?.id) {
