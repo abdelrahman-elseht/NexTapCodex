@@ -8,7 +8,7 @@ const MONITORS = [
 ];
 const WORKFLOW_NAME = "NexTap Phase 1 backup check-in failures";
 
-const SENSITIVE_KEY = /(?:token|secret|dsn|auth|credential|password|api[_-]?key)/i;
+const SENSITIVE_KEY = /(?:token|secret|dsn|auth|bearer|credential|password|api[_-]?key)/i;
 
 function redactText(value, token) {
   return value
@@ -36,9 +36,29 @@ function safeProviderMessage(payload, token) {
   return values.filter(Boolean).join("; ").slice(0, 2048).trim();
 }
 
+function recursiveProviderMessage(payload, token) {
+  const values = [];
+  const visit = (value, key = "") => {
+    if (SENSITIVE_KEY.test(key)) return;
+    if (typeof value === "string") values.push(redactText(value, token));
+    else if (Array.isArray(value)) value.forEach((item) => visit(item, key));
+    else if (value && typeof value === "object") {
+      for (const [childKey, child] of Object.entries(value)) visit(child, childKey);
+    }
+  };
+  visit(payload);
+  return values.filter(Boolean).join("; ").slice(0, 1500).trim();
+}
+
 async function providerErrorDetail(response, token) {
-  if (!response.body) return "";
-  const reader = response.body.getReader();
+  const contentType = (response.headers.get("content-type") ?? "").split(";", 1)[0].trim().toLowerCase().slice(0, 100) || "unknown";
+  if (!response.body) return { kind: "empty", contentType, bytes: 0, detail: "" };
+  let reader;
+  try {
+    reader = response.body.getReader();
+  } catch {
+    return { kind: "unreadable", contentType, bytes: 0, detail: "" };
+  }
   const chunks = [];
   let length = 0;
   try {
@@ -52,10 +72,11 @@ async function providerErrorDetail(response, token) {
     }
     if (length === 8192) await reader.cancel();
   } catch {
-    return "";
+    return { kind: "unreadable", contentType, bytes: length, detail: "" };
   } finally {
     reader.releaseLock();
   }
+  if (!length) return { kind: "empty", contentType, bytes: 0, detail: "" };
   const bytes = new Uint8Array(length);
   let offset = 0;
   for (const chunk of chunks) {
@@ -63,16 +84,20 @@ async function providerErrorDetail(response, token) {
     offset += chunk.length;
   }
   const raw = new TextDecoder().decode(bytes);
-  try {
-    return safeProviderMessage(JSON.parse(raw), token);
-  } catch {
-    return redactText(raw, token).slice(0, 2048).trim();
+  let payload;
+  try { payload = JSON.parse(raw); } catch {
+    const detail = redactText(raw, token).slice(0, 1500).trim();
+    return { kind: "text", contentType, bytes: length, detail };
   }
+  const recognized = safeProviderMessage(payload, token);
+  if (recognized) return { kind: "json", contentType, bytes: length, detail: recognized.slice(0, 1500) };
+  return { kind: "unrecognized JSON", contentType, bytes: length, detail: recursiveProviderMessage(payload, token) };
 }
 
 async function apiError(label, response, token) {
-  const detail = await providerErrorDetail(response, token);
-  const suffix = detail ? `; provider response: ${detail}` : "";
+  const diagnostic = await providerErrorDetail(response, token);
+  const summary = `response ${diagnostic.kind}; content-type ${diagnostic.contentType}; ${diagnostic.bytes} bytes`;
+  const suffix = diagnostic.detail ? `; provider response: ${summary}; ${diagnostic.detail}` : `; provider response: ${summary}`;
   return new Error(`Sentry ${label} failed with HTTP ${response.status}${suffix}; verify SENTRY_AUTH_TOKEN scope and Sentry API access.`);
 }
 

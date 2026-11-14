@@ -440,9 +440,10 @@ describe("Sentry backup alert setup", () => {
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : "";
     }
-    const detail = errorMessage.split("; provider response: ")[1]?.split("; verify")[0] ?? "";
+    const detail = errorMessage.split("; provider response: ")[1]?.split(/; \d+ bytes; /)[1]?.split("; verify")[0] ?? "";
     expect(detail).toMatch(/^Invalid schedule:/);
     expect(detail.length).toBeLessThanOrEqual(2048);
+    expect(errorMessage.length).toBeLessThan(2200);
   });
 
   it("reads no more than 8192 response bytes and caps the returned diagnostic at 2048 characters", async () => {
@@ -475,10 +476,55 @@ describe("Sentry backup alert setup", () => {
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : "";
     }
-    const detail = errorMessage.split("; provider response: ")[1]?.split("; verify")[0] ?? "";
+    const detail = errorMessage.split("; provider response: ")[1]?.split(/; \d+ bytes; /)[1]?.split("; verify")[0] ?? "";
     expect(detail).toMatch(/^Invalid schedule:/);
     expect(detail.length).toBeLessThanOrEqual(2048);
     expect(consumed).toBeLessThanOrEqual(8192 + 1024);
     expect(consumed).toBeGreaterThan(0);
+  });
+
+  it("projects nested unrecognized validation JSON and redacts credential-shaped fields", async () => {
+    const existingMonitor = monitor("nextap-phase1-development-backup", "monitor-dev");
+    const body = {
+      validation: { errors: [{ field: "config.schedule", message: `Invalid schedule for ${dsn}` }] },
+      nested: { bearer: "Bearer opaque-token", authorization: "Basic opaque-auth", accessToken: "opaque-access" },
+    };
+    const fetcher = vi.fn(async (input: URL | RequestInfo) => {
+      const url = String(input);
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/")) return response([existingMonitor]);
+      if (url.endsWith("/monitors/monitor-dev/")) return response(body, 400);
+      throw new Error(`Unexpected mocked request: ${url}`);
+    });
+    let message = "";
+    try { await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher }); }
+    catch (error) { message = error instanceof Error ? error.message : ""; }
+    expect(message).toContain("response unrecognized JSON; content-type application/json;");
+    expect(message).toContain("Invalid schedule for [redacted DSN]");
+    for (const secret of ["public-key", "opaque-token", "opaque-auth", "opaque-access"]) expect(message).not.toContain(secret);
+  });
+
+  it("distinguishes empty and unreadable provider response bodies", async () => {
+    const existingMonitor = monitor("nextap-phase1-development-backup", "monitor-dev");
+    for (const [body, expectedKind] of [
+      [new Response(null, { status: 400, headers: { "content-type": " application/problem+json; charset=utf-8 " } }), "empty"],
+      [new Response(new ReadableStream<Uint8Array>({ pull() { throw new Error("read failed"); } }), { status: 400 }), "unreadable"],
+    ] as const) {
+      const fetcher = vi.fn(async (input: URL | RequestInfo) => {
+        const url = String(input);
+        if (url.endsWith("/organizations/")) return response([org]);
+        if (url.endsWith("/projects/")) return response([project]);
+        if (url.endsWith("/monitors/")) return response([existingMonitor]);
+        if (url.endsWith("/monitors/monitor-dev/")) return body;
+        throw new Error(`Unexpected mocked request: ${url}`);
+      });
+      let message = "";
+      try { await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher }); }
+      catch (error) { message = error instanceof Error ? error.message : ""; }
+      expect(message).toContain(`response ${expectedKind}; content-type`);
+      if (expectedKind === "empty") expect(message).toContain("content-type application/problem+json; 0 bytes");
+      expect(message.length).toBeLessThan(2048);
+    }
   });
 });
