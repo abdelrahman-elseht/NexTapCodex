@@ -21,30 +21,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  sentry-setup:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == matrix.target }}
-    strategy:
-      max-parallel: 1
-      matrix:
-        target: [development, staging]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: staging
-    env:
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.23.5
-          cache: npm
-      - run: npm ci
-      - name: Configure and verify Sentry backup alerts
-        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs "${{ matrix.target }}"
-
   development:
-    needs: sentry-setup
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'development' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -68,12 +45,16 @@ jobs:
           node-version: 22.23.5
           cache: npm
       - run: npm ci
+      - name: Configure and verify Sentry backup alerts
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs development
       - run: npm install --global wrangler@4.161.0
       - name: Generate verified development recovery point
         run: node scripts/cloudflare/phase1-scheduled-backup.mjs development
 
   staging:
-    needs: sentry-setup
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'staging' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -95,6 +76,11 @@ jobs:
           node-version: 22.23.5
           cache: npm
       - run: npm ci
+      - name: Configure and verify Sentry backup alerts
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs staging
       - run: npm install --global wrangler@4.161.0
       - name: Generate verified staging recovery point
         run: node scripts/cloudflare/phase1-scheduled-backup.mjs staging

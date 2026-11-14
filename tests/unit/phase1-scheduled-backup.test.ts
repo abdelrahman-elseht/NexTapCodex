@@ -23,29 +23,23 @@ describe("scheduled recovery generation", () => {
 
   it("selects both targets on schedule and only the requested target on manual runs", () => {
     const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
-    const setup = workflow.match(/  sentry-setup:\n([\s\S]*?)(?=\n  development:)/)?.[1];
     const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
     const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
-    const setupGuard = setup?.match(/^    if: (.+)$/m)?.[1];
     const developmentGuard = development?.match(/^    if: (.+)$/m)?.[1];
     const stagingGuard = staging?.match(/^    if: (.+)$/m)?.[1];
 
-    expect(setupGuard).toBe("${{ github.event_name != 'workflow_dispatch' || inputs.target == matrix.target }}");
     expect(developmentGuard).toBe("${{ github.event_name != 'workflow_dispatch' || inputs.target == 'development' }}");
     expect(stagingGuard).toBe("${{ github.event_name != 'workflow_dispatch' || inputs.target == 'staging' }}");
 
-    const runs = (guard: string, event: string, target: string, selected = target) =>
-      guard.includes("matrix.target")
-        ? event !== "workflow_dispatch" || selected === target
-        : event !== "workflow_dispatch" || guard.includes(`'${selected}'`);
+    const runs = (guard: string, event: string, selected: string, target: string) =>
+      event !== "workflow_dispatch" || guard.includes(`'${selected}'`) && guard.includes(`'${target}'`);
     for (const target of ["development", "staging"]) {
-      expect(runs(setupGuard!, "schedule", target)).toBe(true);
-      expect(runs(target === "development" ? developmentGuard! : stagingGuard!, "schedule", target)).toBe(true);
-      expect(runs(setupGuard!, "workflow_dispatch", target, target)).toBe(true);
-      expect(runs(setupGuard!, "workflow_dispatch", target, target === "development" ? "staging" : "development")).toBe(false);
-      expect(runs(developmentGuard!, "workflow_dispatch", target)).toBe(target === "development");
-      expect(runs(stagingGuard!, "workflow_dispatch", target)).toBe(target === "staging");
+      expect(runs(developmentGuard!, "schedule", target, "development")).toBe(true);
+      expect(runs(stagingGuard!, "schedule", target, "staging")).toBe(true);
+      expect(runs(developmentGuard!, "workflow_dispatch", target, "development")).toBe(target === "development");
+      expect(runs(stagingGuard!, "workflow_dispatch", target, "staging")).toBe(target === "staging");
     }
+    expect(workflow).not.toMatch(/^    if:.*\b(?:matrix|needs)\./m);
   });
 
   it("aligns both Sentry monitor schedules with the workflow schedule", async () => {
@@ -67,35 +61,31 @@ describe("scheduled recovery generation", () => {
 
   it("configures and verifies each target before the protected backup jobs", () => {
     const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
-    const setup = workflow.match(/  sentry-setup:\n([\s\S]*?)(?=\n  development:)/)?.[1];
     const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
     const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
 
-    expect(setup).toContain("environment: staging");
-    expect(setup).toContain("inputs.target == matrix.target");
-    expect(setup).toContain("max-parallel: 1");
-    expect(workflow.match(/sentry-backup-alert-setup\.mjs/g)).toHaveLength(1);
-    expect(setup).toContain('sentry-backup-alert-setup.mjs "${{ matrix.target }}"');
-    for (const job of [development, staging]) {
-      expect(job).toContain("needs: sentry-setup");
+    expect(workflow.match(/sentry-backup-alert-setup\.mjs/g)).toHaveLength(2);
+    for (const [job, target] of [[development, "development"], [staging, "staging"]]) {
       expect(job).toContain("environment: staging");
-      expect(job).not.toContain("sentry-backup-alert-setup.mjs");
+      expect(job).toContain(`sentry-backup-alert-setup.mjs ${target}`);
+      expect(job.indexOf(`sentry-backup-alert-setup.mjs ${target}`))
+        .toBeLessThan(job.indexOf(`phase1-scheduled-backup.mjs ${target}`));
     }
   });
 
   it("maps the Sentry DSN secret to setup and both backup check-ins", () => {
     const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
-    const setup = workflow.match(/  sentry-setup:\n([\s\S]*?)(?=\n  development:)/)?.[1];
     const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
     const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
 
-    expect(setup).toContain("SENTRY_DSN: ${{ secrets.SENTRY_DSN }}");
     expect(development).toContain("SENTRY_DSN: ${{ secrets.SENTRY_DSN }}");
     expect(staging).toContain("SENTRY_DSN: ${{ secrets.SENTRY_DSN }}");
     expect(staging).toContain("SENTRY_CRON_MONITOR_SLUG: nextap-phase1-staging-backup");
     expect(staging).toContain("GITHUB_RUN_ID: ${{ github.run_id }}");
     expect(staging).toContain("GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}");
     expect(staging).not.toContain("NEXT_PUBLIC_SENTRY_DSN");
+    expect(development).toContain("SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}");
+    expect(staging).toContain("SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}");
   });
 
   it("hashes exact bytes and rejects production or unknown environments", () => {
