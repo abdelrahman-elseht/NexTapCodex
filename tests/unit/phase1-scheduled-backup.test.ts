@@ -59,33 +59,16 @@ describe("scheduled recovery generation", () => {
     }
   });
 
-  it("configures and verifies each target before the protected backup jobs", () => {
+  it("runs protected backup jobs without Sentry setup or credentials", () => {
     const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
     const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
     const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
 
-    expect(workflow.match(/sentry-backup-alert-setup\.mjs/g)).toHaveLength(2);
+    expect(workflow).not.toMatch(/sentry-backup-alert-setup\.mjs|SENTRY_[A-Z0-9_]+/);
     for (const [job, target] of [[development, "development"], [staging, "staging"]]) {
       expect(job).toContain("environment: staging");
-      expect(job).toContain(`sentry-backup-alert-setup.mjs ${target}`);
-      expect(job.indexOf(`sentry-backup-alert-setup.mjs ${target}`))
-        .toBeLessThan(job.indexOf(`phase1-scheduled-backup.mjs ${target}`));
+      expect(job).toContain(`phase1-scheduled-backup.mjs ${target}`);
     }
-  });
-
-  it("maps the Sentry DSN secret to setup and both backup check-ins", () => {
-    const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
-    const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
-    const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
-
-    expect(development).toContain("SENTRY_DSN: ${{ secrets.SENTRY_DSN }}");
-    expect(staging).toContain("SENTRY_DSN: ${{ secrets.SENTRY_DSN }}");
-    expect(staging).toContain("SENTRY_CRON_MONITOR_SLUG: nextap-phase1-staging-backup");
-    expect(staging).toContain("GITHUB_RUN_ID: ${{ github.run_id }}");
-    expect(staging).toContain("GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}");
-    expect(staging).not.toContain("NEXT_PUBLIC_SENTRY_DSN");
-    expect(development).toContain("SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}");
-    expect(staging).toContain("SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}");
   });
 
   it("hashes exact bytes and rejects production or unknown environments", () => {
