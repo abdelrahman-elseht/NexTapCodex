@@ -38,14 +38,17 @@ describe("scheduled recovery generation", () => {
     }
   });
 
-  it("configures Sentry once before both protected backup jobs", () => {
+  it("configures and verifies each target before the protected backup jobs", () => {
     const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
     const setup = workflow.match(/  sentry-setup:\n([\s\S]*?)(?=\n  development:)/)?.[1];
     const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
     const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
 
     expect(setup).toContain("environment: staging");
+    expect(setup).toContain("inputs.target == matrix.target");
+    expect(setup).toContain("max-parallel: 1");
     expect(workflow.match(/sentry-backup-alert-setup\.mjs/g)).toHaveLength(1);
+    expect(setup).toContain('sentry-backup-alert-setup.mjs "${{ matrix.target }}"');
     for (const job of [development, staging]) {
       expect(job).toContain("needs: sentry-setup");
       expect(job).toContain("environment: staging");
@@ -53,50 +56,34 @@ describe("scheduled recovery generation", () => {
     }
   });
 
-  it("runs only staging on the exact candidate-branch push and preserves schedule/manual routing", () => {
+  it("routes scheduled, manual, and candidate push events to the intended targets", () => {
     const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
+    const setup = workflow.match(/  sentry-setup:\n([\s\S]*?)(?=\n  development:)/)?.[1];
     const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
     const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
+    const candidateRef = "refs/heads/codex/phase1-backup-staging-test-main";
+    const condition = (section: string | undefined) => section?.match(/^    if: \$\{\{ ([^\n]+) \}\}$/m)?.[1] ?? "true";
+    const evaluate = (expression: string, event: string, target: string | undefined, ref: string, matrixTarget?: string) =>
+      new Function("github", "inputs", "matrix", `return (${expression});`)({ event_name: event, ref }, { target }, { target: matrixTarget });
+    const setupCondition = condition(setup);
+    const developmentCondition = condition(development);
+    const stagingCondition = condition(staging);
 
     expect(workflow).toMatch(/push:\n\s+branches:\n\s+- codex\/phase1-backup-staging-test-main/);
-    expect(development).toContain("github.event_name == 'schedule'");
-    expect(development).not.toContain("github.event_name == 'push'");
-    expect(staging).toContain("github.event_name == 'push'");
-    expect(staging).toContain("refs/heads/codex/phase1-backup-staging-test-main");
-    expect(workflow).toContain("inputs.target == 'development'");
-    expect(workflow).toContain("inputs.target == 'staging'");
-    expect(workflow).toContain("github.event_name == 'push' && github.ref == 'refs/heads/codex/phase1-backup-staging-test-main' && 'staging'");
-    expect(workflow).toContain("|| 'both'");
-  });
-
-  it("evaluates workflow event routing across push, schedule, and manual targets", () => {
-    const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
-    const jobCondition = (job: string) => {
-      const section = workflow.match(new RegExp(`  ${job}:\\n([\\s\\S]*?)(?=\\n  [a-z-]+:|$)`))?.[1];
-      return section?.match(/^    if: \$\{\{ ([^\n]+) \}\}$/m)?.[1] ?? "true";
-    };
-    const sentryTargetExpression = workflow.match(/sentry-backup-alert-setup\.mjs "\$\{\{ ([^\n]+) \}\}"/)?.[1];
-    expect(sentryTargetExpression).toBeDefined();
-
-    const evaluate = (expression: string, event: string, target: string | undefined, branch = "codex/phase1-backup-staging-test-main") => {
-      const context = { event_name: event, ref: `refs/heads/${branch}` };
-      return new Function("github", "inputs", `return (${expression});`)(context, { target });
-    };
-
-    const cases = [
-      { event: "push", target: undefined, branch: "codex/phase1-backup-staging-test-main", sentrySetup: true, sentry: "staging", development: false, staging: true },
-      { event: "push", target: undefined, branch: "main", sentrySetup: false, sentry: "both", development: false, staging: false },
-      { event: "schedule", target: undefined, branch: "main", sentrySetup: true, sentry: "both", development: true, staging: true },
-      { event: "workflow_dispatch", target: "development", branch: "main", sentrySetup: true, sentry: "development", development: true, staging: false },
-      { event: "workflow_dispatch", target: "staging", branch: "main", sentrySetup: true, sentry: "staging", development: false, staging: true },
+    expect(setupCondition).toContain("matrix.target == 'staging'");
+    expect(setup).toContain("max-parallel: 1");
+    const scenarios = [
+      { event: "schedule", target: undefined, ref: "refs/heads/main", setup: [true, true], development: true, staging: true },
+      { event: "workflow_dispatch", target: "development", ref: "refs/heads/main", setup: [true, false], development: true, staging: false },
+      { event: "workflow_dispatch", target: "staging", ref: "refs/heads/main", setup: [false, true], development: false, staging: true },
+      { event: "push", target: undefined, ref: candidateRef, setup: [false, true], development: false, staging: true },
+      { event: "push", target: undefined, ref: "refs/heads/main", setup: [false, false], development: false, staging: false },
     ];
 
-    for (const scenario of cases) {
-      const { event, target, branch } = scenario;
-      expect(evaluate(jobCondition("sentry-setup"), event, target, branch)).toBe(scenario.sentrySetup);
-      expect(evaluate(jobCondition("development"), event, target, branch)).toBe(scenario.development);
-      expect(evaluate(jobCondition("staging"), event, target, branch)).toBe(scenario.staging);
-      expect(evaluate(sentryTargetExpression!, event, target, branch)).toBe(scenario.sentry);
+    for (const scenario of scenarios) {
+      expect(["development", "staging"].map((target) => evaluate(setupCondition, scenario.event, scenario.target, scenario.ref, target))).toEqual(scenario.setup);
+      expect(evaluate(developmentCondition, scenario.event, scenario.target, scenario.ref)).toBe(scenario.development);
+      expect(evaluate(stagingCondition, scenario.event, scenario.target, scenario.ref)).toBe(scenario.staging);
     }
   });
 

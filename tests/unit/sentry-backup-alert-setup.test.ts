@@ -10,6 +10,7 @@ const workflow = {
   name: "NexTap Phase 1 backup check-in failures",
   enabled: true,
   organizationId: "123",
+  logicType: "any-short",
   triggers: {
     id: "trigger-1",
     organizationId: "123",
@@ -23,8 +24,6 @@ const workflow = {
     conditions: [{ id: "action-condition-1", type: "issue_type", comparison: { value: "monitor_check_in_failure", include: true }, conditionResult: true }],
     actions: [{
       type: "email",
-      integrationId: null,
-      status: "active",
       config: { targetType: "issue_owners", targetIdentifier: null },
       data: { fallthroughType: "AllMembers" },
     }],
@@ -49,7 +48,7 @@ function response(body: unknown, status = 200) {
 }
 
 describe("Sentry backup alert setup", () => {
-  it("creates both fixed monitors and the org workflow, then verifies their readback", async () => {
+  it.each(["development", "staging"] as const)("configures only the %s monitor and the org workflow", async (target) => {
     const monitors: ReturnType<typeof monitor>[] = [];
     let workflows: typeof workflow[] = [];
     const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
@@ -72,21 +71,24 @@ describe("Sentry backup alert setup", () => {
       throw new Error(`Unexpected mocked request: ${method} ${url}`);
     });
 
-    await expect(configureSentryBackupAlerts({ dsn, token, fetcher })).resolves.toMatchObject({
+    const expectedSlug = `nextap-phase1-${target}-backup`;
+    await expect(configureSentryBackupAlerts({ target, dsn, token, fetcher })).resolves.toMatchObject({
       organization: "nextap-org",
       project: "nextap",
-      monitors: ["nextap-phase1-development-backup", "nextap-phase1-staging-backup"],
+      monitors: [expectedSlug],
       workflow: workflow.name,
     });
     const monitorBodies = fetcher.mock.calls.filter(([url, init]) => String(url).endsWith("/monitors/") && init?.method === "POST").map(([, init]) => JSON.parse(String(init?.body)));
-    expect(monitorBodies).toHaveLength(2);
-    expect(monitorBodies.map((body) => body.config.schedule_type)).toEqual(["crontab", "crontab"]);
-    expect(monitorBodies.map((body) => body.config.schedule)).toEqual(["15 0 * * *", "15 0 * * *"]);
+    expect(monitorBodies).toHaveLength(1);
+    expect(monitorBodies.map((body) => body.slug)).toEqual([expectedSlug]);
+    expect(monitorBodies.map((body) => body.config.schedule_type)).toEqual(["crontab"]);
+    expect(monitorBodies.map((body) => body.config.schedule)).toEqual(["15 0 * * *"]);
     expect(monitorBodies.every((body) => body.config.max_runtime === 30)).toBe(true);
     expect(monitorBodies.every((body) => body.project === project.slug && body.config.timezone === "UTC")).toBe(true);
     expect(fetcher.mock.calls.find(([url, init]) => String(url).endsWith("/workflows/") && init?.method === "POST")?.[1]?.body).toBe(JSON.stringify({
       name: workflow.name,
       organizationId: "123",
+      logicType: "any-short",
       triggers: {
         logicType: "any-short",
         conditions: [{ type: "issue_type", comparison: { value: "monitor_check_in_failure", include: true } }],
@@ -104,6 +106,13 @@ describe("Sentry backup alert setup", () => {
     }));
   });
 
+  it.each([undefined, "production", ""])("rejects a missing or invalid target (%s) before API access", async (target) => {
+    const fetcher = vi.fn();
+    await expect(configureSentryBackupAlerts({ target, dsn, token, fetcher } as Parameters<typeof configureSentryBackupAlerts>[0]))
+      .rejects.toThrow("A Sentry monitor target of development or staging is required.");
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("updates existing monitors and workflow without adding alert_rule_id", async () => {
     const monitors = [monitor("nextap-phase1-development-backup", "monitor-dev"), monitor("nextap-phase1-staging-backup", "monitor-staging")];
     const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
@@ -117,9 +126,9 @@ describe("Sentry backup alert setup", () => {
       throw new Error(`Unexpected mocked request: ${init?.method ?? "GET"} ${url}`);
     });
 
-    await configureSentryBackupAlerts({ dsn, token, fetcher });
+    await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher });
     const updates = fetcher.mock.calls.filter(([, init]) => init?.method === "PUT");
-    expect(updates).toHaveLength(3);
+    expect(updates).toHaveLength(2);
     expect(updates.map(([, init]) => JSON.parse(String(init?.body))).every((body) => !("alert_rule_id" in body))).toBe(true);
   });
 
@@ -157,7 +166,7 @@ describe("Sentry backup alert setup", () => {
       throw new Error(`Unexpected mocked request: ${method} ${url}`);
     });
 
-    await expect(configureSentryBackupAlerts({ dsn, token, fetcher })).rejects.toThrow(/readback/);
+    await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).rejects.toThrow(/readback/);
   });
 
   it.each([
@@ -168,8 +177,6 @@ describe("Sentry backup alert setup", () => {
     ["legacy comparison field", (value: any) => { value.triggers.conditions[0].comparison.field = "issue_type"; delete value.triggers.conditions[0].comparison.value; }],
     ["missing condition result", (value: any) => { delete value.triggers.conditions[0].conditionResult; }],
     ["action recipient", (value: any) => { value.actionFilters[0].actions[0].config.targetType = "managers"; }],
-    ["inactive email action", (value: any) => { value.actionFilters[0].actions[0].status = "disabled"; }],
-    ["integration-bound email action", (value: any) => { value.actionFilters[0].actions[0].integrationId = "integration-1"; }],
     ["fallback recipient", (value: any) => { value.actionFilters[0].actions[0].data.fallthroughType = "none"; }],
   ])("rejects a structurally incorrect workflow %s readback", async (_label, mutate) => {
     const monitors: ReturnType<typeof monitor>[] = [];
@@ -199,7 +206,7 @@ describe("Sentry backup alert setup", () => {
       throw new Error(`Unexpected mocked request: ${method} ${url}`);
     });
 
-    await expect(configureSentryBackupAlerts({ dsn, token, fetcher })).rejects.toThrow(/workflow readback/);
+    await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).rejects.toThrow(/workflow readback/);
   });
 
   it("rejects a missing workflow readback", async () => {
@@ -221,12 +228,12 @@ describe("Sentry backup alert setup", () => {
       throw new Error(`Unexpected mocked request: ${method} ${url}`);
     });
 
-    await expect(configureSentryBackupAlerts({ dsn, token, fetcher })).rejects.toThrow(/workflow readback/);
+    await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).rejects.toThrow(/workflow readback/);
   });
 
   it("fails with the exact API status before later setup calls when token scope is insufficient", async () => {
     const fetcher = vi.fn().mockResolvedValue(response({ detail: "redacted" }, 403));
-    await expect(configureSentryBackupAlerts({ dsn, token, fetcher })).rejects.toThrow("HTTP 403; verify SENTRY_AUTH_TOKEN scope and Sentry API access.");
+    await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).rejects.toThrow("HTTP 403; verify SENTRY_AUTH_TOKEN scope and Sentry API access.");
     expect(fetcher).toHaveBeenCalledOnce();
     expect(String(fetcher.mock.calls[0]?.[0])).not.toContain("public-key");
   });

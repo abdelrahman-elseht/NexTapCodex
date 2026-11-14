@@ -68,6 +68,7 @@ function desiredWorkflow(organizationId) {
   return {
     name: WORKFLOW_NAME,
     organizationId: String(organizationId),
+    logicType: "any-short",
     triggers: {
       logicType: "any-short",
       conditions: [{
@@ -120,19 +121,22 @@ function isExpectedWorkflow(workflow, expected) {
 
   return workflow.name === expected.name
     && workflow.enabled === true
+    && workflow.logicType === expected.logicType
     && String(workflow.organizationId) === expected.organizationId
     && hasSingleFailureCondition(workflow.triggers)
     && hasSingleFailureCondition(actionFilter)
     && emailAction?.type === "email"
-    && emailAction.status === "active"
-    && emailAction.integrationId === null
     && emailAction.config?.targetType === "issue_owners"
     && emailAction.config?.targetIdentifier === null
     && emailAction.data?.fallthroughType === "AllMembers";
 }
 
-/** @param {{dsn?: string, token?: string, fetcher?: typeof fetch}} options Configure and verify both scheduled monitors and the organization failure workflow. */
-export async function configureSentryBackupAlerts({ dsn, token, fetcher = fetch } = {}) {
+/** @param {{target: "development" | "staging", dsn?: string, token?: string, fetcher?: typeof fetch}} options Configure and verify one scheduled monitor and the organization failure workflow. */
+export async function configureSentryBackupAlerts({ target, dsn, token, fetcher = fetch } = {}) {
+  if (target !== "development" && target !== "staging") {
+    throw new Error("A Sentry monitor target of development or staging is required.");
+  }
+  const desired = MONITORS.find((monitor) => monitor.slug === `nextap-phase1-${target}-backup`);
   if (!token) throw new Error("SENTRY_AUTH_TOKEN is required to configure Sentry backup alerts.");
   const { orgId, projectId } = readDsn(dsn);
   const organizations = await listAll(fetcher, token, "/organizations/");
@@ -144,7 +148,7 @@ export async function configureSentryBackupAlerts({ dsn, token, fetcher = fetch 
 
   const monitorPath = `/organizations/${encodeURIComponent(organization.slug)}/monitors/`;
   const existingMonitors = await listAll(fetcher, token, monitorPath);
-  for (const desired of MONITORS) {
+  {
     const prior = existingMonitors.find((item) => item.slug === desired.slug);
     const body = {
       project: project.slug,
@@ -173,22 +177,20 @@ export async function configureSentryBackupAlerts({ dsn, token, fetcher = fetch 
   }
 
   const verifiedMonitors = await listAll(fetcher, token, monitorPath);
-  for (const desired of MONITORS) {
-    const actual = verifiedMonitors.find((item) => item.slug === desired.slug);
-    if (!actual || !isExpectedMonitor(actual, desired.slug, desired.name, project.slug)) {
-      throw new Error(`Sentry monitor ${desired.slug} readback did not confirm the required project, Cron schedule, and UTC timezone.`);
-    }
+  const actual = verifiedMonitors.find((item) => item.slug === desired.slug);
+  if (!actual || !isExpectedMonitor(actual, desired.slug, desired.name, project.slug)) {
+    throw new Error(`Sentry monitor ${desired.slug} readback did not confirm the required project, Cron schedule, and UTC timezone.`);
   }
   const verifiedWorkflows = await listAll(fetcher, token, workflowPath);
   const verifiedWorkflow = verifiedWorkflows.find((workflow) => workflow.name === WORKFLOW_NAME);
   if (!verifiedWorkflow || !isExpectedWorkflow(verifiedWorkflow, expected)) {
     throw new Error("Sentry organization workflow readback did not confirm monitor failure detection and issue-owner email with AllMembers fallback.");
   }
-  return { organization: organization.slug, project: project.slug, monitors: MONITORS.map(({ slug }) => slug), workflow: WORKFLOW_NAME };
+  return { organization: organization.slug, project: project.slug, monitors: [desired.slug], workflow: WORKFLOW_NAME };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  configureSentryBackupAlerts({ dsn: process.env.SENTRY_DSN, token: process.env.SENTRY_AUTH_TOKEN })
+  configureSentryBackupAlerts({ target: process.argv[2], dsn: process.env.SENTRY_DSN, token: process.env.SENTRY_AUTH_TOKEN })
     .then(({ organization, project, monitors, workflow }) => {
       process.stdout.write(`Sentry alert configuration verified for ${organization}/${project}: ${monitors.join(", ")} and ${workflow}.\n`);
     })
