@@ -2,7 +2,7 @@ import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 import fs from "node:fs/promises";
 
-test("card confirmation finishes in a production build", async ({ app, screen, browser }) => {
+test("card confirmation finishes in a production build", { tags: ["story:ADM-CARD-05", "story:STATE-03", "domain:cards", "risk:critical", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true" || !process.env.E2E_FIXTURE_PATH, "Requires a seeded isolated fixture");
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH!, "utf8"));
   await app.open("/login?lang=en");
@@ -18,7 +18,7 @@ test("card confirmation finishes in a production build", async ({ app, screen, b
   await expect(browser.locator(".mutation-result").first()).toBeVisible();
 });
 
-test("unassigned card displays only its printed serial", async ({ app, browser }) => {
+test("unassigned card displays only its printed serial", { tags: ["story:PUB-05", "domain:public", "risk:critical", "env:local", "env:staging", "mutation:read"] }, async ({ app, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true" || !process.env.E2E_FIXTURE_PATH, "Requires a seeded isolated fixture");
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH!, "utf8"));
   test.skip(!fixture.unassignedToken || !/^NT-[0-9]{8}-[0-9]{6}$/.test(fixture.unassignedSerial), "Fixture has no unassigned card");

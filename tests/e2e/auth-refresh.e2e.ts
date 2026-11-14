@@ -1,7 +1,7 @@
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
-test("expired cookie sessions refresh on admin routes and sign-out removes owner access", async ({ app, screen, browser }) => {
+test("expired cookie sessions refresh on admin routes and sign-out removes owner access", { tags: ["story:AUTH-01", "story:AUTH-05", "domain:auth", "risk:critical", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   test.skip(!process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD, "Requires isolated owner credentials");
   await app.open("/login");
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);

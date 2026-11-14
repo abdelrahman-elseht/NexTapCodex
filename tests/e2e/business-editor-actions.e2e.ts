@@ -2,7 +2,7 @@ import { fetchApp } from "./_helpers/http";
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
-test("owners can configure provider-aware actions, social links, and payment links and fallbacks", async ({ app, screen, browser }) => {
+test("owners can configure provider-aware actions, social links, payment links, and section lifecycle", { tags: ["story:ADM-BIZ-05", "story:ADM-BIZ-06", "story:PUB-02", "story:PUB-04", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(
     !process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD || process.env.E2E_ALLOW_MUTATIONS !== "true",
     "Owner editor workflows require credentials and E2E_ALLOW_MUTATIONS=true for the isolated Supabase test project.",

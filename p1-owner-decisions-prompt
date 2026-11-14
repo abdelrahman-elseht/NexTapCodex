@@ -1,0 +1,59 @@
+$orchestrator Finish Phase 1 of the NexTap Cloudflare migration. Execute the work, do not return another plan or status-only report. Work directly from the current repository and finish every Phase 1 acceptance gate that is within scope. Keep the work bounded: reuse valid evidence, do not rediscover known resources, repeat passed tests, or reopen settled decisions without conflicting new evidence.
+
+## Owner decisions: apply without asking again
+
+- Preserve Menu as a separate product. Core profile link contract is `/b/{slug}/menu`; do not build the Menu page/product or add a runtime Core-to-Menu dependency.
+- Preserve historical profile slugs indefinitely as aliases to the same profile. Never expire or reassign them. Existing independent QR/NFC links must continue to open the same profile without reprinting. This is separate from tokenized card routes.
+- Start with Workers Paid at $5/month. Use Free for tests when it does not limit the required proof. The $5 starting plan is authorized if a specific Phase 1 test needs it; no other purchases or spend beyond this plan.
+- Business location: El Mahalla El Kubra, Egypt. Choose and document the best supported Cloudflare D1 region using current official Cloudflare documentation and actual product constraints. Measure dev/staging latency where useful. Do not treat existing WEUR/EEUR placement as approved. Do not replace resources until a verified migration path is ready.
+- RTO target is four hours. Prove it with a representative recovery rehearsal and explicit start/end boundaries. The prior 183-second synthetic local restore is not RTO evidence. Recommend an RPO from observed update frequency and backup capabilities; clearly label it as a recommendation, not an approval.
+- Production DNS, data, bindings/configuration, public routing and cutover are out of scope and prohibited. Phase 1 completion does not authorize them. Phase 0 remains separately incomplete; do not waive its open gates or implement later-phase public publication/card features.
+
+## Credentials
+
+Use only credentials that are explicitly present in the repository's documented, ignored local environment file and only for authorized dev/staging Phase 1 operations. Never assume a token is current, guess variable names or scopes, brute-force permissions, repeatedly probe credentials, print secret values, or copy credentials between files/environments. If a required credential is absent or a specific operation returns an authorization error, stop credential-dependent work and ask the owner once to add the exact named credential to the documented ignored `.env` file. State the required variable name and the precise missing permission, never request the value in chat. Continue independent work while waiting. Do not use `.env.cloudflare.local` if its permissions/mount remain unsafe. Do not put secrets in evidence, logs, commands shown to the user, screenshots, or commits.
+
+## Start here
+
+Read `AGENTS.md`, the authoritative migration PRD (`docs/specs/NEXTAP_LANDING_DELIVERY_AND_SUPABASE_EXIT_PRD.md`), Phase 0/1 plans and specs, `docs/research/PHASE_0_P0_4_DECISION_REVIEW.md`, `docs/research/PHASE_1_FOUNDATION_EVIDENCE_20261113.json`, `infra/cloudflare/PHASE_1_ENVIRONMENTS.md`, `infra/cloudflare/d1/SCHEMA_DECISIONS.md`, all current D1 migrations, the legacy parity inventory, and relevant tests/runbooks. Check the current worktree first and preserve all user changes. Reconcile this prompt with newer repository evidence.
+
+Known evidence to verify once, then rely on unless contradicted:
+
+- Dev/staging D1, R2 and KV already exist. Do not provision duplicates.
+- Migrations 0001 and 0002 are reported applied to dev/staging; verify their ledgers/status once.
+- Migration-first restore with explicit data-table allowlist passed on synthetic local data with matching row/relationship checksums, expected counts and clean FK checks. The earlier full schema/data import failure is superseded by this method.
+- This does not prove representative recovery, R2 object-reference integrity, application transaction behavior, runtime bindings/isolation, or the four-hour RTO.
+- Existing candidate schema remains a review candidate unless repository evidence records owner approval. Apply the owner's decisions above and resolve contract discrepancies; do not infer physical schema approval from migrations being applied.
+- P0.3 route proof is complete under the revised standard; it makes no individual cache-tier HIT claim. Phase 0 remains open for physical Android/mobile evidence and a dedicated synthetic-card journey.
+
+## Execute and finish
+
+Use parallel agents for independent work with exact, disjoint file ownership; the orchestrator owns integration and final verification. Assign only concrete Phase 1 deliverables, not more discovery. Suggested workstreams:
+
+1. Finalize schema and product/authorization contracts, including Menu link and indefinite slug aliases; test relevant D1 constraints and application contracts.
+2. Complete dev/staging runtime bindings, secret handling, Access/application authorization and cross-environment isolation evidence.
+3. Complete representative non-production backup/recovery proof, including R2 object references, checksums/relationships, elapsed time and the four-hour RTO assessment; make an RPO recommendation.
+4. Complete logging redaction, rate-limit, deployment guard, dev/staging rollback and production-readiness documentation/tests.
+
+Before dispatch, check whether each item is already satisfied by current evidence. Do not repeat completed work. Give each agent exact paths, acceptance checks, existing evidence and explicit exclusions. Integrate results, resolve document/code conflicts, and run an independent review. Use relevant installed skills and official Cloudflare sources where they materially help.
+
+Stay in local/dev/staging. Use synthetic data only. Do not alter production or DNS, create duplicate resources, perform destructive replacement, or implement later-phase public routes. If a required in-scope action is blocked by a missing credential, follow the credential rule above and proceed with unrelated work. If a gate cannot be proven through supported non-production tests, record the exact evidence attempted, specific blocker, and smallest owner action; do not loop or report it as passed.
+
+## Phase 1 completion checklist
+
+Use the PRD's Phase 1 exit criteria as authoritative. For each criterion, produce an evidence link and mark `PASS`, `FAIL`, or `BLOCKED`:
+
+1. Distinct dev/staging D1, R2 and KV identities and actual least-privilege bindings; positive and cross-environment-denial checks. Production receives a readiness/binding plan only.
+2. Public/private media access boundaries, with anonymous/admin/cross-environment tests proving private originals, drafts and exports are not public.
+3. Owner-decided schema, identity, authorization and URL contracts covering required Core entities, publication versions, aliases, contacts, cards/history, audit and idempotency; no SQL business workflows.
+4. Staging Access and application authorization tests for anonymous, non-staff, unauthorized and allowed capabilities, including sign-out and documented MFA/recovery expectations.
+5. Repeatable versioned migrations and constraint tests; rename/indefinite-alias and card-state/history contract coverage.
+6. Non-empty isolated backup/restore with counts, checksums, relationships, R2 references, integrity and measured duration; assess against RTO=4h and record the RPO recommendation.
+7. Tested redaction of secrets/contact/full card tokens and enforced, documented rate limits for protected operations.
+8. Deployment guards reject cross-environment targeting and production mutation; documented/tested dev/staging rollback and migration-forward procedures; production remains deferred.
+9. Decisions recorded consistently in the spec/runbook: `/b/{slug}/menu` link only, no Menu implementation, indefinite old-slug resolution/no reassignment, $5 Workers starting plan with Free test use where equivalent, selected D1 region and RTO=4h.
+10. Phase 0's open gates remain visible and separate. No Phase 1 claim may imply Phase 0 completion or authorize production/public routing.
+
+Update authoritative specs, schema decisions, runbooks, evidence JSON, focused tests/scripts and `docs/README.md` as needed. Correct stale claims while preserving historical evidence as superseded. Never commit credentials or temporary secrets. Run relevant focused tests and source checks, `npm run check:docs`, JSON validation and `git diff --check`; run typecheck/lint/build where source/config changes warrant them. Report only checks actually run and their results.
+
+Final response must state whether Phase 1 is complete. If any gate is not `PASS`, list only that gate, what was attempted, the precise blocker and the smallest owner action needed. Report Phase 0's separate open gates. Do not end with a generic progress summary or ask the owner to repeat an already-given decision.

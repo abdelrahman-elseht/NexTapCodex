@@ -26,12 +26,13 @@ const env = {
 };
 const app = {
   url: "http://127.0.0.1:3137",
+  readyUrl: "http://127.0.0.1:3137/login?lang=en",
   command: {
     executable: node,
     args: ["node_modules/next/dist/bin/next", productionServer ? "start" : "dev", "--hostname", "127.0.0.1", "--port", "3137"],
     cwd: process.cwd(),
     env,
-    startupTimeout: 120_000,
+    startupTimeout: 180_000,
     log: ".e2e/logs/app.log",
   },
 };

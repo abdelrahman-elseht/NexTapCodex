@@ -9,9 +9,9 @@ import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 const parser = createRequire(import.meta.url)("vcard-parser");
 const origin = "http://127.0.0.1:3137";
-process.loadEnvFile(".env.local");
+try { process.loadEnvFile(".env.local"); } catch { /* CI injects test environment values directly. */ }
 
-test("Contacts UX crop, override, cached photo, visibility and publication isolation", async ({ app, screen, browser }) => {
+test("Contacts UX crop, override, cached photo, visibility and publication isolation", { tags: ["story:PUB-03", "story:ADM-BIZ-05", "story:ADM-BIZ-09", "domain:media", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   if (new URL(app.baseUrl!).origin !== origin || process.env.NEXT_PUBLIC_SUPABASE_URL !== "https://flkakuysakgwfoemgbwn.supabase.co") throw new Error("Staging-only synthetic test");
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
   const cookies: { name: string; value: string; domain: string; path: string }[] = [];

@@ -1,0 +1,73 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/quality/session-review.mjs record",
+            "timeout": 3,
+            "statusMessage": "Recording session edit paths"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/quality/codex-hooks.mjs Stop",
+            "timeout": 90,
+            "statusMessage": "Reviewing session changes"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/quality/codex-hooks.mjs SessionStart",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/quality/codex-hooks.mjs PreCompact",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/quality/codex-hooks.mjs PostCompact",
+            "timeout": 1
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/quality/codex-hooks.mjs SessionEnd",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}

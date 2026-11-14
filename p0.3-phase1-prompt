@@ -1,0 +1,49 @@
+$orchestrator Update the P0.4 decision review and Phase 1 execution spec in parallel, incorporating the owner's route-evidence decision below. Documentation only: do not implement migration code, provision Cloudflare resources, change Hostinger DNS, alter nameservers, or change production routing.
+
+Owner decision
+Revise P0.3's evidence standard, not the required delivery behavior. Preserve the contract that a warm `/b/{slug}` response is static Cloudflare Pages delivery with no Pages Function/Worker invocation, no D1/KV/Supabase access, and no NexTap application-origin request. Do not require `CF-Cache-Status` or `Age` headers for this Pages route: current requests do not expose them, and `CF-Ray` alone is not proof of a cache hit. Do not buy a plan or change DNS/zone telemetry to obtain those headers.
+
+The revised evidence must be candid about what each signal establishes:
+- Deployed static asset response and matching body/hash establish which artifact Pages served.
+- `_routes.json` excluding `/b/*`, project bindings, and source establish that no Pages Function or app-data/origin binding is configured for the profile route.
+- A same-window positive-control Function invocation plus no profile event in Pages tail establishes no Pages Function invocation for observed profile requests.
+- Verify Cloudflare's official Pages documentation for the platform's static-asset delivery behavior. Cite it. Do not present `CF-Ray`, source inspection, or absent logs alone as evidence of an observable edge cache hit.
+- Define "application origin" as a NexTap application service (for example Vercel/Next.js), not Cloudflare's internal asset storage. Explain whether Pages static-asset routing semantics plus the evidence above establish no NexTap application-origin access. If they do not establish the PRD's runtime claim, state that remaining limitation explicitly and leave that part of P0.3 open; do not invent telemetry or claim proof.
+- Keep P0.3 and Phase 0 status accurate. A revised evidence standard is not a claim that all Phase 0 gates passed.
+
+Repository context and authoritative files
+- Migration PRD: `docs/specs/NEXTAP_LANDING_DELIVERY_AND_SUPABASE_EXIT_PRD.md`
+- Phase 0 plan: `docs/specs/NEXTAP_PHASE_0_EXECUTION_PLAN.md`
+- P0.4 review: `docs/research/PHASE_0_P0_4_DECISION_REVIEW.md`
+- P0.3 runtime evidence: `docs/research/PHASE_0_P0_3_RUNTIME_EVIDENCE_20261113.json`
+- Phase 0 fixture runbook: `infra/cloudflare/phase0-pages/README.md`
+- Phase 1 spec draft: `docs/specs/NEXTAP_PHASE_1_EXECUTION_SPEC.md`
+- Docs index: `docs/README.md`
+- Phase 0 task ledger: `.unlazy/phase0-pages/GATES.md`
+
+Migration overview
+The PRD replaces Supabase for NexTap Core: D1 is the canonical mutable store; R2 holds immutable publication output and public media; KV is a non-authoritative slug/version cache on fallback paths; application services own business rules and authorization. Warm profile delivery must be static/CDN content without per-visit Worker or database access. Preserve profiles, historical slug aliases, cards/QR/NFC, VCF, public media, admin, and manufacturing behavior. Migration phases are Phase 1 environments/contracts; Phase 2 D1/admin replacement; Phase 3 static publication/media; Phase 4 cards/manufacturing; Phase 5 canary/cutover/rollback; Phase 6 Supabase decommission after the rollback window.
+
+Current proven state to verify in the evidence files
+- Pages/R2/Menu are disposable synthetic fixtures under `phase0.nextap.services`; one authorized Hostinger CNAME points to the proof Pages project. Production apex nameservers and records remain unchanged.
+- P0.3's fresh-path slug alias test passed: old and new paths served v2 on both custom and project hostnames within 42 seconds; temporary files were removed; `/b/phase0-demo` remained 200 on both.
+- Synthetic R2 distinct immutable-key cold/warm reads, exact-key purge, retained v1 key, and cleanup passed. Menu HTML/CSS routing passed as a synthetic path fixture only; it does not implement the future Menu profile link.
+- The warm profile requests returned 200 but no cache-status/Age header. Pages tail reports Function invocations, not static asset cache hits. The earlier stale cached v1 observation is historical and is not the current slug gate.
+- P0.2 has a recorded lab baseline with owner-accepted limitations. Physical Android/mobile data, synthetic card journey, cache-disabled diagnostic, complete console capture, and interaction proxy remain unmet/unavailable as documented.
+- The PRD's `has_menu` profile-link contract conflicts with the owner's statement that this profile feature is future work. Preserve the discrepancy; do not silently alter the PRD.
+
+Parallel assignments with disjoint ownership
+1. Terra: own the P0.4 evidence review and Phase 0 evidence/status updates. Inspect the PRD's exact Phase 0 exit criteria and the P0.3 JSON. Verify official Cloudflare Pages static-asset documentation. Update `docs/research/PHASE_0_P0_4_DECISION_REVIEW.md`, the relevant P0.3 acceptance/evidence text in `docs/specs/NEXTAP_PHASE_0_EXECUTION_PLAN.md`, and the task ledger if appropriate. State the recommended evidence interpretation, what remains unproven, and whether P0.3 can close under the owner's decision. Keep the delivery behavior intact and Phase 0 incomplete if any exit gate remains unmet.
+2. Sol: own `docs/specs/NEXTAP_PHASE_1_EXECUTION_SPEC.md`. Update the draft to reflect the owner's evidence decision and the current P0.4 conclusion as provisional until Terra's review is complete. Keep route-dependent implementation conditional. Cover Phase 1 environments, D1/R2/KV contracts, authorization, secrets, backups/restore, logging, rate limits, deployment gates, acceptance/tests, risks, unresolved decisions, and dependencies. Preserve the `has_menu` discrepancy. Do not change the PRD.
+3. Keep these write sets separate. Neither worker edits `docs/README.md`. The coordinator reconciles both outputs, updates the index/navigation once, and requests an independent review of the resulting claims.
+
+Skills and tools
+Each worker should inspect the available skills and use relevant skills and tools when they materially help the assigned work. For documentation changes, use the available docs-guard skill to check claims, references, and navigation. For Cloudflare platform behavior, use authoritative Cloudflare documentation and suitable read-only research/browser tools to verify the exact claim; do not rely on memory or unsourced summaries. Use repository search/read tools to reconcile the named files and focused checks for owned changes. Never use tools to mutate Cloudflare or Hostinger resources, DNS, production routing, or other external state; the boundaries above still apply. Report which skills/tools were used and what each verified.
+
+Boundaries and acceptance
+- Reconcile every supplied "current state" claim against the actual dirty worktree and named evidence artifacts before using it.
+- Treat the existing dirty worktree as user work. Do not revert or clean unrelated changes.
+- Do not create Cloudflare/Hostinger resources, purge caches, write DNS, change nameservers, purchase a plan/domain, or route production traffic.
+- Separate observed facts, Cloudflare-documented platform behavior, and inference. Do not claim an edge cache HIT without a signal that actually establishes one.
+- Do not mark P0.3 or Phase 0 complete unless every required gate has acceptable evidence. Explicitly report unmet gates and owner decisions.
+- After integration, update `docs/README.md`, run `npm run check:docs`, JSON validation for changed evidence, and `git diff --check`. Report deliverables, checks, remaining limitations, and the next decision/action.

@@ -3,7 +3,7 @@ import { web } from "@e2e-dev/web";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
-// Never load .env.local: this checkout may contain hosted settings.
+// Never load .env.local into a local test process; it may contain credentials.
 if (process.env.NEXT_PUBLIC_SUPABASE_URL !== "http://127.0.0.1:56321") throw new Error("Contacts E2E requires the isolated Supabase URL http://127.0.0.1:56321.");
 if (process.env.E2E_SERVER_MODE !== "production") throw new Error("Contacts E2E requires E2E_SERVER_MODE=production and a fresh locally configured production build.");
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");

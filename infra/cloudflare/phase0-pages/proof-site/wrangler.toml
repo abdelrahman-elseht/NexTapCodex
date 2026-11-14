@@ -1,0 +1,10 @@
+name = "nextap-phase0-proof-20261113"
+compatibility_date = "2026-11-13"
+pages_build_output_dir = "./public"
+
+[vars]
+MENU_ORIGIN = "https://nextap-phase0-menu-20261113.pages.dev"
+
+[[r2_buckets]]
+binding = "PHASE0_MEDIA"
+bucket_name = "nextap-phase0-media"

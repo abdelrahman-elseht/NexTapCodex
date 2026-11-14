@@ -2,7 +2,7 @@
 import { expect } from "e2e";
 import { resolveWalletUssdEnabled } from "../../src/lib/config/wallet-ussd.mjs";
 
-test("wallet payment actions open an amount-only modal with sandbox codes behind the staging flag", async ({ app, browser, screen }) => {
+test("wallet payment actions open an amount-only modal with sandbox codes behind the staging flag", { tags: ["story:PUB-04", "domain:payments", "risk:high", "env:staging", "mutation:read"] }, async ({ app, browser, screen }) => {
   const enabled = resolveWalletUssdEnabled(process.env) === "true";
   await app.open("/demo");
   for (const provider of ["Vodafone Cash", "Etisalat Cash", "Orange Cash (Mobinil)"]) {

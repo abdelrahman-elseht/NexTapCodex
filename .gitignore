@@ -6,6 +6,10 @@ node_modules
 out
 .env*
 !.env.example
+!.env.cloudflare.example
+!.env.migration.example
+.dev.vars*
+!.dev.vars.example
 coverage
 *.zip
 !src/app/**/manufacturing.zip/
@@ -13,6 +17,7 @@ coverage
 install.log
 .playwright-mcp/
 .e2e/
+/.codex/state/
 %SystemDrive%/
 artifacts/
 supabase/.temp/

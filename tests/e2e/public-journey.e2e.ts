@@ -2,7 +2,7 @@ import { fetchApp } from "./_helpers/http";
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-test("landing page links to the demo and uses a sample fallback when no contact number is configured", async ({ app, screen, browser }) => {
+test("landing page links to the demo and uses a sample fallback when no contact number is configured", { tags: ["story:MKT-01", "story:MKT-02", "story:MKT-03", "domain:marketing", "risk:normal", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   await app.open("/");
 
   await expect(screen.getByRole("heading", "لمسة واحدة تفتح باب عملك.")).toBeVisible();
@@ -18,7 +18,7 @@ test("landing page links to the demo and uses a sample fallback when no contact 
   expect(widths.content).toBeLessThanOrEqual(widths.viewport);
 });
 
-test("public landing navigation has no owner entry points in either language", async ({ app, browser }) => {
+test("public landing navigation has no owner entry points in either language", { tags: ["story:MKT-04", "story:AUTH-04", "domain:marketing", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, browser }) => {
   for (const route of ["/", "/?lang=en"]) {
     await app.open(route);
     const ownerEntryPoints = await browser.evaluate(() => {
@@ -34,7 +34,7 @@ test("public landing navigation has no owner entry points in either language", a
   }
 });
 
-test("demo presents its map action and returns to the landing page", async ({ app, screen, browser }) => {
+test("demo presents its map action and returns to the landing page", { tags: ["story:MKT-02", "story:PUB-02", "domain:public", "risk:normal", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   await app.open("/demo");
 
   await expect(screen.getByRole("heading", "Coffee & Mood")).toBeVisible();
@@ -50,7 +50,7 @@ test("demo presents its map action and returns to the landing page", async ({ ap
   await expect(browser).toHaveURL("/");
 });
 
-test("demo consolidates social links into official brand icons and a Google Reviews prompt", async ({ app, screen, browser }) => {
+test("demo consolidates social links into official brand icons and a Google Reviews prompt", { tags: ["story:PUB-02", "story:PUB-04", "domain:public", "risk:normal", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   await app.open("/demo");
 
   const instagram = screen.getByRole("link", "Instagram");
@@ -76,7 +76,7 @@ test("demo consolidates social links into official brand icons and a Google Revi
   ]);
 });
 
-test("demo keeps the business profile within a mobile viewport", async ({ app, browser }) => {
+test("demo keeps the business profile within a mobile viewport", { tags: ["story:STATE-04", "story:PUB-01", "domain:public", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, browser }) => {
   await app.open("/demo");
 
   const dimensions = await browser.evaluate(() => ({
@@ -90,7 +90,7 @@ test("demo keeps the business profile within a mobile viewport", async ({ app, b
   expect(dimensions.ratings).toBe(0);
 });
 
-test("team login supports Arabic and English", async ({ app, screen, browser }) => {
+test("team login supports Arabic and English", { tags: ["story:MKT-04", "story:AUTH-01", "story:STATE-05", "domain:auth", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   await app.open("/login");
 
   await expect(screen.getByRole("heading", "دخول فريق NexTap")).toBeVisible();

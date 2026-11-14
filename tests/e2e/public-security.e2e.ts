@@ -1,7 +1,7 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-test("anonymous users are redirected from owner pages and card exports to login", async ({ app, screen, browser }) => {
+test("anonymous users are redirected from owner pages and card exports to login", { tags: ["story:AUTH-04", "domain:auth", "risk:critical", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   const paths = [
     "/admin",
     "/admin/cards",
@@ -16,7 +16,20 @@ test("anonymous users are redirected from owner pages and card exports to login"
   }
 });
 
-test("invalid card tokens reach a branded unavailable state without exposing data", async ({ app, screen, browser }) => {
+test("invalid sign-in returns a generic error without creating a session", { tags: ["story:AUTH-02", "domain:auth", "risk:critical", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
+  await app.open("/login?lang=en");
+  const authCookies = () => browser.cookies().then(cookies => cookies.filter(cookie => /^sb-.*-auth-token$/.test(cookie.name)));
+  expect(await authCookies()).toHaveLength(0);
+  await screen.getByLabel("Email address").fill(`invalid-${Date.now()}@example.invalid`);
+  await screen.getByLabel("Password").fill("invalid-password-for-e2e");
+  await screen.getByRole("button", "Sign in securely").tap();
+  await expect(browser).toHaveURL(/\/login\?notice=invalid/);
+  await expect(screen.getByText("تعذر تسجيل الدخول. راجع بياناتك وحاول مرة أخرى.", { exact: true })).toBeVisible();
+  await expect(browser).toHaveURL(/\/login/);
+  expect(await authCookies()).toHaveLength(0);
+});
+
+test("invalid card tokens reach a branded unavailable state without exposing data", { tags: ["story:PUB-05", "story:STATE-02", "domain:public", "risk:critical", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   await app.open("/c/not-a-valid-token");
 
   await expect(browser).toHaveURL(/\/card\/unavailable\?state=invalid/);
@@ -26,7 +39,7 @@ test("invalid card tokens reach a branded unavailable state without exposing dat
   expect(content).not.toContain("null");
 });
 
-test("unknown business slugs show a not-found page instead of a blank profile", async ({ app, screen, browser }) => {
+test("unknown business slugs show a not-found page instead of a blank profile", { tags: ["story:PUB-06", "domain:public", "risk:normal", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   await app.open("/b/e2e-missing-business-slug");
   await expect(screen.getByRole("link", "العودة للرئيسية")).toBeVisible({ timeout: 20_000 });
 
@@ -36,7 +49,7 @@ test("unknown business slugs show a not-found page instead of a blank profile", 
   expect(result.hasProfile).toBe(false);
 });
 
-test("unknown routes show the branded not-found recovery", async ({ app, screen }) => {
+test("unknown routes show the branded not-found recovery", { tags: ["story:PUB-06", "story:STATE-02", "domain:public", "risk:normal", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen }) => {
   await app.open("/e2e-missing-route");
 
   await expect(screen.getByRole("heading", "هذه الصفحة غير موجودة")).toBeVisible();
@@ -44,14 +57,14 @@ test("unknown routes show the branded not-found recovery", async ({ app, screen 
   await expect(screen.getByRole("link", "استكشاف النموذج")).toHaveAttribute("href", "/demo");
 });
 
-test("access-denied page offers a sign-in recovery", async ({ app, screen }) => {
+test("access-denied page offers a sign-in recovery", { tags: ["story:AUTH-03", "story:STATE-02", "domain:auth", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen }) => {
   await app.open("/403");
 
   await expect(screen.getByRole("heading", "هذه المساحة مخصصة لفريق NexTap")).toBeVisible();
   await expect(screen.getByRole("link", "تسجيل الدخول بحساب آخر")).toHaveAttribute("href", "/login");
 });
 
-test("public pages declare Arabic RTL and remain usable at the active viewport", async ({ app, browser }) => {
+test("public pages declare Arabic RTL and remain usable at the active viewport", { tags: ["story:STATE-04", "story:STATE-05", "domain:public", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, browser }) => {
   await app.open("/demo");
 
   const layout = await browser.evaluate(() => ({
@@ -65,14 +78,14 @@ test("public pages declare Arabic RTL and remain usable at the active viewport",
   expect(layout.content).toBeLessThanOrEqual(layout.viewport);
 });
 
-test("public primary actions can receive keyboard focus", async ({ app, screen }) => {
+test("public primary actions can receive keyboard focus", { tags: ["story:STATE-05", "domain:public", "risk:normal", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen }) => {
   await app.open("/");
   const primaryAction = screen.getByRole("link", "شاهد صفحة تجريبية");
   await primaryAction.focus();
   await expect(primaryAction).toBeFocused();
 });
 
-test("payment cards keep recipient details private and guide the payer through the fallback", async ({ app, screen, browser }) => {
+test("payment cards keep recipient details private and guide the payer through the fallback", { tags: ["story:PUB-04", "domain:payments", "risk:critical", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   await browser.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => undefined } });
   });
@@ -104,7 +117,7 @@ test("payment cards keep recipient details private and guide the payer through t
   await expect(action).toBeFocused();
 });
 
-test("clipboard denial keeps payment instructions usable and local logo failures recover", async ({ app, screen, browser }) => {
+test("clipboard denial keeps payment instructions usable and local logo failures recover", { tags: ["story:PUB-04", "story:STATE-02", "domain:payments", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   await browser.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("Clipboard unavailable"); } } });
   });

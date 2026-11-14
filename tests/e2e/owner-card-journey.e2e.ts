@@ -2,7 +2,7 @@ import { fetchApp } from "./_helpers/http";
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
-test("an owner creates, publishes, activates, scans, renames, and reassigns a card", async ({ app, screen, browser }) => {
+test("an owner creates, publishes, activates, scans, renames, and reassigns a card", { tags: ["story:ADM-BIZ-03", "story:ADM-BIZ-04", "story:ADM-BIZ-08", "story:ADM-BIZ-09", "story:ADM-CARD-04", "story:ADM-CARD-06", "domain:cards", "risk:critical", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(
     !process.env.E2E_USER_OWNER_USERNAME ||
       !process.env.E2E_USER_OWNER_PASSWORD ||

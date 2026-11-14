@@ -1,3 +1,11 @@
+---
+Status: current
+Owner: NexTap engineering
+Supersedes: none
+Path globs: ["src/lib/auth/**", "src/app/admin/**", "supabase/migrations/**", "supabase/tests/**"]
+Topic tags: authorization, admin, security, database
+---
+
 # Shared internal administration with global capabilities
 
 Accepted by the deployment owner on 2026-10-24. Multiple trusted NexTap administrators intentionally manage all businesses in a shared internal administration boundary. Businesses are managed resources, not isolated tenants; there is no sole-owner limit and merchant self-service accounts are not authorized.

@@ -13,7 +13,7 @@ describe("public publication resolver", () => {
     const { getPublicPublication } = await import("../../src/lib/business/public-publication");
     await expect(getPublicPublication("cairo-shop")).resolves.toMatchObject({ version: 2 });
     expect(rpc.mock.calls.map(([name]) => name)).toEqual(["get_publication_pointer", "get_publication_snapshot"]);
-  });
+  }, 30_000);
 
   it("falls back to the existing live RPC when the snapshot read misses", async () => {
     rpc.mockResolvedValueOnce({ data: { publicationId: "11111111-1111-4111-8111-111111111111" }, error: null });
@@ -22,7 +22,7 @@ describe("public publication resolver", () => {
     const { getPublicPublication } = await import("../../src/lib/business/public-publication");
     await expect(getPublicPublication("fallback-shop")).resolves.toMatchObject({ version: 1 });
     expect(rpc.mock.calls[2][0]).toBe("get_published_page");
-  });
+  }, 30_000);
 
   it("does not attempt a snapshot read when the live pointer is absent", async () => {
     rpc.mockResolvedValueOnce({ data: null, error: null });

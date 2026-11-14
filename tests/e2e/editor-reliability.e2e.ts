@@ -18,7 +18,7 @@ afterEach(async () => {
   if (error || pagesError) throw new Error("Fixture cleanup failed");
 });
 
-test("hours, repeated providers, services and optional text survive draft and publication", { timeout: 240_000 }, async ({ app, screen, browser }) => {
+test("hours, repeated providers, services and optional text survive draft and publication", { timeout: 240_000, tags: ["story:PUB-03", "story:ADM-BIZ-05", "story:ADM-BIZ-09", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires isolated staging fixtures.");
   await app.open("/login");
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);

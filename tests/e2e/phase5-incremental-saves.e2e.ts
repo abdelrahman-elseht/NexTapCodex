@@ -1,7 +1,7 @@
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
-test("phase 5 keeps section edits and order across incremental saves", async ({ app, screen, browser }) => {
+test("phase 5 keeps section edits and order across incremental saves", { tags: ["story:ADM-BIZ-05", "story:ADM-BIZ-07", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(
     !process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD || process.env.E2E_ALLOW_MUTATIONS !== "true",
     "Phase 5 owner save checks require the isolated Supabase project and mutation opt-in.",

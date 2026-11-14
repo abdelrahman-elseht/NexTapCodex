@@ -1,10 +1,16 @@
-# NexTap MVP
+# NexTap Core Migration
 
-NexTap is an Arabic-first owner dashboard for Egyptian businesses using permanent NFC/QR cards and editable microsites. It is a Next.js App Router modular monolith backed by Supabase Auth, PostgreSQL and Storage.
+NexTap Core is migrating to a Cloudflare-native architecture. The active target is defined by the [landing delivery PRD](docs/specs/NEXTAP_LANDING_DELIVERY_AND_SUPABASE_EXIT_PRD.md): static/CDN public profiles, Cloudflare-managed administration and publishing, and removal of Supabase after migration and rollback gates pass.
+
+The code currently in this repository is still the Next.js App Router application backed by Supabase Auth, PostgreSQL and Storage. Treat it as the compatibility and rollback baseline, not as the target architecture. Do not report planned Cloudflare behavior as implemented.
 
 ## Repository navigation
 
-Start with the [architecture map](docs/ARCHITECTURE.md) for source ownership and placement rules, and the [documentation index](docs/README.md) for product specifications and implementation handovers. Application code lives in `src/`, automated checks in `tests/` and `supabase/tests/`, operational tools in `scripts/`, and source artwork in `assets/`.
+Start with the [documentation index](docs/README.md) to find the active target contract and current baseline. The [codebook](CODEBOOK.md) defines shared product terms; the [architecture map](docs/ARCHITECTURE.md) locates existing code for parity and replacement work. Current application code lives in `src/`, current database migrations and tests in `supabase/`, shared checks in `tests/` and `scripts/`, and migration preparation notes in `infra/cloudflare/`. The `workers/` runtime is intentionally not scaffolded until its route and deployment model pass the migration PRD's preparation gate.
+
+## Current Baseline Development
+
+The following setup and database instructions apply only to the existing Next.js/Supabase application. Use them to reproduce current behavior and validate compatibility while the Cloudflare phases are in progress. Do not expand Supabase or Vercel as the destination design.
 
 ## Local setup
 

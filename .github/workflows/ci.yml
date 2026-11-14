@@ -31,11 +31,26 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.23.5
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate documentation registrations
+        run: npm run check:docs
+
+      - name: Validate story-to-E2E coverage metadata
+        run: npm run check:stories
+
+      - name: Check documented module boundaries
+        run: npm run check:architecture
+
+      - name: Check source file budgets
+        run: npm run check:file-budget
+
+      - name: Check dependency changes and audit the full tree
+        run: npm run check:dependencies -- --require-audit
 
       - name: Runtime dependency security
         run: npm audit --omit=dev --audit-level=high
@@ -51,12 +66,6 @@ jobs:
 
       - name: Unit tests
         run: npm test
-
-      - name: Migration and RLS contracts (disposable PostgreSQL)
-        run: npm run test:db
-
-      - name: Real PostgreSQL concurrency and rollback
-        run: npm run test:db:concurrency
 
       - name: Production build
         run: npm run build

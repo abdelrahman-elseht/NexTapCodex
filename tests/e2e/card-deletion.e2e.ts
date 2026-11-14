@@ -2,7 +2,7 @@ import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 import { markDocument, expectSameDocument } from "./_helpers/document";
 
-test("single, selected and whole-batch deletion preserve the document and empty exports", async ({ app, screen, browser }) => {
+test("single, selected and whole-batch deletion preserve the document and empty exports", { tags: ["story:ADM-CARD-03", "story:ADM-CARD-05", "domain:cards", "risk:critical", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires authorized synthetic mutations");
   await app.open("/login?lang=en");
   await screen.getByLabel("Email address").fill(credentials.user("owner").username);

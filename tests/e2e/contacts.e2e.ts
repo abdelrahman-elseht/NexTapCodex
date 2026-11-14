@@ -18,7 +18,7 @@ async function cardFile(path: string, name: string) {
   for (const line of text.split("\r\n")) expect(Buffer.byteLength(line)).toBeLessThanOrEqual(75);
 }
 
-test("Contacts configure, preview, save/reload, publish, download and disable on main and branch", async ({app,screen,browser}) => {
+test("Contacts configure, preview, save/reload, publish, download and disable on main and branch", { tags: ["story:PUB-07", "story:ADM-BIZ-05", "story:ADM-BIZ-08", "story:ADM-BIZ-09", "story:ADM-BIZ-10", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({app,screen,browser}) => {
   localOnly(app.baseUrl);
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires explicitly enabled disposable local mutations.");
   const business = process.env.E2E_CONTACT_BUSINESS_ID;
@@ -73,7 +73,7 @@ test("Contacts configure, preview, save/reload, publish, download and disable on
   }
 });
 
-test("anonymous draft preview and invalid contact routes are denied",async({app})=>{
+test("anonymous draft preview and invalid contact routes are denied", { tags: ["story:AUTH-04", "story:ADM-BIZ-08", "domain:auth", "risk:critical", "env:local", "env:staging", "mutation:read"] }, async({app})=>{
   localOnly(app.baseUrl);
   for(const path of ["/b/contacts-missing-synthetic/contact.vcf","/c/contacts-invalid-synthetic/contact.vcf"]) {
     const response=await fetch(origin+path,{redirect:"manual"}); expect(response.status).toBe(404);

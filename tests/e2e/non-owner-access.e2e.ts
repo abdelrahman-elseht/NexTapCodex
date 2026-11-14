@@ -3,7 +3,7 @@ import { credentials, expect } from "e2e";
 import { createServerClient } from "@supabase/ssr";
 import { fetchApp } from "./_helpers/http";
 
-test("authenticated non-owners cannot enter the dashboard, read owner rows or upload media", async ({ app, screen, browser }) => {
+test("authenticated non-owners cannot enter the dashboard, read owner rows or upload media", { tags: ["story:AUTH-03", "domain:auth", "risk:critical", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   test.skip(!process.env.E2E_USER_NON_OWNER_USERNAME || !process.env.E2E_USER_NON_OWNER_PASSWORD, "Requires protected Staging non-owner credentials.");
   await app.open("/login?lang=en");
   await screen.getByLabel("Email address").fill(credentials.user("nonOwner").username);

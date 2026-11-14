@@ -28,14 +28,14 @@ Evidence:
 
 <!-- Required only when the base branch is main. -->
 - [ ] SR-R1 The release source and accepted Staging SHA are identified exactly
-- [ ] SR-R2 Hosted Staging acceptance is complete and its sanitized evidence is linked
+- [ ] SR-R2 Pre-release acceptance evidence for the active architecture is linked
 - [ ] SR-R3 Migration history, checksums, and environment separation are verified
 - [ ] SR-R4 Production recovery, last-known-good deployment, and smoke checks are recorded
 - [ ] SR-R5 The promoted tree was compared with the accepted source after merge strategy
 
 Release source SHA:
 Accepted Staging SHA:
-Hosted Staging acceptance artifact:
+Pre-release acceptance evidence:
 Migration history/checksums:
 Production recovery target:
 Production smoke evidence:

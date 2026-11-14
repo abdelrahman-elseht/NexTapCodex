@@ -1,7 +1,7 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-test("configured Quick Actions keep four columns on mobile and in the phone preview", async ({ app, browser }) => {
+test("configured Quick Actions keep four columns on mobile and in the phone preview", { tags: ["story:PUB-02", "story:STATE-04", "domain:public", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, browser }) => {
   await app.open("/demo");
   const publicLayout = await browser.evaluate(() => {
     const grid = document.querySelector<HTMLElement>(".quick-actions-configured")!;

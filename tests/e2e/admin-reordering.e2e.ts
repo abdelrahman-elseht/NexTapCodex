@@ -1,7 +1,7 @@
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
-test("an owner can reorder sections, save them, and keep the order on reload", async ({ app, screen, browser }) => {
+test("an owner can reorder sections, save them, and keep the order on reload", { tags: ["story:ADM-BIZ-07", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(
     !process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD || process.env.E2E_ALLOW_MUTATIONS !== "true",
     "Owner mutation tests require credentials and E2E_ALLOW_MUTATIONS=true for a dedicated isolated Supabase test project.",

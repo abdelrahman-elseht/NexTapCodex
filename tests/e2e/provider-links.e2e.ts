@@ -3,7 +3,7 @@ import { credentials, expect } from "e2e";
 import fs from "node:fs/promises";
 import { markDocument, expectSameDocument } from "./_helpers/document";
 
-test("delivery destinations survive save, preview, publication and override", async ({ app, screen, browser }) => {
+test("delivery destinations survive save, preview, publication and override", { tags: ["story:ADM-BIZ-05", "story:ADM-BIZ-09", "story:PUB-02", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true" || !process.env.E2E_FIXTURE_PATH, "Requires authorized namespaced fixture");
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH!, "utf8"));
   await app.open("/login?lang=en");

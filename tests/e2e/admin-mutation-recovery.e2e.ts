@@ -3,7 +3,7 @@ import { credentials, expect } from "e2e";
 import fs from "node:fs/promises";
 import { markDocument, expectSameDocument } from "./_helpers/document";
 
-test("rejected and interrupted admin mutations retain work and retry identity", async ({ app, screen, browser }) => {
+test("rejected and interrupted admin mutations retain work and retry identity", { tags: ["story:ADM-BIZ-05", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(!process.env.E2E_FIXTURE_PATH, "Requires namespaced owner fixture");
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH!, "utf8"));
   await app.open("/login?lang=en");
@@ -43,7 +43,7 @@ test("rejected and interrupted admin mutations retain work and retry identity", 
   expect(await browser.evaluate(() => new Set(Reflect.get(window, "__retryKeys")).size)).toBe(2);
 });
 
-test("lost creation response retries one committed batch without a document reload", async ({ app, screen, browser }) => {
+test("lost creation response retries one committed batch without a document reload", { tags: ["story:ADM-CARD-02", "domain:cards", "risk:critical", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires authorized synthetic mutations");
   await app.open("/login?lang=en");
   await screen.getByLabel("Email address").fill(credentials.user("owner").username);

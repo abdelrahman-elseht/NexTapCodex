@@ -1,9 +1,6 @@
 name: Phase 1 non-production backups
 
 on:
-  push:
-    branches:
-      - codex/phase1-backup-staging-test-main
   schedule:
     - cron: "15 0 * * *"
   workflow_dispatch:
@@ -25,6 +22,11 @@ concurrency:
 
 jobs:
   sentry-setup:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == matrix.target }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        target: [development, staging]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: staging
@@ -38,16 +40,12 @@ jobs:
           node-version: 22.23.5
           cache: npm
       - run: npm ci
-      - name: Configure and verify development Sentry backup alert
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'development') }}
-        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs development
-      - name: Configure and verify staging Sentry backup alert
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'staging') || (github.event_name == 'push' && github.ref == 'refs/heads/codex/phase1-backup-staging-test-main') }}
-        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs staging
+      - name: Configure and verify Sentry backup alerts
+        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs "${{ matrix.target }}"
 
   development:
     needs: sentry-setup
-    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'development') }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'development' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The confirmed DEV S3 pair is stored in this protected Environment. Its
@@ -76,7 +74,7 @@ jobs:
 
   staging:
     needs: sentry-setup
-    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'staging') || (github.event_name == 'push' && github.ref == 'refs/heads/codex/phase1-backup-staging-test-main') }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'staging' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: staging

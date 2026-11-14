@@ -1,0 +1,42 @@
+$orchestrator Finish Phase 1. Do the remaining work now; do not produce another plan or progress-only report. Reuse passed evidence and do not repeat completed investigations. Preserve the dirty worktree.
+
+## Fixed boundaries and decisions
+
+- Work only in local/dev/staging. Never change production data, DNS, routes, bindings, or configuration.
+- Use only the existing authorized credentials in documented ignored local env files. Never print, copy, guess, or brute-force secrets. If a required credential/identity is genuinely missing, ask once for the exact variable or owner action, then continue independent work.
+- Direct QR/NFC profile URLs retain the same hostname and `/b/{slug}` path forever; old slugs resolve to the same page and are never reassigned. Token URLs `/c/{token}` retain their separate active-card behavior.
+- Menu link is `/b/{slug}/menu`; do not build Menu or couple it at runtime.
+- `has_menu` is a page boolean default false, copied into the immutable published snapshot. Contact projection is versioned and snapshot-only. Use the approved legacy global role matrix; require explicit business ID for business-scoped operations.
+- The approved RTO is four hours; approved RPO is 24 hours with daily backups. Workers Paid $5/month is the starting plan; Free is acceptable when evidence is equivalent. Egypt region guidance is EEUR; existing resources stay where they are.
+- QR/NFC token fingerprints are abuse signals, not a low hard cap. Test more than 10 scans/minute. Direct `/b/{slug}` traffic bypasses card-resolution limits and remains static/CDN work for a later phase.
+- JavaScript asset storage/cache is a Phase 3 handoff, not Phase 1 implementation.
+
+## Current evidence: verify once
+
+Read `AGENTS.md`, the active migration PRD, Phase 1 spec, closeout report, owner packet, environment/operations/recovery runbooks, migration ledger evidence, and changed source/tests. Reconcile newer evidence, then proceed.
+
+- Migrations 0001/0002/0003 are applied to dev and staging; `has_menu` defaults to 0 with a 0/1 constraint; FK checks are clean.
+- Approved schema contracts and staging rate-limit scenarios have local tests. Rate-limit scenarios include 15 QR/NFC requests/minute with repeated fingerprints and `/b/{slug}` bypass.
+- Dev/staging recovery matched all 12 populated tables, row checksums, slug relationship, and FK checks. The four owned fixture rows and four R2 objects were removed and absence verified. This proves integrity for that fixture, not RTO.
+- A staging Worker version was uploaded with expected staging D1/public R2/KV/private recovery R2 bindings. The prior health-probe result and temporary bearer secret were lost. No health response is verified.
+- Backup workflow commit `9e5dd52` is on `codex/phase1-backup-staging-test-main`; `main` is unchanged. Its staging setup ran under staging approval, but failed Sentry monitor readback. Sentry accepted monitor and alert-workflow writes, but readback did not confirm project, cron schedule, and UTC timezone. The mismatch field was not identified. Both backup jobs were skipped; no D1 export, R2 verification, artifact, or success check-in occurred.
+- Staging Access, runtime authorization, cross-environment credential isolation, live rate-limit enforcement, and rollback rehearsal remain open unless current evidence proves them.
+- R2 recovery bucket/schedule status must be checked once. The owner authorized a private backup bucket and daily non-production schedule; create/configure them if absent, using existing authorized access. Keep the bucket private, separate from public media, without public URL/custom domain/application binding. Do not schedule production backups.
+- Phase 0 Android and synthetic-card gaps remain separate; they do not block route-independent Phase 1 completion.
+
+## Execute these remaining gates in order
+
+1. **Fix Sentry on the feature branch:** continue on `codex/phase1-backup-staging-test-main`. Inspect Sentry API responses and current monitor/alert-rule state with safe field-level diagnostics. Identify which expected field mismatches: project, cron schedule, UTC timezone, or recipient rule. Correct only the mismatched field and verify all expected fields by readback. Never log DSNs, tokens, secrets, or recipient addresses.
+2. **Commit and push directly to that branch:** run focused tests/checks, commit only the intended Sentry/workflow files, and push to `codex/phase1-backup-staging-test-main`. Do not touch `main`, merge, change the default branch, or approve/modify the unrelated Hosted Staging E2E run.
+3. **Run staging backup:** the owner approved one staging test run. Use the staging workflow path and staging Environment approval gate only. The prior run's approval was consumed, so obtain the approval for this run only; never approve unrelated workflows. Verify Sentry in-progress/success check-ins, D1 export, R2 inventory/hash readback, artifacts, and failure/missed-run alert configuration. No production or development job.
+4. **Staging health probe:** inspect the guarded wrapper and deployment metadata read-only. Pin exact staging D1 fixture ID, exact R2 key, and expected content/hash. Store a new temporary probe secret only in an ignored local env file; never print it. Configure the smallest staging-only target and verify response and actual bindings. If an owner-controlled identity is genuinely required, ask once for the exact item and continue independent work.
+5. **Access and isolation:** establish staging Access and runtime authorization. Prove anonymous, non-staff, invalid/expired session, no capability, missing/empty business scope, wrong business, and allowed requests. Prove dev credentials cannot mutate staging and staging credentials cannot mutate dev. Local tests are not runtime evidence.
+6. **Live rate limits:** verify staging enforcement/429 behavior for sign-in, recovery, upload, publish, admin mutation, and export. Confirm legitimate QR/NFC bursts above 10/minute succeed despite repeated fingerprints; `/b/{slug}` must not use the card limiter.
+7. **Recovery/RTO:** run one timed representative synthetic D1/R2 recovery. Verify table counts/checksums, relationships, FKs, manifests, referenced-object hashes, and successful staging smoke. Measure incident declaration to verified usable service against four hours. Record the approved 24-hour RPO and backup point. Never use production data.
+8. **Rollback and closeout:** rehearse dev/staging Worker rollback and migration-forward behavior. Update authoritative docs/evidence. Run targeted ESLint on changed files, relevant tests, typecheck if source changed, `npm run check:docs`, JSON validation, and `git diff --check`; fix failures and rerun affected checks only.
+
+Use parallel agents only for independent steps with exact disjoint file ownership; integrate as results arrive and do not wait idle. Do not stop after metadata upload, local tests, or a draft. If a gate is blocked, state the precise missing capability and one smallest owner action; complete every other gate first. GitHub scheduled workflows run only from the default branch. Keep `main` unchanged; do not merge just to activate scheduling. Use the feature-branch manual staging run for this test and report the separate daily-scheduling limitation.
+
+## Completion report
+
+Report each Phase 1 acceptance criterion as `PASS`, `FAIL`, or `BLOCKED` with evidence. Declare Phase 1 complete only if all Phase 1 gates pass. Otherwise name only the remaining blockers and exact owner action(s), while stating which work is complete. Keep Phase 0's Android/card gaps separate. No vague status, repeated permission requests, or production changes.

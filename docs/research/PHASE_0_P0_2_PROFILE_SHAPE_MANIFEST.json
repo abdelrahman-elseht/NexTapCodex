@@ -1,0 +1,135 @@
+{
+  "schema_version": "phase-0-p0.2-profile-shape-manifest-v2",
+  "status": "measured-lab-matrix-complete-for-transition",
+  "phase_status": "p0.2-transition-authorized-with-unmet-limitations; phase0-incomplete",
+  "candidate_head": "181f634025b8bb3962778b846f383dd8ae4e8c93",
+  "branch": "NextapCloudflareMigration",
+  "observed_at": "2026-11-13",
+  "source": {
+    "host": "https://nextap.services",
+    "url_policy": "Public profile paths are retained; query values are redacted. No card token, cookie, authorization header, contact data, or private media URL is recorded.",
+    "browser_evidence": "Terra supplied the public-profile shape observations and the repeatable Playwright/Chromium cold-warm matrix. See browser_baseline_evidence for exact settings and results."
+  },
+  "profiles": [
+    {
+      "slug": "abdelrahman",
+      "source_url": "https://nextap.services/b/abdelrahman",
+      "observed": {
+        "http_status": 200,
+        "language": "ar",
+        "direction": "rtl",
+        "cover": { "present": true, "width_px": 1066, "height_px": 600 },
+        "logo": true,
+        "features": ["bio", "social", "payment"]
+      }
+    },
+    {
+      "slug": "keve-barber",
+      "source_url": "https://nextap.services/b/keve-barber",
+      "observed": {
+        "http_status": 200,
+        "language": "ar",
+        "direction": "rtl",
+        "cover": { "present": true, "width_px": 1254, "height_px": 705 },
+        "logo": true,
+        "features": ["barber_hours", "payments", "reviews", "social"]
+      }
+    },
+    {
+      "slug": "dr-walaa-zein",
+      "source_url": "https://nextap.services/b/dr-walaa-zein?via=[redacted]",
+      "query": { "present": true, "keys": ["via"], "values_recorded": false },
+      "observed": {
+        "http_status": 200,
+        "language": "ar",
+        "direction": "rtl",
+        "cover": { "present": true, "width_px": 430, "height_px": 322 },
+        "logo": true,
+        "features": ["clinic", "location", "hours", "payments"],
+        "query_comparison": "The direct URL without the query had the same observed title/body, language, direction, link count (9), and image count (9). This does not establish that analytics or other non-visible effects are absent."
+      }
+    },
+    {
+      "slug": "galaleeb-store",
+      "source_url": "https://nextap.services/b/galaleeb-store",
+      "observed": {
+        "http_status": 200,
+        "language": "ar",
+        "direction": "rtl",
+        "cover": { "present": true, "width_px": 757, "height_px": 426 },
+        "logo": true,
+        "features": ["two_branches", "payment", "social"]
+      }
+    },
+    {
+      "slug": "even-cafe",
+      "source_url": "https://nextap.services/b/even-cafe",
+      "observed": {
+        "http_status": 200,
+        "language": "ar",
+        "direction": "rtl",
+        "cover": { "present": true, "width_px": 890, "height_px": 501 },
+        "logo": true,
+        "visible_identity_language": "en",
+        "features": ["contact", "social", "payment"]
+      }
+    }
+  ],
+  "observed_common": {
+    "cover_imagery_seen": true,
+    "horizontal_overflow_observed": false,
+    "overflow_scope": "Unfixed browser viewport only; this is not mobile or desktop acceptance evidence."
+  },
+  "browser_baseline_evidence": {
+    "artifact": "PHASE_0_P0_2_BROWSER_BASELINE_SANITIZED.json",
+    "candidate_head": "181f634025b8bb3962778b846f383dd8ae4e8c93",
+    "completed_at": "2026-11-13T13:32:55.261Z",
+    "tool": "Playwright Core 1.63.0",
+    "browser": "Chromium 158.0.8127.18",
+    "profiles": ["abdelrahman", "keve-barber", "dr-walaa-zein", "galaleeb-store", "even-cafe"],
+    "profile_sampling_deviation": "Owner states no-cover/gallery profiles are not realistic or needed for this cohort. These exact five owner-supplied profiles were sampled; this Phase 0 sampling deviation does not delete product parity requirements.",
+    "devices": {
+      "desktop-control": "1365x768, device scale 1, CPU 1x, unthrottled network",
+      "mobile-lab": "390x844, device scale 1, CPU 4x, CDP RTT 150ms, download 200KB/s, upload 100KB/s"
+    },
+    "cache": "Browser cache enabled; each cold/warm pair used a fresh isolated context, cold initial navigation and immediate warm same-URL navigation. CDN bypass was not used.",
+    "runs": "10 cold/warm pairs per profile and device setting; 5 profiles x 2 settings x 10 pairs = 100 pairs and 200 page navigations. 100 direct-media GETs were separate and did not inherit CDP throttling.",
+    "results": {
+      "page_responses": "200/200 HTTP 200; zero navigation/request failures; zero horizontal overflow; all documents lang=ar and dir=rtl, including even-cafe with English visible identity.",
+      "direct_media": "100/100 HTTP 200.",
+      "desktop_cold_median": {"fcp_ms": 516, "lcp_ms": 1070, "ttfb_ms": 62, "cls": 0.000046, "transfer_bytes": 336329, "requests": 25},
+      "desktop_warm_median": {"fcp_ms": 360, "lcp_ms": 360, "ttfb_ms": 60, "cls": 0.000053, "transfer_bytes": 3000, "requests": 25},
+      "mobile_cold_median": {"fcp_ms": 6034, "lcp_ms": 6034, "ttfb_ms": 150, "cls": 0.000415, "transfer_bytes": 336329, "requests": 25},
+      "mobile_warm_median": {"fcp_ms": 708, "lcp_ms": 708, "ttfb_ms": 150, "cls": 0.00519, "transfer_bytes": 3000, "requests": 25},
+      "cold_resource_medians": {"javascript_files": 11, "javascript_bytes": 156925, "font_files": 4, "font_bytes": 130808},
+      "warm_resource_medians": {"javascript_bytes": 0, "font_bytes": 1200}
+    },
+    "limitations": {
+      "physical_android": "Unavailable permanently per owner; remains an unmet physical-device gate. Mobile emulation is not physical-device evidence.",
+      "synthetic_card": "No real dedicated non-secret synthetic /c/{token} was discoverable; journey not run and unverified.",
+      "cache_disabled_diagnostic": "Not run.",
+      "console": "One console error in the first 40 navigations; console collection unavailable for the remaining 160.",
+      "interaction_proxy": "Unavailable; no harmless representative action common to the profiles was established."
+    },
+    "transition_decision": "Owner explicitly accepts the above limitations for transition to P0.3 only. They remain unmet/unavailable and are not passing measurements. Phase 0 is not passed or complete.",
+    "menu_discrepancy": "Unresolved PRD-versus-plan has_menu profile-link requirement; this sample does not change that contract."
+  },
+  "non_claims": [
+    "This browser matrix is desktop/mobile-lab evidence, not physical-device evidence.",
+    "The owner-approved no-cover/gallery sampling deviation does not remove those product parity requirements.",
+    "No dedicated synthetic active-card journey or /c/{token} result is recorded; this gate remains unverified.",
+    "Physical low-end Android, cache-disabled diagnostic, complete console visibility, and interaction proxy remain unmet/unavailable despite transition authorization.",
+    "The query comparison does not establish that analytics or other non-visible query effects are absent.",
+    "The supplied query URL is /b/{slug}; it is not a synthetic /c/{token} card journey.",
+    "P0.2 is complete only for transition under the owner's accepted limitations; this artifact does not pass Phase 0 or prove Cloudflare routing, cache, Worker, origin, purge, slug-update, or Menu coexistence gates."
+  ],
+  "missing_gates": [
+    "The dedicated synthetic active-card /c/{token} journey was not run and remains unverified.",
+    "The physical low-end Android/mobile-network gate remains unmet; cache-disabled diagnostic, full console collection, and interaction proxy are unavailable.",
+    "Complete the P0.3 disposable slug-update check and the remaining P0.4 comparison and route-contract decisions."
+  ],
+  "menu_discrepancy": {
+    "status": "unresolved",
+    "detail": "The PRD requires a published has_menu profile link contract, while the active plan excludes a Menu-enabled public profile because the owner says that profile feature is future work. The synthetic /menu/* route fixture is not evidence that the profile-link requirement is implemented."
+  }
+}

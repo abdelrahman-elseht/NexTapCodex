@@ -2,7 +2,7 @@ import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 import fs from "node:fs/promises";
 
-test("the only eligible published page is selected for card activation", async ({ app, screen, browser }) => {
+test("the only eligible published page is selected for card activation", { tags: ["story:ADM-CARD-01", "story:ADM-CARD-04", "domain:cards", "risk:critical", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   test.skip(
     !process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD,
     "Set owner E2E credentials to verify the authenticated card assignment screen.",

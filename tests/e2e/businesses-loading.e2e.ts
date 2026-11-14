@@ -1,7 +1,7 @@
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
-test("owners can browse businesses, open an editor, and return through preview", async ({ app, screen, browser }) => {
+test("owners can browse businesses, open an editor, and return through preview", { tags: ["story:ADM-BIZ-01", "story:ADM-BIZ-02", "story:ADM-BIZ-08", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   test.skip(!process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD, "Requires the configured owner account.");
 
   await app.open("/login");

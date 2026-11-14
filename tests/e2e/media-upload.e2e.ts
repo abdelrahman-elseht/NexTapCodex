@@ -2,7 +2,7 @@ import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 import sharp from "sharp";
 
-test("managed images survive upload, draft reload and publication, with pending-work guards", async ({ app, screen, browser }) => {
+test("managed images survive upload, draft reload and publication, with pending-work guards", { tags: ["story:ADM-BIZ-05", "story:ADM-BIZ-09", "story:ADM-BIZ-11", "domain:media", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires an isolated mutation-enabled project");
   await app.open("/login");
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);
@@ -68,7 +68,7 @@ test("managed images survive upload, draft reload and publication, with pending-
   // credentials correctly prevent pixel capture in this authenticated test.
 });
 
-test("newer edits remain dirty during save; failures retry without losing input", async ({ app, screen, browser }) => {
+test("newer edits remain dirty during save; failures retry without losing input", { tags: ["story:ADM-BIZ-05", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true", "Requires an isolated mutation-enabled project");
   await app.open("/login");
   await screen.getByLabel("البريد الإلكتروني").fill(credentials.user("owner").username);

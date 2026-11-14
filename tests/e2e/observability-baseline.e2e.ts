@@ -8,7 +8,7 @@ async function fixture() {
   return value;
 }
 
-test("baseline published synthetic business keeps its media and actions usable", async ({ app, screen, browser }) => {
+test("baseline published synthetic business keeps its media and actions usable", { tags: ["story:PUB-01", "story:PUB-02", "story:ADM-BIZ-11", "domain:public", "risk:high", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   const data = await fixture();
   await app.clearState();
   await app.open(`/b/${data.slug}`);
@@ -29,7 +29,7 @@ test("baseline published synthetic business keeps its media and actions usable",
   expect(layout).toEqual({ lang: "ar", dir: "rtl", overflow: false });
 });
 
-test("baseline owner dashboard and editor update the live preview without saving", async ({ app, screen, browser }) => {
+test("baseline owner dashboard and editor update the live preview without saving", { tags: ["story:ADM-BIZ-01", "story:ADM-BIZ-05", "domain:admin-business", "risk:high", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   const data = await fixture();
   await app.clearState();
   let mutationRequests = 0;

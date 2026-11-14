@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexTap profile features on Cloudflare</title>
+  <style>
+    :root{color-scheme:light;--ink:#1d2b28;--muted:#53615d;--paper:#f5f7f4;--panel:#fff;--line:#d6dfd8;--green:#176b53;--lime:#d9ee9a;--coral:#be5544;--blue:#2f6689;--soft:#e9f1eb;--gold:#a76e19}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{max-width:1180px;margin:auto;padding:32px 22px 72px}h1,h2,h3,p{margin-top:0}h1{font-size:3rem;line-height:1.05;max-width:850px}h2{font-size:1.55rem;line-height:1.2}h3{font-size:1.05rem;margin-bottom:8px}a{color:#155b79;overflow-wrap:anywhere}small,.muted{color:var(--muted)}.eyebrow{text-transform:uppercase;font-size:.76rem;font-weight:750;letter-spacing:.09em;color:var(--green)}
+    .lead{font-size:1.15rem;max-width:850px;color:#344641}.topline{display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:42px}.stamp{font-size:.82rem;color:var(--muted)}
+    .answer{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(250px,.75fr);gap:28px;align-items:start;margin-bottom:38px}.callout{border-left:4px solid var(--green);padding:14px 18px;background:var(--soft);border-radius:2px}.metric{background:var(--ink);color:#f6fbf5;padding:22px;border-radius:4px}.metric strong{display:block;font-size:2rem;line-height:1.1}.metric p{margin:8px 0 0;color:#d9e3da;font-size:.92rem}
+    section{padding:32px 0;border-top:1px solid var(--line)}.flow{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:20px;margin:18px 0 24px}.flow svg{width:100%;height:auto;display:block;color:var(--ink)}.node{fill:#fff;stroke:#a9b9ae;stroke-width:2}.node-green{fill:#e7f2e9;stroke:#4a9474}.node-gold{fill:#fff1d4;stroke:#c28a35}.node-blue{fill:#e9f2f8;stroke:#5385a5}.edge{stroke:#61716a;stroke-width:2;fill:none;marker-end:url(#arrow)}svg text{font:15px system-ui,sans-serif;fill:var(--ink)}.flow-caption{margin:12px 0 0;color:var(--muted);font-size:.9rem}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.tile{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--green);padding:18px;border-radius:4px;min-width:0}.tile.faq{border-top-color:var(--blue)}.tile.wa{border-top-color:var(--gold)}.tile ul{padding-left:19px;margin:10px 0 0}.tile li{margin:5px 0}
+    .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:var(--panel)}table{border-collapse:collapse;width:100%;min-width:760px}th,td{text-align:left;vertical-align:top;padding:12px 14px;border-bottom:1px solid var(--line)}th{background:#e8efea;font-size:.88rem}tr:last-child td{border-bottom:0}td:first-child{font-weight:700}
+    .phases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.phase{padding:15px;background:var(--panel);border:1px solid var(--line);border-radius:4px;min-width:0}.phase b{color:var(--green);display:block;margin-bottom:5px}.phase.blocked{border-color:#d9988d;background:#fff5f2}.phase.future{border-color:#a7c3d2}
+    .chart{background:var(--panel);border:1px solid var(--line);padding:16px;border-radius:4px;overflow:hidden}.chart svg{display:block;width:100%;height:auto}.chart text{font:14px system-ui,sans-serif;fill:var(--ink)}#chart-plot .bar-label-in{fill:#fff}#chart-plot .bar-label-out{fill:var(--ink)}.chart .gridline{stroke:#dce4de;stroke-width:1}.chart-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px;margin:0 0 18px}.control{min-width:0}.control label{display:flex;justify-content:space-between;gap:10px;font-weight:650}.control input[type=range]{width:100%;accent-color:var(--green)}.control input[type=number]{width:112px;border:1px solid #9caaa1;border-radius:3px;padding:5px 7px;font:inherit}.control small{display:block}.small-note{font-size:.88rem;color:var(--muted)}.risk{border-left:4px solid var(--coral);padding:10px 14px;background:#fff0ed;margin:14px 0}.sources{columns:2;column-gap:30px}.sources li{break-inside:avoid;margin:0 0 8px}
+    footer{border-top:1px solid var(--line);padding-top:20px;margin-top:30px;color:var(--muted);font-size:.88rem}
+    @media(max-width:760px){main{padding:22px 15px 48px}h1{font-size:2.1rem}.answer,.grid,.bars{grid-template-columns:1fr}.phases{grid-template-columns:repeat(2,minmax(0,1fr))}.sources{columns:1}.topline{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="topline"><div class="eyebrow">NexTap · Cloudflare migration review</div><div class="stamp">Research snapshot · 14 Nov 2026 · proposal, not implementation</div></div>
+  <div class="answer">
+    <div>
+      <h1>Estimate how many business profiles fit the monthly platform allowances.</h1>
+      <p class="lead">The $5 Workers plan does not cap static business profiles by count. Capacity depends on where profile files and images are stored, their size, account traffic, cache misses, and any dynamic Worker use.</p>
+      <div class="callout"><b>Starting scenario</b><br>About 16,260 profiles fit within 10 GB of the separate Standard R2 free storage allowance at 615 KB each (five 120 KB images plus a 15 KB page object). This is an R2 storage estimate, not a business limit included in the $5 Workers fee. Adjust the assumptions below to see which allowance binds.</div>
+    </div>
+    <aside class="metric"><span class="eyebrow" style="color:var(--lime)">$5 Workers Paid</span><strong>10M requests</strong><p>and 30M CPU-ms included monthly. Static asset requests are free and unlimited. Cache hits to dynamic Worker code still count as requests.</p><p><a href="https://developers.cloudflare.com/workers/platform/pricing/" style="color:#d8f1a7">Cloudflare pricing source</a></p></aside>
+  </div>
+
+  <section id="architecture">
+    <h2>Where these features fit</h2>
+    <p class="muted">The target design makes publication work happen when a business changes content. Visitors read published artifacts.</p>
+    <div class="flow">
+      <svg viewBox="0 0 1000 250" role="img" aria-labelledby="flow-title flow-desc">
+        <title id="flow-title">Feature delivery path in the target architecture</title><desc id="flow-desc">Admin content is validated and published to immutable HTML and media. Visitors receive static HTML and cached media. WhatsApp opens directly outside the site.</desc>
+        <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#61716a"/></marker></defs>
+        <rect class="node node-gold" x="25" y="73" width="180" height="90" rx="8"/><text x="115" y="108" text-anchor="middle">Admin edits</text><text x="115" y="132" text-anchor="middle">gallery · FAQ · links</text>
+        <rect class="node node-green" x="300" y="38" width="205" height="82" rx="8"/><text x="402" y="73" text-anchor="middle">Static profile HTML</text><text x="402" y="97" text-anchor="middle">FAQ + direct actions</text>
+        <rect class="node node-blue" x="300" y="145" width="205" height="70" rx="8"/><text x="402" y="176" text-anchor="middle">Hashed R2 media</text><text x="402" y="198" text-anchor="middle">responsive AVIF / fallback</text>
+        <rect class="node node-green" x="625" y="38" width="170" height="82" rx="8"/><text x="710" y="73" text-anchor="middle">CDN / browser</text><text x="710" y="97" text-anchor="middle">no Worker on warm hit</text>
+        <rect class="node node-blue" x="625" y="145" width="170" height="70" rx="8"/><text x="710" y="176" text-anchor="middle">Media CDN</text><text x="710" y="198" text-anchor="middle">lazy images 2-5</text>
+        <rect class="node node-gold" x="860" y="73" width="120" height="90" rx="8"/><text x="920" y="108" text-anchor="middle">Visitor</text><text x="920" y="132" text-anchor="middle">or WhatsApp</text>
+        <path class="edge" d="M205 103 L300 80"/><path class="edge" d="M205 125 L300 179"/><path class="edge" d="M505 80 L625 80"/><path class="edge" d="M505 180 L625 180"/><path class="edge" d="M795 80 L860 102"/><path class="edge" d="M795 180 Q850 180 880 162"/>
+      </svg>
+      <p class="flow-caption">D1 remains the mutable admin authority; KV is fallback lookup cache only. Neither should be touched by an ordinary published profile view.</p>
+    </div>
+  </section>
+
+  <section id="features">
+    <h2>Feature effect and implementation guard</h2>
+    <div class="grid">
+      <article class="tile" id="gallery"><h3>Five-image horizontal carousel</h3><p>Business value: show venue, product, team, or work quality before the visitor contacts the business.</p><ul><li>Each AVIF is 120 KB; all five total 600 KB.</li><li>First visible/LCP image eager; images 2-5 native lazy.</li><li>Reserve slide dimensions and test left/right scroll, keyboard, and touch.</li></ul></article>
+      <article class="tile faq" id="faq"><h3>FAQ</h3><p>Business value: answer common objections before a visitor starts a conversation.</p><ul><li>Static semantic HTML; native details/summary if collapsible.</li><li>No hydration or Worker request.</li><li>FAQ rich results are not generally available; Google limits eligibility.</li></ul></article>
+      <article class="tile wa" id="whatsapp"><h3>WhatsApp templates</h3><p>Business value: make the first message easier and clarify intent (booking, order, question).</p><ul><li>Direct `wa.me` anchor with URL-encoded short text.</li><li>Normalize international phone format.</li><li>No Worker redirect, tracking, or API integration.</li></ul></article>
+    </div>
+  </section>
+
+  <section id="quota">
+    <h2>Quota is about the request path</h2>
+    <div class="table-wrap"><table><thead><tr><th>Request type</th><th>Workers plan impact</th><th>Practical implication</th></tr></thead><tbody>
+      <tr><td>Static profile HTML / static assets</td><td>Static asset requests are free and unlimited.</td><td>Preserve the PRD's warm `/b/{slug}` static/CDN requirement.</td></tr>
+      <tr><td>Dynamic Worker route, even cache hit</td><td>Request counts; cached Worker result avoids CPU but not request accounting.</td><td>Avoid routing every profile/media request through a Worker.</td></tr>
+      <tr><td>R2 media object</td><td>No egress charge; storage and operation allowances apply.</td><td>Cache hashed derivatives at CDN; watch cache misses, storage, and resizing.</td></tr>
+      <tr><td>FAQ / direct WhatsApp click</td><td>No Worker usage if plain HTML links.</td><td>No click analytics or short-link redirect unless separately justified.</td></tr>
+    </tbody></table></div>
+    <p class="small-note">The gallery adds no Worker calls when its images are static/CDN files. The chart below estimates visitor download volume, not Worker quota or an R2 invoice.</p>
+  </section>
+
+  <section id="business-chart">
+    <h2>Adjust assumptions to estimate monthly hosted businesses</h2>
+    <p>The calculator estimates the number of active profiles the monthly allowances can support. It models storage, edge cache fills, and Worker calls, then returns the lowest capacity as the final answer.</p>
+    <div class="chart">
+      <div class="chart-controls">
+        <div class="control"><label for="gallery-count-range">Gallery images stored <input id="gallery-count-number" type="number" min="0" max="5" step="1" value="5" aria-label="Gallery images stored per business"></label><input id="gallery-count-range" type="range" min="0" max="5" step="1" value="5" aria-label="Gallery images stored per business slider"><small>0 to 5 images per profile</small></div>
+        <div class="control"><label for="retained-count-range">Unique retained media images / business <input id="retained-count-number" type="number" min="0" max="50" step="1" value="5" aria-label="Unique retained media images per business"></label><input id="retained-count-range" type="range" min="0" max="50" step="1" value="5" aria-label="Unique retained media images slider"><small>Includes older revisions that are not deduplicated</small></div>
+        <div class="control"><label for="size-range">AVIF size per image (KB) <input id="size-number" type="number" min="1" max="5000" step="1" value="120" aria-label="AVIF size per image in kilobytes"></label><input id="size-range" type="range" min="1" max="5000" step="1" value="120" aria-label="AVIF size per image slider"><small>1 KB to 5,000 KB per image</small></div>
+        <div class="control"><label for="page-size-range">Published page object (KB) <input id="page-size-number" type="number" min="1" max="1000" step="1" value="15" aria-label="Published page object size in kilobytes"></label><input id="page-size-range" type="range" min="1" max="1000" step="1" value="15" aria-label="Published page object size slider"><small>Storage size per published profile</small></div>
+        <div class="control"><label for="storage-range">R2 storage allowance (GB) <input id="storage-number" type="number" min="1" max="1000" step="1" value="10" aria-label="R2 storage allowance in gigabytes"></label><input id="storage-range" type="range" min="1" max="1000" step="1" value="10" aria-label="R2 storage allowance slider"><small>Separate from Workers Paid</small></div>
+        <div class="control"><label for="r2-reads-range">R2 Class B reads / month <input id="r2-reads-number" type="number" min="1" max="1000000000" step="1" value="10000000" aria-label="R2 Class B read allowance per month"></label><input id="r2-reads-range" type="range" min="1" max="1000000000" step="1" value="10000000" aria-label="R2 Class B read allowance slider"><small>Monthly object-read allowance</small></div>
+        <div class="control"><label for="visits-range">Profile visits / business / month <input id="visits-number" type="number" min="1" max="1000000" step="1" value="100" aria-label="Monthly profile visits per business"></label><input id="visits-range" type="range" min="1" max="1000000" step="1" value="100" aria-label="Monthly profile visits per business slider"><small>Used for estimated monthly R2 reads</small></div>
+        <div class="control"><label for="images-range">Gallery images fetched / visit <input id="images-number" type="number" min="0" max="5" step="1" value="2" aria-label="Average gallery images fetched per visit"></label><input id="images-range" type="range" min="0" max="5" step="1" value="2" aria-label="Average gallery images fetched per visit slider"><small>0 to 5; plus one profile HTML read</small></div>
+        <div class="control"><label for="regions-range">Active edge locations / business <input id="regions-number" type="number" min="1" max="300" step="1" value="3" aria-label="Estimated active edge locations per business"></label><input id="regions-range" type="range" min="1" max="300" step="1" value="3" aria-label="Estimated active edge locations per business slider"><small>Assumption used to estimate cold cache fills</small></div>
+        <div class="control"><label for="page-ttl-range">Profile HTML cache TTL (minutes) <input id="page-ttl-number" type="number" min="1" max="43200" step="1" value="5" aria-label="Profile HTML cache time to live in minutes"></label><input id="page-ttl-range" type="range" min="1" max="43200" step="1" value="5" aria-label="Profile HTML cache TTL slider"><small>Model assumption; target publish visibility is within five minutes</small></div>
+        <div class="control"><label for="media-ttl-range">Immutable media cache TTL (days) <input id="media-ttl-number" type="number" min="1" max="365" step="1" value="365" aria-label="Immutable media cache time to live in days"></label><input id="media-ttl-range" type="range" min="1" max="365" step="1" value="365" aria-label="Immutable media cache TTL slider"><small>Hashed media object lifetime at edge</small></div>
+        <div class="control"><label for="worker-per-range">Worker requests / business / month <input id="worker-per-number" type="number" min="0" max="1000000" step="1" value="0" aria-label="Worker requests per business per month"></label><input id="worker-per-range" type="range" min="0" max="1000000" step="1" value="0" aria-label="Worker requests per business per month slider"><small>Static profile delivery should be zero</small></div>
+        <div class="control"><label for="worker-cpu-range">Worker CPU ms / business / month <input id="worker-cpu-number" type="number" min="0" max="100000000" step="1" value="0" aria-label="Worker CPU milliseconds per business per month"></label><input id="worker-cpu-range" type="range" min="0" max="100000000" step="1" value="0" aria-label="Worker CPU milliseconds per business slider"><small>Static profile delivery should be zero CPU</small></div>
+        <div class="control"><label for="worker-budget-range">Workers request allowance / month <input id="worker-budget-number" type="number" min="1" max="1000000000" step="1" value="10000000" aria-label="Workers monthly request allowance"></label><input id="worker-budget-range" type="range" min="1" max="1000000000" step="1" value="10000000" aria-label="Workers monthly request allowance slider"><small>$5 Workers Paid includes 10 million requests</small></div>
+        <div class="control"><label for="worker-used-range">Other Worker requests already used <input id="worker-used-number" type="number" min="0" max="1000000000" step="1" value="0" aria-label="Other Worker requests already used per month"></label><input id="worker-used-range" type="range" min="0" max="1000000000" step="1" value="0" aria-label="Other Worker requests already used slider"><small>Subtract shared app usage first</small></div>
+        <div class="control"><label for="worker-cpu-budget-range">Workers CPU allowance (ms) / month <input id="worker-cpu-budget-number" type="number" min="1" max="1000000000" step="1" value="30000000" aria-label="Workers CPU allowance per month in milliseconds"></label><input id="worker-cpu-budget-range" type="range" min="1" max="1000000000" step="1" value="30000000" aria-label="Workers CPU allowance slider"><small>$5 Workers Paid includes 30 million CPU-ms</small></div>
+        <div class="control"><label for="worker-cpu-used-range">Other Worker CPU already used (ms) <input id="worker-cpu-used-number" type="number" min="0" max="1000000000" step="1" value="0" aria-label="Other Worker CPU milliseconds already used per month"></label><input id="worker-cpu-used-range" type="range" min="0" max="1000000000" step="1" value="0" aria-label="Other Worker CPU usage slider"><small>Subtract shared app CPU first</small></div>
+      </div>
+      <svg id="business-chart-svg" viewBox="0 0 900 360" role="img" aria-labelledby="business-chart-title business-chart-desc">
+        <title id="business-chart-title">Estimated hosted business profile capacity</title><desc id="business-chart-desc">Adjust storage, traffic, cache, and Worker assumptions to see estimated capacity and the binding allowance.</desc>
+        <g id="chart-plot"></g>
+      </svg>
+      <p id="chart-result" class="small-note" aria-live="polite"></p>
+      <p id="capacity-summary" class="small-note"></p>
+    </div>
+    <p class="small-note">Cache misses are estimated from visits per business, assumed active edge locations, and the cache TTL for HTML and immutable media. It assumes visits are spread evenly across those locations and each TTL window starts cold; this is a planning heuristic, not a measured Cloudflare cache ratio. Storage counts retained unique media objects, but does not model deduplication across businesses or other R2 data. Static profiles use zero Worker requests and CPU under the target contract. R2 allowances are separate from the $5 Workers plan.</p>
+  </section>
+
+  <section id="current">
+    <h2>Current architecture versus additions</h2>
+    <div class="grid">
+      <article class="tile"><h3>Already in target contract</h3><ul><li>D1 mutable records; immutable publication/media in R2.</li><li>Warm profile static/CDN response, no Worker or database.</li><li>KV is fallback-only and non-authoritative.</li><li>Direct public media, hashed names, cache freshness rules.</li><li>AVIF conditional; WebP compatible default and real-device fallback tests.</li></ul></article>
+      <article class="tile faq"><h3>Existing product baseline</h3><ul><li>Gallery section/items and managed media exist in the current editor.</li><li>WhatsApp contact/action exists as a direct link.</li><li>FAQ section is not in the current section inventory.</li><li>Cloudflare runtime is not yet deployed; Phase 1 remains incomplete.</li></ul></article>
+      <article class="tile wa"><h3>Proposed additions</h3><ul><li>Max gallery count and image derivative/byte budgets.</li><li>FAQ content schema, bounds, semantics, publication tests.</li><li>Template count, encoding, phone, and privacy rules.</li><li>Gallery byte-through-LCP and total-scroll budgets.</li></ul></article>
+    </div>
+  </section>
+
+  <section id="phases">
+    <h2>Phase placement and gates</h2>
+    <div class="phases">
+      <article class="phase blocked"><b>Phase 0 · gated</b>Prove route split: warm profile static/CDN with zero Worker invocations.</article>
+      <article class="phase blocked"><b>Phase 1 · incomplete</b>Finish bindings, access, schema approval, backup/restore, and isolated environments.</article>
+      <article class="phase"><b>Phase 2</b>Admin/data replacement and authorized editor/publishing inputs.</article>
+      <article class="phase future"><b>Phase 3 · feature home</b>Publish gallery derivatives, FAQ HTML, direct message links, cache policy, AVIF fallback, and performance acceptance.</article>
+    </div>
+    <div class="risk"><b>Current status:</b> dev/staging resources and candidate migrations exist, but there is no complete deployed Worker runtime, no R2 media objects, and Phase 1 acceptance remains blocked. Do not describe this proposal as implemented.</div>
+  </section>
+
+  <section id="optimization">
+    <h2>Carousel performance checks</h2>
+    <p>At the current 120 KB/image assumption, loading all slides transfers 600 KB per full gallery view. Load only the actual visible/LCP image eagerly; apply native lazy loading to images 2-5 and verify in target browsers how many are fetched initially and after each left/right scroll. Measure LCP, CLS, first-view image bytes, complete-gallery bytes, CDN hit ratio, R2 reads, and Worker invocations by route. The PRD's 35 KB figure is a cover-image target, not an approved limit for these gallery files.</p>
+  </section>
+
+  <section id="sources">
+    <h2>Evidence and source links</h2>
+    <ul class="sources">
+      <li><a href="NEXTAP_LANDING_DELIVERY_AND_SUPABASE_EXIT_PRD.md">Migration PRD and phases 0-6</a></li>
+      <li><a href="../../infra/cloudflare/PHASE_1_ENVIRONMENTS.md">Phase 1 resources and deployment status</a></li>
+      <li><a href="CLOUDFLARE_PROFILE_FEATURES_COST_AND_PERFORMANCE_20261114.md">Full research report</a></li>
+      <li><a href="https://developers.cloudflare.com/workers/platform/pricing/">Workers plan pricing</a></li>
+      <li><a href="https://developers.cloudflare.com/r2/pricing/">R2 pricing and egress</a></li>
+      <li><a href="https://developers.cloudflare.com/workers/static-assets/">Workers static assets</a></li>
+      <li><a href="https://developers.cloudflare.com/cache/concepts/cdn-cache-control/">CDN cache-control</a></li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img">Image loading and lazy behavior</a></li>
+      <li><a href="https://faq.whatsapp.com/5913398998672934/">WhatsApp click-to-chat</a></li>
+      <li><a href="https://developers.google.com/search/docs/appearance/structured-data/faqpage">Google FAQ structured-data eligibility</a></li>
+    </ul>
+  </section>
+  <footer>Sources were checked 14 Nov 2026. Plan details are published list pricing; actual account usage and total spend depend on traffic, storage, cache misses, and any optional services.</footer>
+</main>
+<script>
+  const controls = [
+    { key: "galleryCount", range: document.getElementById("gallery-count-range"), number: document.getElementById("gallery-count-number") },
+    { key: "retainedCount", range: document.getElementById("retained-count-range"), number: document.getElementById("retained-count-number") },
+    { key: "visits", range: document.getElementById("visits-range"), number: document.getElementById("visits-number") },
+    { key: "images", range: document.getElementById("images-range"), number: document.getElementById("images-number") },
+    { key: "size", range: document.getElementById("size-range"), number: document.getElementById("size-number") },
+    { key: "pageKB", range: document.getElementById("page-size-range"), number: document.getElementById("page-size-number") },
+    { key: "storageGB", range: document.getElementById("storage-range"), number: document.getElementById("storage-number") },
+    { key: "r2Reads", range: document.getElementById("r2-reads-range"), number: document.getElementById("r2-reads-number") },
+    { key: "edgeLocations", range: document.getElementById("regions-range"), number: document.getElementById("regions-number") },
+    { key: "pageTtlMinutes", range: document.getElementById("page-ttl-range"), number: document.getElementById("page-ttl-number") },
+    { key: "mediaTtlDays", range: document.getElementById("media-ttl-range"), number: document.getElementById("media-ttl-number") },
+    { key: "workerPerBusiness", range: document.getElementById("worker-per-range"), number: document.getElementById("worker-per-number") },
+    { key: "workerCpuPerBusiness", range: document.getElementById("worker-cpu-range"), number: document.getElementById("worker-cpu-number") },
+    { key: "workerBudget", range: document.getElementById("worker-budget-range"), number: document.getElementById("worker-budget-number") },
+    { key: "workerUsed", range: document.getElementById("worker-used-range"), number: document.getElementById("worker-used-number") },
+    { key: "workerCpuBudget", range: document.getElementById("worker-cpu-budget-range"), number: document.getElementById("worker-cpu-budget-number") },
+    { key: "workerCpuUsed", range: document.getElementById("worker-cpu-used-range"), number: document.getElementById("worker-cpu-used-number") },
+  ];
+  const plot = document.getElementById("chart-plot");
+  const chartResult = document.getElementById("chart-result");
+  const ns = "http://www.w3.org/2000/svg";
+  const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+  const integer = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+  function makeSvg(tag, attrs, text) {
+    const element = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, String(value)));
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+
+  function niceMaximum(value) {
+    if (value <= 0) return 1;
+    const power = 10 ** Math.floor(Math.log10(value));
+    const fraction = value / power;
+    return (fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10) * power;
+  }
+
+  function formatCapacity(value) {
+    if (!Number.isFinite(value)) return "No limit from this allowance";
+    if (value <= 0) return "0 businesses";
+    return `${integer.format(value)} businesses`;
+  }
+
+  function expectedCacheFills(requests, locations, ttlWindows) {
+    if (requests <= 0) return 0;
+    const perWindow = requests / ttlWindows;
+    return Math.min(requests, ttlWindows * locations * (1 - (1 - 1 / locations) ** perWindow));
+  }
+
+  function redraw() {
+    const values = Object.fromEntries(controls.map(({ key, range }) => [key, Number(range.value)]));
+    const availableStorageKB = values.storageGB * 1_000_000;
+    const storedKBPerBusiness = values.retainedCount * values.size + values.pageKB;
+    const storageCapacity = storedKBPerBusiness > 0 ? Math.floor(availableStorageKB / storedKBPerBusiness) : Infinity;
+    const monthlyHours = 30 * 24;
+    const pageWindows = Math.max(1, Math.ceil(monthlyHours * 60 / values.pageTtlMinutes));
+    const mediaWindows = Math.max(1, Math.ceil(30 / values.mediaTtlDays));
+    const htmlReadsPerBusiness = expectedCacheFills(values.visits, values.edgeLocations, pageWindows);
+    const galleryCount = values.galleryCount;
+    const firstImageVisits = galleryCount > 0 ? values.visits * Math.min(1, values.images) : 0;
+    const otherImageVisits = galleryCount > 1 ? values.visits * Math.max(0, Math.min(1, (values.images - 1) / (galleryCount - 1))) : 0;
+    const mediaReadsPerBusiness = expectedCacheFills(firstImageVisits, values.edgeLocations, mediaWindows)
+      + Math.max(0, galleryCount - 1) * expectedCacheFills(otherImageVisits, values.edgeLocations, mediaWindows);
+    const r2ReadsPerBusiness = htmlReadsPerBusiness + mediaReadsPerBusiness;
+    const r2Capacity = r2ReadsPerBusiness > 0 ? Math.floor(values.r2Reads / r2ReadsPerBusiness) : Infinity;
+    const remainingWorkerRequests = Math.max(0, values.workerBudget - values.workerUsed);
+    const remainingWorkerCpu = Math.max(0, values.workerCpuBudget - values.workerCpuUsed);
+    const workerRequestCapacity = values.workerPerBusiness > 0 ? Math.floor(remainingWorkerRequests / values.workerPerBusiness) : Infinity;
+    const workerCpuCapacity = values.workerCpuPerBusiness > 0 ? Math.floor(remainingWorkerCpu / values.workerCpuPerBusiness) : Infinity;
+    const workerCapacity = Math.min(workerRequestCapacity, workerCpuCapacity);
+    const capacities = [storageCapacity, r2Capacity, workerCapacity];
+    const overallCapacity = Math.min(...capacities);
+    const maxCapacity = niceMaximum(Math.max(1, overallCapacity));
+    const left = 42;
+    const right = 858;
+    const labelX = left;
+    const barX = left;
+    const barY = 92;
+    const barWidth = right - left;
+    const labels = ["R2 storage", "R2 monthly reads", "Workers request / CPU"];
+    plot.replaceChildren();
+
+    for (let tick = 0; tick <= 4; tick += 1) {
+      const fraction = tick / 4;
+      const capacity = Math.expm1(Math.log1p(maxCapacity) * fraction);
+      const x = barX + barWidth * fraction;
+      plot.append(makeSvg("line", { x1: x, y1: 64, x2: x, y2: 185, stroke: "#dce4de", "stroke-width": 1 }));
+      plot.append(makeSvg("text", { x, y: 207, "text-anchor": "middle" }, integer.format(capacity)));
+    }
+    plot.append(makeSvg("text", { x: labelX, y: 40, "font-weight": 700 }, "Maximum active profiles supported this month"));
+    const finalWidth = overallCapacity <= 0 ? 0 : Math.max(3, barWidth * Math.log1p(overallCapacity) / Math.log1p(maxCapacity));
+    plot.append(makeSvg("rect", { x: barX, y: barY, width: finalWidth, height: 48, rx: 4, fill: "#176b53" }));
+    const labelInside = finalWidth > barWidth * 0.35;
+    plot.append(makeSvg("text", { class: labelInside ? "bar-label-in" : "bar-label-out", x: labelInside ? barX + finalWidth - 8 : Math.min(right - 130, barX + finalWidth + 8), y: barY + 31, "text-anchor": labelInside ? "end" : "start", "font-size": 21, "font-weight": 750 }, formatCapacity(overallCapacity)));
+    const boundIndex = capacities.indexOf(overallCapacity);
+    const storageMB = storedKBPerBusiness / 1000;
+    const totalPotentialReads = values.visits * (1 + Math.min(values.images, galleryCount));
+    const missRate = totalPotentialReads > 0 ? Math.min(100, r2ReadsPerBusiness / totalPotentialReads * 100) : 0;
+    const estimatedR2Reads = overallCapacity * r2ReadsPerBusiness;
+    const estimatedWorkerRequests = overallCapacity * values.workerPerBusiness + values.workerUsed;
+    const estimatedWorkerCpu = overallCapacity * values.workerCpuPerBusiness + values.workerCpuUsed;
+    const monthlyProfileVisits = overallCapacity * values.visits;
+    const detail = `R2 storage permits ${formatCapacity(storageCapacity)}; R2 reads permit ${formatCapacity(r2Capacity)}; Worker request allowance permits ${formatCapacity(workerRequestCapacity)} and CPU permits ${formatCapacity(workerCpuCapacity)}.`;
+    chartResult.textContent = `FINAL ESTIMATE: ${formatCapacity(overallCapacity)} active profiles, reaching about ${integer.format(monthlyProfileVisits)} profile visits/month. Binding limit: ${labels[boundIndex]}. ${detail} At this capacity, R2 reads are ${integer.format(estimatedR2Reads)} of ${integer.format(values.r2Reads)}; Worker usage is ${integer.format(estimatedWorkerRequests)} of ${integer.format(values.workerBudget)} requests and ${integer.format(estimatedWorkerCpu)} of ${integer.format(values.workerCpuBudget)} CPU-ms. Estimated cache-miss rate: ${fmt.format(missRate)}%.`;
+    document.getElementById("business-chart-desc").textContent = `Final estimate: ${formatCapacity(overallCapacity)} active profiles and about ${integer.format(monthlyProfileVisits)} monthly profile visits, limited by ${labels[boundIndex]}. Estimated cache-miss rate ${fmt.format(missRate)} percent. R2 storage ceiling ${formatCapacity(storageCapacity)}; R2 reads ceiling ${formatCapacity(r2Capacity)}; Worker request ceiling ${formatCapacity(workerRequestCapacity)}; Worker CPU ceiling ${formatCapacity(workerCpuCapacity)}.`;
+    document.getElementById("capacity-summary").textContent = `Each profile stores about ${fmt.format(storageMB)} MB including retained unique media. Estimated R2 reads/profile/month: ${fmt.format(r2ReadsPerBusiness)} (HTML ${fmt.format(htmlReadsPerBusiness)} + gallery ${fmt.format(mediaReadsPerBusiness)}). Estimated cache fills use ${values.edgeLocations} active locations/profile, ${values.pageTtlMinutes}-minute HTML TTL, and ${values.mediaTtlDays}-day media TTL.`;
+  }
+
+  controls.forEach(({ range, number }) => {
+    range.addEventListener("input", () => {
+      number.value = range.value;
+      redraw();
+    });
+    number.addEventListener("input", () => {
+      if (number.value === "") return;
+      const min = Number(number.min);
+      const max = Number(number.max);
+      const value = Math.min(max, Math.max(min, Number(number.value) || min));
+      range.value = String(value);
+      number.value = String(value);
+      redraw();
+    });
+  });
+  redraw();
+</script>
+</body>
+</html>

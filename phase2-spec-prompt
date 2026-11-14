@@ -1,0 +1,46 @@
+$orchestrator Create the Phase 2 execution specification for the NexTap Cloudflare migration. This is spec creation only: do not implement Phase 2 code, deploy Workers, run migrations, import data, configure Access, or change Cloudflare/Hostinger/production resources.
+
+Use the EGM skills required for a design artifact: `egm-draft` to draft from the project brief and authoritative repository contracts, then `egm-review` (feature-spec review) to challenge the design, and `docs-guard` to verify documentation claims and links. Read each skill's instructions and required supporting resources before using it. Follow EGM's artifact-first and review/checkpoint requirements; do not skip a required author decision gate. Use fresh-context reviewers as required by EGM. If a required skill capability or reviewer dispatch is unavailable, state that instead of simulating completion.
+
+## Scope and authority
+
+The active migration PRD is authoritative. Phase 2 is **D1 Migration and Internal Admin Replacement**:
+
+- Outcome: the internal NexTap team can operate Core data without Supabase.
+- Work: inventory business outcomes, authorization, records, card history, media metadata, and exports; use legacy behavior as parity evidence, not as a schema to copy mechanically; import data to D1; protect internal admin with Cloudflare Access and application authorization; implement business rules in application services; preserve required transactions with short D1 transactions and idempotency; validate imports with approved manifests, counts, checksums, and focused functional fixtures.
+- Exit gate: business/page edits, preview/publish administration, branch handling, user authorization, audit history, and supported card workflows pass isolated staging tests; cross-tenant authorization passes; imported data has no unexplained mismatch; restore succeeds.
+
+Create `docs/specs/NEXTAP_PHASE_2_EXECUTION_SPEC.md`, link it from `docs/README.md`, and keep it subordinate to the PRD. Do not edit the PRD unless the review finds an actual contract conflict; report such a conflict rather than silently rewriting it.
+
+## Required context
+
+Read `AGENTS.md`, `concepts_brief.md`, the full Phase 2 section and relevant product/security/data/test/rollout sections of `docs/specs/NEXTAP_LANDING_DELIVERY_AND_SUPABASE_EXIT_PRD.md`, `docs/specs/NEXTAP_PHASE_1_EXECUTION_SPEC.md`, `docs/specs/NEXTAP_PHASE_0_EXECUTION_PLAN.md`, `docs/research/PHASE_1_LEGACY_PARITY_INVENTORY.md`, `infra/cloudflare/d1/PHASE_1_SCHEMA_REVIEW.md`, current schema decisions and migrations, the Phase 1 owner decision packet and latest closeout report, `CODEBOOK.md`, relevant current source/tests, and `docs/TESTING.md`. Verify current status from files; dated reports are evidence, not current truth if newer evidence exists.
+
+Carry these owner-approved contracts forward:
+
+- Existing direct-profile QR/NFC URLs keep the same hostname and `/b/{slug}` path; historical slugs resolve to the same page indefinitely and are never reassigned. Token URLs `/c/{token}` remain separate and resolve through active card assignment.
+- Menu is separate. The Core profile link contract is `/b/{slug}/menu`; Phase 2 does not build Menu or add runtime dependency.
+- `has_menu` is a page boolean defaulting false and is copied into immutable publication snapshots. Contact projection is versioned and snapshot-only. Use the legacy global staff capability matrix; require an explicit business ID for each business-scoped operation.
+- D1 is canonical mutable state; application services own workflows and authorization; R2 owns immutable publication/media artifacts; KV is non-authoritative and not used on warm static profile delivery.
+- Approved recovery targets are RTO 4 hours and RPO 24 hours. Treat these as acceptance targets whose operational proof is still required; do not mistake a policy statement for measured evidence.
+- Phase 1 remains open on runtime Access/isolation, backup scheduling/alerting, representative recovery/RTO, and other gates identified in the newest closeout evidence. Phase 0 Android/card evidence remains separate. The Phase 2 spec must identify Phase 1 exit as a prerequisite for dependent Phase 2 implementation, while allowing route-independent spec/planning work now.
+- No production changes, DNS, public routing, cutover, or production data are authorized by this spec task.
+
+## What the Phase 2 spec must make executable
+
+Write a bounded, testable plan for:
+
+1. Legacy behavior and data inventory, with source-of-truth references for businesses/pages/branches, drafts, ordered sections, publication snapshots, contact/VCF, media metadata, aliases, cards/tokens/serials/history, audit, idempotency, and exports. Identify what migrates and what is intentionally rebuilt; do not copy every RPC/RLS policy mechanically.
+2. The D1 import contract: stable IDs, slug/QR preservation, migration manifest/version, deterministic table order, explicit allowlists, counts/checksums/referential checks, idempotent retry and conflict behavior, quarantine/reconciliation, and no silent overwrite/skip. Include R2 object inventory/hash verification and the boundary between Phase 2 migration data and Phase 3 static publication.
+3. Internal admin replacement: Access admission plus server-side capability authorization, global legacy role mapping, explicit business scope, deny cases, session/logout/MFA/recovery expectations, audit logging, and secret boundaries. Name the operations and state transitions, not just generic “CRUD.”
+4. Application-service contracts for business/page/branch edits, drafts/revisions, media upload/association, preview/publish administration as allowed by Phase 2, slug rename with permanent alias preservation, card assignment/reassignment/deactivation/history, idempotency, and failure behavior. Keep public static publication and CDN routes in Phase 3 and manufacturing workflows in Phase 4 unless the PRD explicitly assigns a narrow Phase 2 contract.
+5. D1 transaction boundaries and cross-service workflows across D1/R2/KV: stage immutable writes, verify objects/manifests before activating references, preserve prior valid state on failure, reconcile partial operations, and keep KV non-authoritative.
+6. Staged migration and rollback sequence using synthetic/dev/staging gates, dual-read/compare only where justified, export manifests/checksums, cutover prerequisites, failure thresholds, recovery, and explicit prohibition on production execution until separately authorized.
+7. Phase 2 acceptance criteria and test matrix mapped to PRD exit gates: unit/domain, D1 constraints/transactions, auth/tenant denial, R2 privacy/integrity, import reconciliation, admin workflows, card parity within assigned scope, performance/security regression, restore, and staging end-to-end journeys. Each criterion must have an observable pass condition and evidence location/type.
+8. Dependencies and gate table distinguishing: Phase 1 prerequisites; Phase 2 work; later Phase 3 static publication/CDN/JavaScript delivery; Phase 4 cards/manufacturing; Phase 5 canary/cutover. Explicitly state that writing this spec does not start implementation or authorize production changes.
+
+Avoid vague placeholders such as “TBD” when repository evidence can resolve the question. For genuine owner choices not already decided, present a small set of concrete options and their consequences; do not invent owner approval. Do not reopen settled decisions. Keep scope tied to Phase 2 and the PRD; JavaScript bundle storage/cache remains a Phase 3 design handoff.
+
+## Delivery and verification
+
+Draft the spec in the repository, review it through EGM, resolve or clearly list material findings, add the docs index link, then run `npm run check:docs` and `git diff --check`. Preserve unrelated dirty files. Deliver the spec path, EGM review outcome, checks run, and any precise unresolved owner decision. No implementation or infrastructure mutation.

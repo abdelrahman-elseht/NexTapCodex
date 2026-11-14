@@ -1,0 +1,210 @@
+{
+  "artifact": "phase-0-p0-3-runtime-evidence",
+  "captured_at_utc": "2026-11-13T13:58:42Z",
+  "status": "historical snapshot: partial; slug update gate passed; contemporaneous P0.3 decision open",
+  "current_adjudication": {
+    "recorded_at_utc": "2026-11-13",
+    "decision": "P0.3 Pages route proof complete under the reviewed evidence standard; Phase 0 remains incomplete",
+    "application_origin_conclusion": "Supported for the observed /b/{slug} requests: documented Pages static-asset routing plus deployed artifact/hash, route configuration/bindings/source, and same-window positive-control Function event with no profile Function event establish the static Pages path without a NexTap application-origin request. This does not mean Cloudflare avoids its internal asset storage, and dashboard-only configuration is not attested.",
+    "cache_tier_conclusion": "Unobserved. No individual cache-tier HIT is claimed or required; CF-Cache-Status and Age are not required for this Pages route.",
+    "official_cloudflare_source": "https://developers.cloudflare.com/pages/configuration/serving-pages/",
+    "decision_record": "docs/research/PHASE_0_P0_4_DECISION_REVIEW.md"
+  },
+  "deployment": {
+    "project": "nextap-phase0-proof-20261113",
+    "deployment_id": "74cc9dcd-419b-49cc-91ef-66505569a94b",
+    "created_on_utc": "2026-11-13T13:51:00.138372Z",
+    "tail_format": "json",
+    "wrangler_version": "4.161.0"
+  },
+  "hostname": "phase0.nextap.services",
+  "demo_cache_probe": {
+    "captured_at_utc": "2026-11-13T15:14:09Z",
+    "method": "Four sequential read-only GETs with no cache-bypass headers; custom hostname cold/warm followed by pages.dev cold/warm.",
+    "responses": [
+      { "state": "custom_host_cold", "url": "https://phase0.nextap.services/b/phase0-demo", "status": 200, "body_bytes": 363, "sha256": "1b52920bac66ec5262a387d22d8c428c6431dafd12c0bb9f3c4a482842637c23", "content_type": "text/html; charset=utf-8", "cache_control": "public, max-age=0, must-revalidate", "cf_cache_status": null, "age": null, "cf_ray": "a59eb68879d31222-MRS" },
+      { "state": "custom_host_warm", "url": "https://phase0.nextap.services/b/phase0-demo", "status": 200, "body_bytes": 363, "sha256": "1b52920bac66ec5262a387d22d8c428c6431dafd12c0bb9f3c4a482842637c23", "content_type": "text/html; charset=utf-8", "cache_control": "public, max-age=0, must-revalidate", "cf_cache_status": null, "age": null, "cf_ray": "a59eb68a0e816666-MRS" },
+      { "state": "pages_dev_cold", "url": "https://nextap-phase0-proof-20261113.pages.dev/b/phase0-demo", "status": 200, "body_bytes": 363, "sha256": "1b52920bac66ec5262a387d22d8c428c6431dafd12c0bb9f3c4a482842637c23", "content_type": "text/html; charset=utf-8", "cache_control": "public, max-age=0, must-revalidate", "cf_cache_status": null, "age": null, "cf_ray": "a59eb68bba3518c4-MRS" },
+      { "state": "pages_dev_warm", "url": "https://nextap-phase0-proof-20261113.pages.dev/b/phase0-demo", "status": 200, "body_bytes": 363, "sha256": "1b52920bac66ec5262a387d22d8c428c6431dafd12c0bb9f3c4a482842637c23", "content_type": "text/html; charset=utf-8", "cache_control": "public, max-age=0, must-revalidate", "cf_cache_status": null, "age": null, "cf_ray": "a59eb68ce8b4e1b5-MRS" }
+    ],
+    "other_cache_headers": "No Age, CF-Cache-Status, x-vercel-cache, or x-cache header was present. Cloudflare returned server: cloudflare and a distinct CF-Ray per response.",
+    "edge_hit_conclusion": "INCONCLUSIVE: body consistency, Cloudflare traversal, and distinct request IDs do not prove an edge cache hit. External Hostinger DNS is not itself evidence that Cloudflare did not cache, but these responses expose no direct hit signal. P0.3 static warm edge-hit gate remains open.",
+    "application_origin_conclusion": "No application-origin request is observable from these client response headers alone. Keep runtime origin independence open pending direct platform request/path evidence."
+  },
+  "project_configuration_inspection": {
+    "inspected_at_utc": "2026-11-13T15:14:09Z",
+    "wrangler_project_list": ["nextap-phase0-proof-20261113", "nextap-phase0-menu-20261113"],
+    "proof_project_hostname_list": ["nextap-phase0-proof-20261113.pages.dev", "phase0.nextap.services"],
+    "checked_in_declared_bindings": { "r2": [{ "binding": "PHASE0_MEDIA", "bucket": "nextap-phase0-media" }], "d1": [], "kv": [], "services": [] },
+    "checked_in_variables": { "MENU_ORIGIN": "https://nextap-phase0-menu-20261113.pages.dev" },
+    "function_routes": { "include": ["/__phase0/*", "/media/*", "/menu/*"], "exclude": ["/b/*"] },
+    "source_inspection": "PHASE0_MEDIA is read only by the /media Function. MENU_ORIGIN is used only by the /menu proxy Function. The /b/phase0-demo profile is a static file; no D1, KV, Supabase, or application-origin call/reference is present in the proof-site profile path.",
+    "scope_and_limit": "These are checked-in config and code facts plus Pages project-list metadata. They do not independently attest dashboard-only bindings or prove that a request avoids an application origin at runtime; no such origin dependency is demonstrated by the inspected fixture code. The P0.3 runtime independence gate remains open until directly observed."
+  },
+  "live_tail": {
+    "positive_control": "phase0-control event observed for /__phase0/control; HTTP 200",
+    "menu_function": "phase0-menu events observed for /menu/ and /menu/menu.css",
+    "media_function": "In the 2026-11-13 immutable-media window, phase0-media events were observed for both isolated keys during fetch and cleanup checks.",
+    "purge_function": "phase0-purge events were observed for both isolated keys during test and cleanup purges.",
+    "profile_bypass": "No Pages Function event for /b/phase0-demo or either slug fixture request during the same tail window",
+    "privacy": "Raw live-tail output is not retained; it includes request metadata and client network details.",
+    "deployment_id": "74cc9dcd-419b-49cc-91ef-66505569a94b",
+    "format": "json"
+  },
+  "media": {
+    "bucket": "nextap-phase0-media",
+    "captured_at_utc": "2026-11-13T14:10:42Z",
+    "test_kind": "Two distinct immutable synthetic keys; no object overwrite and no version-history claim.",
+    "objects": [
+      {
+        "version_marker": "v1",
+        "key": "phase0/p03-immutable-20261113T141042Z-694500a8-v1.svg",
+        "body_bytes": 138,
+        "sha256": "d0870ba3caf2556adb30d6c8fe66044013adcfcf365ec8002557d0f0303922d4",
+        "direct_r2_read_sha256": "d0870ba3caf2556adb30d6c8fe66044013adcfcf365ec8002557d0f0303922d4",
+        "responses": [
+          { "state": "cold", "status": 200, "content_type": "image/svg+xml", "cache_control": "public, max-age=60", "phase0_cache": "MISS", "cf_cache_status": null, "cf_ray": "a59e5e265b44e1c5", "body_bytes": 138, "sha256": "d0870ba3caf2556adb30d6c8fe66044013adcfcf365ec8002557d0f0303922d4" },
+          { "state": "warm", "status": 200, "content_type": "image/svg+xml", "cache_control": "public, max-age=60", "phase0_cache": "HIT", "cf_cache_status": "HIT", "age_seconds": 0, "cf_ray": "a59e5e28da26e246", "body_bytes": 138, "sha256": "d0870ba3caf2556adb30d6c8fe66044013adcfcf365ec8002557d0f0303922d4" },
+          { "state": "after_exact_key_cache_purge", "purge_status": 200, "purge_deleted": true, "status": 200, "content_type": "image/svg+xml", "phase0_cache": "MISS", "cf_ray": "a59e5e30fb1cac32", "body_bytes": 138, "sha256": "d0870ba3caf2556adb30d6c8fe66044013adcfcf365ec8002557d0f0303922d4" }
+        ]
+      },
+      {
+        "version_marker": "v2",
+        "key": "phase0/p03-immutable-20261113T141042Z-694500a8-v2.svg",
+        "body_bytes": 138,
+        "sha256": "df908e1ccbcc5c357b3b4254a5ebb16058a396f19c0f4e9ba6c3ac717217ec5a",
+        "direct_r2_read_sha256": "df908e1ccbcc5c357b3b4254a5ebb16058a396f19c0f4e9ba6c3ac717217ec5a",
+        "responses": [
+          { "state": "cold", "status": 200, "content_type": "image/svg+xml", "cache_control": "public, max-age=60", "phase0_cache": "MISS", "cf_cache_status": null, "cf_ray": "a59e5e2a7ce89822", "body_bytes": 138, "sha256": "df908e1ccbcc5c357b3b4254a5ebb16058a396f19c0f4e9ba6c3ac717217ec5a" },
+          { "state": "warm", "status": 200, "content_type": "image/svg+xml", "cache_control": "public, max-age=60", "phase0_cache": "HIT", "cf_cache_status": "HIT", "age_seconds": 0, "cf_ray": "a59e5e2cb971dad4", "body_bytes": 138, "sha256": "df908e1ccbcc5c357b3b4254a5ebb16058a396f19c0f4e9ba6c3ac717217ec5a" },
+          { "state": "after_exact_key_cache_purge", "purge_status": 200, "purge_deleted": true, "status": 200, "content_type": "image/svg+xml", "phase0_cache": "MISS", "cf_ray": "a59e5e32ccd5e197", "body_bytes": 138, "sha256": "df908e1ccbcc5c357b3b4254a5ebb16058a396f19c0f4e9ba6c3ac717217ec5a" }
+        ]
+      }
+    ],
+    "superseded_untrusted_observation": {
+      "key": "phase0/cover.svg",
+      "reported_direct_r2_sha256": "17b116150d2eccba3bc11cf068e3d65ef0ae86df7c54124509b947bce3bb72e5",
+      "reported_response_bytes": 315,
+      "reported_bucket_size_bytes": 377,
+      "repository_fixture_bytes": 329,
+      "repository_fixture_sha256": "d5fa035aef4fd659c84857c12a0a42623c6bfb826d82184bf191c93af4a17212",
+      "assessment": "Provenance for the prior runtime sample is unexplained and its reported bytes/hash do not match the retained fixture. Do not use it as canonical fixture proof. The seeded object and fixture were left untouched."
+    },
+    "cleanup": {
+      "objects_deleted": true,
+      "exact_key_cache_purges": { "v1_status": 200, "v1_deleted": true, "v2_status": 200, "v2_deleted": true },
+      "post_cleanup_endpoint_statuses": { "v1": 404, "v2": 404 },
+      "r2_prefix_object_count_after_cleanup": 0
+    },
+    "version_update": "The contract is distinct immutable keys, not overwrite-based version history. After uploading v2, both v2 and prior v1 keys returned their exact distinct bytes; both remained addressable after exact cache purge.",
+    "direct_r2_custom_domain": "Not tested; outside this Pages Function gate."
+  },
+  "menu": {
+    "html": {
+      "path": "/menu/",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "body_bytes": 408,
+      "sha256": "f4a8a41c825cbd7bff68f0ab8e0a0163d8e0c50b4bf7714d7679e3c6d52ab9b4",
+      "synthetic_fixture_marker": "data-application=menu-test"
+    },
+    "css": {
+      "path": "/menu/menu.css",
+      "status": 200,
+      "content_type": "text/css",
+      "body_bytes": 63,
+      "sha256": "d9c25c659f85888294fbe466cfd1c4800eb82fe05b27314a30f0a8071d7d486a"
+    }
+  },
+  "static_profile": {
+    "path": "/b/phase0-demo",
+    "status": 200,
+    "content_type": "text/html; charset=utf-8",
+    "body_bytes": 363,
+    "sha256": "1b52920bac66ec5262a387d22d8c428c6431dafd12c0bb9f3c4a482842637c23",
+    "same_window_function_events": 0
+  },
+  "slug_fixture": {
+    "captured_at_utc": "2026-11-13T13:58:42Z",
+    "old_path": {
+      "path": "/b/phase0-slug-test",
+      "status": 200,
+      "marker": "slug-test-v1",
+      "body_bytes": 13,
+      "cf_cache_status": "HIT",
+      "age_seconds": 547,
+      "sha256": "82306e8edc3199df4381723332057b94e9c8c697882f2aa7061537c7a73c31c9"
+    },
+    "new_path": {
+      "path": "/b/phase0-slug-test-v2",
+      "status": 404,
+      "body_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "deployment_specific_host": {
+      "deployment_id": "74cc9dcd-419b-49cc-91ef-66505569a94b",
+      "old_path_status": 404,
+      "new_path_status": 404,
+      "interpretation": "The current deployment no longer contains either slug asset while the custom hostname still serves a cached v1 response. This supports stale Pages cache retention as the current explanation; the custom-host cleanup gate remains unverified until that response clears."
+    },
+    "gate": "FAIL; the recorded current deployment returned 404 for both slug paths, so the v2 deployment was not demonstrated and the actual slug update sequence was not exercised. Old-path v2 alias and cleanup are not proven. No fixture files were changed or removed.",
+    "cache_age_calculation": {
+      "observed_at_utc": "2026-11-13T13:58:42Z",
+      "observed_age_seconds": 547,
+      "estimated_cache_inserted_at_utc": "2026-11-13T13:49:35Z",
+      "nominal_one_week_expiry_utc": "2026-11-20T13:49:35Z",
+      "safe_recheck_after_utc": "2026-11-20T14:05:00Z",
+      "basis": "Estimate from response Age, not deployment creation time; re-evaluate using headers if the stale response is still served. This date is only for cache recovery before rerunning the actual update test."
+    },
+    "cleanup_verification": "Cache recovery is only a prerequisite, not a slug-update pass. After 2026-11-20T14:05:00Z, first check the old path on the custom and project pages.dev hostnames and verify /b/phase0-demo remains 200. Expected old-path 404 only confirms stale v1 cleared. Then deploy v1 at /b/phase0-slug-test and verify it before requesting the new path; deploy v2 at /b/phase0-slug-test-v2 and update the old path to the v2 alias. Do not request the new URL before its deployment is live, to avoid a cached pre-deployment 404. The slug gate passes only when both paths return the v2 marker on both hosts within the PRD five-minute freshness window. Stale v1 or 404 at five minutes is a gate failure; waiting a week for eventual expiry is cleanup evidence only. If stale v1 persists during cache recovery, record current Age/cache headers and keep the gate open; do not infer expiry from deployment time. After capturing the actual update result, remove only the dedicated test files and redeploy. Do not redeploy or purge the production zone."
+  },
+  "limitations": [
+    "This does not establish direct R2 custom-domain delivery or Workers Route behavior.",
+    "The earlier slug attempt failed because the cached old path obscured the deployment. A separate fresh-path v1-to-v2 attempt passed as recorded below.",
+    "The runtime evidence is a single synthetic sample per route and is not a performance benchmark."
+  ],
+  "slug_update_run": {
+    "status": "PASS",
+    "run_started_at_utc": "2026-11-13T15:01:07Z",
+    "paths": { "old": "/b/phase0-slug-old-20261113T150107Z", "new": "/b/phase0-slug-new-20261113T150107Z" },
+    "v1_deployment": {
+      "deployment_id": "c8976b5a-11bc-46bd-86f1-ee4e192f4198",
+      "created_on_utc": "2026-11-13T15:01:37.51597Z",
+      "deployed_url": "https://c8976b5a.nextap-phase0-proof-20261113.pages.dev",
+      "new_path_requested_before_v2": false,
+      "checks": [
+        { "timestamp_utc": "2026-11-13T15:01:54Z", "hostname": "phase0.nextap.services", "status": 200, "marker": "slug-test-v1", "sha256": "82306e8edc3199df4381723332057b94e9c8c697882f2aa7061537c7a73c31c9", "cf_cache_status": null, "age": null, "cf_ray": "a59ea78e6d2ee21e-MRS" },
+        { "timestamp_utc": "2026-11-13T15:01:55Z", "hostname": "nextap-phase0-proof-20261113.pages.dev", "status": 200, "marker": "slug-test-v1", "sha256": "82306e8edc3199df4381723332057b94e9c8c697882f2aa7061537c7a73c31c9", "cf_cache_status": null, "age": null, "cf_ray": "a59ea7902cdde1d5-MRS" }
+      ]
+    },
+    "v2_deployment": {
+      "deployment_id": "89ce2191-0b36-4f37-a220-ea9eda7cf256",
+      "created_on_utc": "2026-11-13T15:02:54.848961Z",
+      "deployed_url": "https://89ce2191.nextap-phase0-proof-20261113.pages.dev",
+      "tail_command": "npx -y wrangler@4 pages deployment tail 89ce2191-0b36-4f37-a220-ea9eda7cf256 --project-name nextap-phase0-proof-20261113 --env-file ../../../../.env.cloudflare.local --format json",
+      "freshness_window_seconds": 300,
+      "elapsed_from_deployment_seconds": 42,
+      "checks": [
+        { "timestamp_utc": "2026-11-13T15:03:36Z", "hostname": "phase0.nextap.services", "path": "/b/phase0-slug-old-20261113T150107Z", "final_url": "https://phase0.nextap.services/b/phase0-slug-old-20261113T150107Z", "status": 200, "marker": "slug-test-v2", "sha256": "79483b8592ca37f22477fe1590150e837f61f2c2f0c90a3b78138fc30031e3c5", "cf_cache_status": null, "age": null, "cf_ray": "a59eaa0959c8af5a-MRS" },
+        { "timestamp_utc": "2026-11-13T15:03:36Z", "hostname": "phase0.nextap.services", "path": "/b/phase0-slug-new-20261113T150107Z", "final_url": "https://phase0.nextap.services/b/phase0-slug-new-20261113T150107Z", "status": 200, "marker": "slug-test-v2", "sha256": "79483b8592ca37f22477fe1590150e837f61f2c2f0c90a3b78138fc30031e3c5", "cf_cache_status": null, "age": null, "cf_ray": "a59eaa0c188b2c78-MRS" },
+        { "timestamp_utc": "2026-11-13T15:03:37Z", "hostname": "nextap-phase0-proof-20261113.pages.dev", "path": "/b/phase0-slug-old-20261113T150107Z", "final_url": "https://nextap-phase0-proof-20261113.pages.dev/b/phase0-slug-old-20261113T150107Z", "status": 200, "marker": "slug-test-v2", "sha256": "79483b8592ca37f22477fe1590150e837f61f2c2f0c90a3b78138fc30031e3c5", "cf_cache_status": null, "age": null, "cf_ray": "a59eaa0d9c36e1ae-MRS" },
+        { "timestamp_utc": "2026-11-13T15:03:37Z", "hostname": "nextap-phase0-proof-20261113.pages.dev", "path": "/b/phase0-slug-new-20261113T150107Z", "final_url": "https://nextap-phase0-proof-20261113.pages.dev/b/phase0-slug-new-20261113T150107Z", "status": 200, "marker": "slug-test-v2", "sha256": "79483b8592ca37f22477fe1590150e837f61f2c2f0c90a3b78138fc30031e3c5", "cf_cache_status": null, "age": null, "cf_ray": "a59eaa0ed91cf5c5-MRS" }
+      ],
+      "positive_control": { "timestamp_utc": "2026-11-13T15:03:37Z", "url": "https://phase0.nextap.services/__phase0/control", "status": 200, "marker": "phase0-control-v1", "cf_ray": "a59eaa100fdfe208-MRS", "function_log": "phase0-control /__phase0/control observed" },
+      "function_invocation_evidence": "The deployment tail recorded the positive-control event and no Function events for either static slug path during the window.",
+      "header_absence": "CF-Cache-Status and Age were absent from all four slug responses; no cache-bypass headers were sent."
+    },
+    "cleanup": {
+      "removed_paths": ["/b/phase0-slug-old-20261113T150107Z", "/b/phase0-slug-new-20261113T150107Z"],
+      "deployment_id": "0c5c6460-0b83-4110-9dcb-e4dff2821243",
+      "created_on_utc": "2026-11-13T15:05:18.75922Z",
+      "verified_at_utc": "2026-11-13T15:05:35Z/2026-11-13T15:05:36Z",
+      "phase0_demo": [
+        { "hostname": "phase0.nextap.services", "status": 200, "sha256": "1b52920bac66ec5262a387d22d8c428c6431dafd12c0bb9f3c4a482842637c23", "cf_ray": "a59eacf42ea2762f-MRS" },
+        { "hostname": "nextap-phase0-proof-20261113.pages.dev", "status": 200, "sha256": "1b52920bac66ec5262a387d22d8c428c6431dafd12c0bb9f3c4a482842637c23", "cf_ray": "a59eacf59c7cc570-MRS" }
+      ],
+      "temporary_path_post_cleanup_status_required": false
+    },
+    "gate_decision": "PASS: old alias and new slug both served slug-test-v2 on both hosts within five minutes. The earlier stale-cache observation remains a separate cleanup observation, not the basis of this pass."
+  }
+}

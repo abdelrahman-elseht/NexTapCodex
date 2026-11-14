@@ -3,7 +3,7 @@ import { credentials, expect } from "e2e";
 import fs from "node:fs/promises";
 import { markDocument, expectSameDocument } from "./_helpers/document";
 
-test("inventory filters preserve document, draft and explicit selection", async ({ app, screen, browser }) => {
+test("inventory filters preserve document, draft and explicit selection", { tags: ["story:ADM-CARD-01", "domain:cards", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, screen, browser }) => {
   test.skip(!process.env.E2E_FIXTURE_PATH, "Requires namespaced owner fixture");
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH!, "utf8"));
   await app.open("/login?lang=en");
@@ -23,7 +23,7 @@ test("inventory filters preserve document, draft and explicit selection", async 
   await expectSameDocument(browser, before);
 });
 
-test("assignment and disable preserve document, history and unrelated work", async ({ app, screen, browser }) => {
+test("assignment and disable preserve document, history and unrelated work", { tags: ["story:ADM-CARD-04", "story:ADM-CARD-05", "domain:cards", "risk:critical", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true" || !process.env.E2E_FIXTURE_PATH, "Requires authorized synthetic mutation fixture");
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH!, "utf8"));
   await app.open("/login?lang=en");
@@ -58,7 +58,7 @@ test("assignment and disable preserve document, history and unrelated work", asy
   await expect(browser.locator("[data-card-status]")).toHaveText("disabled");
 });
 
-test("page activation preserves an unsaved business editor draft", async ({ app, screen, browser }) => {
+test("page activation preserves an unsaved business editor draft", { tags: ["story:ADM-BIZ-04", "domain:admin-business", "risk:high", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(process.env.E2E_ALLOW_MUTATIONS !== "true" || !process.env.E2E_FIXTURE_PATH, "Requires authorized synthetic mutation fixture");
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH!, "utf8"));
   await app.open("/login?lang=en");

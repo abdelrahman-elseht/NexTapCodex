@@ -2,17 +2,26 @@
   "name": "nextap-mvp",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "^22.23.5 || >=24.8.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "test:e2e": "e2e run",
-    "test:e2e:hosted": "e2e run --config e2e.hosted.config.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "check:docs": "node scripts/quality/docs-index.mjs",
+    "check:stories": "node scripts/quality/story-coverage.mjs",
+    "select:stories": "node scripts/quality/story-select.mjs",
+    "check:dependencies": "node scripts/quality/dependency-check.mjs",
+    "check:architecture": "node scripts/quality/architecture-check.mjs",
+    "check:file-budget": "node scripts/quality/file-budget.mjs",
+    "check:performance": "node scripts/observability/public-performance-check.mjs",
+    "check:performance-report": "node scripts/quality/performance-budget.mjs",
     "test:db": "node scripts/database/test-database.mjs",
-    "test:e2e:seed": "node scripts/database/seed-e2e.mjs",
     "test:watch": "vitest",
     "test:db:concurrency": "node scripts/database/test-concurrency.mjs"
   },

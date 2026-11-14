@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "include": [
+    "/__phase0/*",
+    "/media/*",
+    "/menu/*"
+  ],
+  "exclude": []
+}

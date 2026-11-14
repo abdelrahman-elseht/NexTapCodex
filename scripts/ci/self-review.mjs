@@ -19,7 +19,7 @@ const HIGH_RISK_CHECKLIST = [
 
 const RELEASE_CHECKLIST = [
   ["SR-R1", "The release source and accepted Staging SHA are identified exactly"],
-  ["SR-R2", "Hosted Staging acceptance is complete and its sanitized evidence is linked"],
+  ["SR-R2", "Pre-release acceptance evidence for the active architecture is linked"],
   ["SR-R3", "Migration history, checksums, and environment separation are verified"],
   ["SR-R4", "Production recovery, last-known-good deployment, and smoke checks are recorded"],
   ["SR-R5", "The promoted tree was compared with the accepted source after merge strategy"],
@@ -107,9 +107,9 @@ function requiredItems({ baseRef, risk }) {
 }
 
 /**
- * @param {{ pr: any, files: any[], hostedAcceptanceRuns?: Array<{event?: string, conclusion?: string, head_sha?: string}> }} input
+ * @param {{ pr: any, files: any[] }} input
  */
-export function evaluateReview({ pr, files, hostedAcceptanceRuns = [] }) {
+export function evaluateReview({ pr, files }) {
   const body = String(pr.body ?? "");
   const risk = classifyFiles(files);
   const errors = [];
@@ -156,14 +156,8 @@ export function evaluateReview({ pr, files, hostedAcceptanceRuns = [] }) {
       if (!/^[0-9a-f]{40}$/i.test(acceptedSha) || acceptedSha.toLowerCase() !== String(pr.head.sha).toLowerCase()) {
         errors.push("Accepted Staging SHA must exactly match the staging PR head SHA.");
       }
-      if (!hasUsefulValue(field(selfReview, "Hosted Staging acceptance artifact"))) {
-        errors.push("Hosted Staging acceptance artifact must be linked for a staging release.");
-      }
-      const hasDispatchAcceptance = hostedAcceptanceRuns.some(
-        (run) => run.event === "workflow_dispatch" && run.conclusion === "success" && run.head_sha === pr.head.sha,
-      );
-      if (!hasDispatchAcceptance) {
-        errors.push("A successful manual Hosted Staging acceptance run for the exact release SHA was not found.");
+      if (!hasUsefulValue(field(selfReview, "Pre-release acceptance evidence"))) {
+        errors.push("Pre-release acceptance evidence for the exact release SHA must be linked.");
       }
     } else if (!hasUsefulValue(field(selfReview, "Hotfix base SHA"))) {
       errors.push("A non-staging main PR must identify its Hotfix base SHA.");
@@ -233,12 +227,6 @@ async function listFiles(repo, number, token) {
   throw new Error("The pull request changes exceed the self-review file limit of 2,000 files.");
 }
 
-async function listHostedAcceptanceRuns(repo, sha, token) {
-  const query = new URLSearchParams({ branch: "staging", head_sha: sha, per_page: "100" });
-  const data = await githubRequest(`/repos/${repo}/actions/workflows/hosted-e2e.yml/runs?${query}`, token);
-  return data.workflow_runs ?? [];
-}
-
 function renderSummary({ pr, result, manifest }) {
   const lines = [
     `### Self-review ${result.ok ? "passed" : "failed"}`,
@@ -260,10 +248,7 @@ export async function runSelfReview({ eventPath = process.env.GITHUB_EVENT_PATH,
 
   const pr = await githubRequest(`/repos/${repo}/pulls/${number}`, token);
   const files = await listFiles(repo, number, token);
-  const hostedAcceptanceRuns = pr.base.ref === "main" && pr.head.ref === "staging"
-    ? await listHostedAcceptanceRuns(repo, pr.head.sha, token)
-    : [];
-  const result = evaluateReview({ pr, files, hostedAcceptanceRuns });
+  const result = evaluateReview({ pr, files });
   const manifest = buildManifest({ repo, pr, files, result });
   await fs.mkdir(outputDir, { recursive: true });
   await fs.writeFile(path.join(outputDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");

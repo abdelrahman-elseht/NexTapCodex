@@ -2,7 +2,7 @@ import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 import fs from "node:fs/promises";
 
-test("public media has responsive variants, eager hero/logo, lazy gallery and stable geometry", async ({ app, browser }) => {
+test("public media has responsive variants, eager hero/logo, lazy gallery and stable geometry", { tags: ["story:PUB-01", "story:PUB-03", "story:ADM-BIZ-11", "domain:media", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, browser }) => {
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH || ".e2e/optimization-phase123/fixture.json", "utf8"));
   await app.open(`/b/${fixture.slug}`);
   await expect(browser.locator('.hero-photo')).toHaveAttribute("loading", "eager");
@@ -29,7 +29,7 @@ test("public media has responsive variants, eager hero/logo, lazy gallery and st
   await app.screenshot("public-responsive-gallery");
 });
 
-test("broken optimized images preserve actions and recover after reload", async ({ app, browser, screen }) => {
+test("broken optimized images preserve actions and recover after reload", { tags: ["story:PUB-01", "story:STATE-02", "story:ADM-BIZ-11", "domain:media", "risk:high", "env:local", "env:staging", "mutation:read"] }, async ({ app, browser, screen }) => {
   const fixture = JSON.parse(await fs.readFile(process.env.E2E_FIXTURE_PATH || ".e2e/optimization-phase123/fixture.json", "utf8"));
   await browser.route("**/_next/image?**", route => route.abort());
   await app.open(`/b/${fixture.slug}`);

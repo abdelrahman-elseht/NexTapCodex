@@ -19,7 +19,7 @@ function body({ highRisk = false, release = false, owner = "owner", riskLevel = 
       ? [
           `Release source SHA: ${sha("a")}`,
           `Accepted Staging SHA: ${sha("a")}`,
-          "Hosted Staging acceptance artifact: https://github.com/example/artifact",
+          "Pre-release acceptance evidence: https://github.com/example/artifact",
           "Migration history/checksums: verified against Staging",
           "Production recovery target: deployment dpl_last_good and backup 2026-10-15",
           "Production smoke evidence: https://github.com/example/smoke",
@@ -64,7 +64,7 @@ describe("self-review gate", () => {
     expect(result.errors).toContain("Self-review owner @another-user must match PR author @owner.");
   });
 
-  it("requires exact source and hosted acceptance evidence for a staging release", () => {
+  it("requires exact source and active-architecture acceptance evidence for a staging release", () => {
     const pr = pullRequest({
       base: { ref: "main", sha: sha("b") },
       head: { ref: "staging", sha: sha("a") },
@@ -73,16 +73,18 @@ describe("self-review gate", () => {
     const accepted = evaluateReview({
       pr,
       files: [{ filename: "docs/example.md", status: "modified", additions: 1, deletions: 0, changes: 1, patch: "+documented" }],
-      hostedAcceptanceRuns: [{ event: "workflow_dispatch", conclusion: "success", head_sha: sha("a") }],
     });
     expect(accepted.ok).toBe(true);
 
     const missingAcceptance = evaluateReview({
-      pr,
+      pr: pullRequest({
+        base: { ref: "main", sha: sha("b") },
+        head: { ref: "staging", sha: sha("a") },
+        body: body({ release: true }).replace("Pre-release acceptance evidence: https://github.com/example/artifact", ""),
+      }),
       files: [{ filename: "docs/example.md", status: "modified", additions: 1, deletions: 0, changes: 1, patch: "+documented" }],
-      hostedAcceptanceRuns: [],
     });
-    expect(missingAcceptance.errors).toContain("A successful manual Hosted Staging acceptance run for the exact release SHA was not found.");
+    expect(missingAcceptance.errors).toContain("Pre-release acceptance evidence for the exact release SHA must be linked.");
   });
 
   it("does not persist a detected secret in the review artifact", () => {

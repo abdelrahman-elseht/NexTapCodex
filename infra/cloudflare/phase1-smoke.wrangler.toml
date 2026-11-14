@@ -1,0 +1,32 @@
+name = "nextap-phase1-runtime-smoke"
+main = "../../workers/phase1-foundation/src/index.ts"
+compatibility_date = "2026-11-13"
+workers_dev = false
+
+[env.staging]
+name = "nextap-phase1-runtime-smoke-staging"
+workers_dev = true
+
+[env.staging.vars]
+APP_ENV = "staging"
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+SMOKE_D1_FIXTURE_ID = "recovery-20261114-7f3a-business"
+SMOKE_R2_FIXTURE_KEY = "recovery-20261114-7f3a/media/synthetic.txt"
+
+[[env.staging.d1_databases]]
+binding = "NEXTAP_DB"
+database_name = "nextap-staging-core"
+database_id = "98f7be19-5ab8-47c3-9e36-f7df99d83089"
+
+[[env.staging.r2_buckets]]
+binding = "NEXTAP_PUBLIC_MEDIA"
+bucket_name = "nextap-staging-public"
+
+[[env.staging.r2_buckets]]
+binding = "SMOKE_RECOVERY_MEDIA"
+bucket_name = "nextap-recovery-backup-20261114-7f3a"
+
+[[env.staging.kv_namespaces]]
+binding = "NEXTAP_SLUG_CACHE"
+id = "d0154043f05a495c8e5e0ef5dbb81dc1"

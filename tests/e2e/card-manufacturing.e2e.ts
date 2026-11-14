@@ -1,7 +1,7 @@
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
-test("owner creates a manufacturing batch, previews its QR, and downloads its archive", async ({ app, screen, browser }) => {
+test("owner creates a manufacturing batch, previews its QR, and downloads its archive", { tags: ["story:ADM-CARD-02", "story:ADM-CARD-03", "story:ADM-CARD-06", "domain:cards", "risk:critical", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen, browser }) => {
   test.skip(
     !process.env.E2E_USER_OWNER_USERNAME || !process.env.E2E_USER_OWNER_PASSWORD || process.env.E2E_ALLOW_MUTATIONS !== "true",
     "Manufacturing E2E requires owner credentials and E2E_ALLOW_MUTATIONS=true on an isolated Supabase project.",

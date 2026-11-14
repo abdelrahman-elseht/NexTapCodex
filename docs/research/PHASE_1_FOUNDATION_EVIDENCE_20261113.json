@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "status": "partial-foundation-verified",
+  "candidateRevision": "181f634025b8bb3962778b846f383dd8ae4e8c93",
+  "verificationWindowUtc": {
+    "startedAt": "2026-11-13T16:56:27Z",
+    "endedAt": "2026-11-13T17:09:01Z"
+  },
+  "wranglerVersion": "4.161.0",
+  "resourceMatrix": "infra/cloudflare/phase1-resource-matrix.json",
+  "resources": {
+    "development": {
+      "d1": { "name": "nextap-dev-core", "id": "a64cabf6-b8f4-41aa-84fc-b7fed5d2dde7", "region": "WEUR", "connectivity": "SELECT 1 returned 1", "applicationTables": 0 },
+      "r2": { "name": "nextap-dev-public", "objects": 0 },
+      "kv": { "name": "nextap-dev-slug-cache", "id": "58df600b88a94da7806deb7ad5bc90c2", "keys": 0 }
+    },
+    "staging": {
+      "d1": { "name": "nextap-staging-core", "id": "98f7be19-5ab8-47c3-9e36-f7df99d83089", "region": "EEUR", "connectivity": "SELECT 1 returned 1", "applicationTables": 0 },
+      "r2": { "name": "nextap-staging-public", "objects": 0 },
+      "kv": { "name": "nextap-staging-slug-cache", "id": "d0154043f05a495c8e5e0ef5dbb81dc1", "keys": 0 }
+    },
+    "production": { "resourcesCreated": false, "status": "not-authorized" }
+  },
+  "environmentGuard": {
+    "developmentIdentityCheck": "pass",
+    "stagingIdentityCheck": "pass",
+    "productionRejectedBeforeMutation": "pass",
+    "mismatchedResourceRejectedByUnitTest": "pass",
+    "devCredentialCannotMutateStaging": "unverified; shared local CLI credential used for authorized resource creation and read-only inventory"
+  },
+  "logicalExportRestoreRehearsal": {
+    "source": "nextap-dev-core",
+    "target": "nextap-staging-core",
+    "exportFormat": "Wrangler D1 SQL export, d1 compatibility",
+    "exportBytes": 32,
+    "exportSha256": "309d1516f5d4f4f792b17106f7b761312f848c634e3028d70e6eb8ed39df7398",
+    "exportContents": "PRAGMA defer_foreign_keys=TRUE;",
+    "restoreResult": "pass for empty-database toolchain only; one statement and zero rows written",
+    "sourceApplicationTablesBefore": 0,
+    "targetApplicationTablesAfter": 0,
+    "sourceD1ReportedRegion": "WEUR",
+    "targetD1ReportedRegion": "EEUR",
+    "applicationDataIntegrity": "not established; no schema or fixture data existed",
+    "elapsedWindowSeconds": 142,
+    "recoveryTimeObjective": "unresolved",
+    "recoveryPointObjective": "unresolved"
+  },
+  "syntheticNonEmptyRestoreRehearsal": {
+    "verifiedAtUtc": "2026-11-13T17:22:57Z",
+    "wranglerVersion": "4.161.0",
+    "source": {
+      "name": "nextap-dev-core",
+      "id": "a64cabf6-b8f4-41aa-84fc-b7fed5d2dde7",
+      "region": "WEUR"
+    },
+    "target": {
+      "name": "nextap-staging-core",
+      "id": "98f7be19-5ab8-47c3-9e36-f7df99d83089",
+      "region": "EEUR"
+    },
+    "fixture": {
+      "table": "phase1_restore_probe_20261113",
+      "rows": [
+        { "probeId": "restore-a", "payload": "synthetic-alpha", "ordinal": 1 },
+        { "probeId": "restore-b", "payload": "synthetic-beta", "ordinal": 2 }
+      ],
+      "schemaVerified": true,
+      "rowValuesVerifiedInSourceAndTarget": true,
+      "referentialIntegrityApplicable": false,
+      "cleanup": "fixture table dropped from source and target; both report zero tables"
+    },
+    "export": {
+      "format": "Wrangler D1 SQL export, --compatibility d1",
+      "bytes": 388,
+      "sha256": "f013a8c3c94d4e2524bca7f0a52d918ebbecf42d2f879304b0b9c38a0a8a92b5"
+    },
+    "restore": {
+      "status": "pass for synthetic SQL schema and two-row restore only",
+      "importCommandWallSeconds": 10.9,
+      "rowsWrittenReportedByWrangler": 7,
+      "verificationRowsWritten": 0,
+      "applicationDataIntegrity": "not established; application schema and fixtures are not approved",
+      "rpo": "unresolved",
+      "rto": "unresolved; observed import command duration is not an RTO"
+    },
+    "limitations": [
+      "No application schema, relational business fixture, R2 object, or production data was involved.",
+      "Development and staging run in different Cloudflare regions; regional parity is unresolved.",
+      "This rehearsal does not establish runtime binding isolation or separate credential privileges."
+    ]
+  },
+  "representativeRecoveryCloseout": {
+    "checkedAtUtc": "2026-11-13T22:21:12Z",
+    "status": "blocked-before-mutation",
+    "credentialUse": "explicitly authorized CLOUDFLARE_MIGRATION_API_TOKEN loaded in memory; value not recorded",
+    "productionAccessed": false,
+    "preflight": {
+      "operation": "read-only remote D1 table counts",
+      "tables": ["businesses", "business_pages", "page_sections", "slug_registry", "page_publications", "media_assets", "publication_media", "card_batches", "cards", "card_assignment_history", "audit_events", "operation_receipts"],
+      "development": { "database": "nextap-dev-core", "rowsPerTable": 0 },
+      "staging": { "database": "nextap-staging-core", "rowsPerTable": 0 },
+      "result": "both application databases empty; closeout instruction required stopping before mutation"
+    },
+    "mutations": { "d1RowsWritten": 0, "r2ObjectsWritten": 0, "existingDataOverwritten": false, "cleanupRequired": false },
+    "r2": {
+      "currentInventoryCollected": false,
+      "lastRecordedInventoryAtUtc": "2026-11-13T17:09:01Z",
+      "lastRecordedObjectCounts": { "development": 0, "staging": 0 },
+      "limitation": "Wrangler r2 object CLI lists get, put, and delete; no object-list command was available in this closeout"
+    },
+    "serviceReadSmoke": "not run; Worker undeployed and runtime secrets not configured",
+    "timing": {
+      "incidentDeclared": false,
+      "usableServiceReached": false,
+      "elapsedToUsableServiceSeconds": null,
+      "rtoTargetSeconds": 14400,
+      "assessment": "not measurable; no incident was declared and no service endpoint exists. RTO remains unproven"
+    },
+    "rpo": {
+      "approved": false,
+      "evidenceSupportedRecommendation": "none; no observed application update frequency or backup cadence",
+      "priorPlanningRecommendation": "at most 24 hours, unapproved"
+    },
+    "limitations": [
+      "No representative live D1/R2 recovery was run because the current application databases had no fixture or application rows.",
+      "The dated empty R2 inventory was not refreshed during closeout.",
+      "No live runtime read path, backup retention, or service usability boundary was available."
+    ]
+  },
+  "authorizedRecoveryAttempt20261114": {
+    "checkedAtUtc": "2026-11-14T00:08:55Z",
+    "status": "stopped-before-fixture-mutation",
+    "credentialUse": "explicitly authorized CLOUDFLARE_MIGRATION_API_TOKEN loaded into process memory from ignored .env.migration.local; value not recorded",
+    "productionAccessed": false,
+    "wranglerVersion": "4.161.0",
+    "developmentD1": {
+      "name": "nextap-dev-core",
+      "rowsPerApplicationTable": 0,
+      "applicationTableCount": 12,
+      "queryReportedRowsWritten": 0
+    },
+    "backupBucket": {
+      "name": "nextap-recovery-backup-20261114-7f3a",
+      "created": true,
+      "customDomains": [],
+      "r2DevPublicAccess": "disabled",
+      "objectsWritten": 0
+    },
+    "existingR2Buckets": {
+      "development": {
+        "name": "nextap-dev-public",
+        "customDomains": [],
+        "r2DevPublicAccess": "disabled",
+        "objectInventory": "unavailable"
+      },
+      "staging": {
+        "name": "nextap-staging-public",
+        "customDomains": [],
+        "r2DevPublicAccess": "disabled",
+        "objectInventory": "unavailable"
+      },
+      "blocker": "Wrangler has no R2 object-list command; bucket-info and direct Cloudflare API attempts timed out; no R2 S3 credentials were available for ListObjectsV2. Historical empty inventory does not establish current emptiness or ownership."
+    },
+    "mutations": {
+      "backupBucketCreated": true,
+      "d1RowsWritten": 0,
+      "r2ObjectsWritten": 0,
+      "existingDataOverwritten": false,
+      "restoreRun": false,
+      "cleanupRequired": false
+    },
+    "runtimeSmokeReady": false,
+    "timing": {
+      "incidentDeclared": false,
+      "usableServiceReached": false,
+      "elapsedToUsableServiceSeconds": null,
+      "rtoTargetSeconds": 14400,
+      "assessment": "not measurable; no incident was declared and no usable service endpoint exists"
+    },
+    "rpoDemonstrated": false
+  },
+  "applicationShapedRecovery20261114": {
+    "verifiedAtUtc": "2026-11-14T00:50:56Z",
+    "status": "restore-integrity-pass-cleanup-complete-runtime-health-unverified",
+    "credentialUse": "explicitly authorized CLOUDFLARE_MIGRATION_API_TOKEN loaded into process memory; value not recorded",
+    "productionAccessed": false,
+    "wranglerVersion": "4.161.0",
+    "targetedRestoreFix": {
+      "reproducedRawImportFailure": true,
+      "rawExportBytes": 12626,
+      "rawImportError": "no such table: main.page_publications: SQLITE_ERROR",
+      "diagnosis": "A full schema-and-data dump into an empty target can insert a row referencing page_publications before that table is created because page and publication rows form a cyclic reference.",
+      "appliedPath": "Apply the three checked-in migrations first, then restore the explicit 12-table data-only export through scripts/cloudflare/phase1-d1-workflow.mjs.",
+      "foreignKeyHandling": "FK enforcement remained enabled. Wrangler data export's PRAGMA defer_foreign_keys=TRUE permits the cyclic row set to be inserted; PRAGMA foreign_key_check ran after restore and returned zero violations on both databases."
+    },
+    "source": { "name": "nextap-dev-core", "id": "a64cabf6-b8f4-41aa-84fc-b7fed5d2dde7", "region": "WEUR" },
+    "target": { "name": "nextap-staging-core", "id": "98f7be19-5ab8-47c3-9e36-f7df99d83089", "region": "EEUR" },
+    "backup": {
+      "sqlBytes": 4118,
+      "sqlSha256": "50be667a77476a3221836788c5ece68730f4a703b58a1d769a6d35b91235535b",
+      "manifestBytes": 1139,
+      "manifestSha256": "a042fab48810106ba5b36328faa2ebe8f353a1b6bfe5272888843ea51c40fb60",
+      "exportCommandWallSeconds": 9.508
+    },
+    "fixture": {
+      "idPrefix": "recovery-20261114-7f3a",
+      "businessId": "recovery-20261114-7f3a-business",
+      "pageId": "recovery-20261114-7f3a-page",
+      "canonicalSlug": "recovery-fixture-20261114-7f3a",
+      "aliasSlug": "recovery-fixture-old-20261114-7f3a",
+      "publicationId": "recovery-20261114-7f3a-publication",
+      "mediaAssetId": "recovery-20261114-7f3a-media",
+      "syntheticRowCounts": {
+        "businesses": 1,
+        "business_pages": 1,
+        "page_sections": 1,
+        "slug_registry": 2,
+        "page_publications": 1,
+        "media_assets": 1,
+        "publication_media": 1,
+        "card_batches": 1,
+        "cards": 1,
+        "card_assignment_history": 1,
+        "audit_events": 1,
+        "operation_receipts": 1
+      }
+    },
+    "r2": {
+      "bucket": "nextap-recovery-backup-20261114-7f3a",
+      "privacy": { "customDomains": [], "r2DevPublicAccess": "disabled" },
+      "objectsCreated": 4,
+      "objectChecksumsMatchedOnReadBack": true,
+      "objects": [
+        { "key": "recovery-20261114-7f3a/publication/artifact.html", "sizeBytes": 123, "sha256": "6f7dd808ac29a285ab35144a8bbae5d112e3264c604d7c455ef0db8dd2d361e2" },
+        { "key": "recovery-20261114-7f3a/media/synthetic.txt", "sizeBytes": 74, "sha256": "4b6c4c318a9360e28f4b7f80a4f2b994e40076546f4ec052a578f222691af93b" },
+        { "key": "recovery-20261114-7f3a/backup/core.sql", "sizeBytes": 4118, "sha256": "50be667a77476a3221836788c5ece68730f4a703b58a1d769a6d35b91235535b" },
+        { "key": "recovery-20261114-7f3a/backup/core.manifest.json", "sizeBytes": 1139, "sha256": "a042fab48810106ba5b36328faa2ebe8f353a1b6bfe5272888843ea51c40fb60" }
+      ],
+      "mediaReferenceSha256": "4b6c4c318a9360e28f4b7f80a4f2b994e40076546f4ec052a578f222691af93b",
+      "publicationManifestSha256Verified": true
+    },
+    "restore": {
+      "status": "pass",
+      "migrationsAppliedAndVerified": ["0001_phase1_core_schema.sql", "0002_permanent_slug_aliases.sql", "0003_approved_page_publication_contracts.sql"],
+      "populatedTableCount": 12,
+      "r2ReferencesVerified": 2,
+      "mediaChecksumsVerified": 1,
+      "publicationManifestChecksumsVerified": 1,
+      "sourceTargetPerTableCountAndSha256Match": true,
+      "sourceTargetPerTable": {
+        "businesses": { "count": 1, "sha256": "621c962554ea32eb27c10b29d7fed1638af0b819461f176b949889d13f56d98e" },
+        "business_pages": { "count": 1, "sha256": "9cc32aa096cc9883b70a2d1c6c06b10ceb249a2f76d6e6b4b6bc4ecc76b46955" },
+        "page_sections": { "count": 1, "sha256": "855d9db8f8d4e9b6d631a8c3b3108175cb8c7efd055b2cf79614eca4ee6aef18" },
+        "slug_registry": { "count": 2, "sha256": "31e919e1a716adb279a2f4bd941432d27df89410ba180258bd35876e8ac3bc58" },
+        "page_publications": { "count": 1, "sha256": "02dc683149fe5f9572a888a188e460465a77ebf1076ec4527bbcec4e6854d161" },
+        "media_assets": { "count": 1, "sha256": "f09cb5d0db7bbee0dffe1d8f7cd093267bf3d32d861101cb22247e646eb7ba10" },
+        "publication_media": { "count": 1, "sha256": "cc5983015043b445994caa627df69d9f5ee2b749b938787d7aa73b15e5627177" },
+        "card_batches": { "count": 1, "sha256": "dcf6549b259bb987e92bc87d291e26d07433032fd31a6465934d0c60d0ff6d9a" },
+        "cards": { "count": 1, "sha256": "7b5cc6ef3297a41a2567a3c755406ae8d324fa31168d9dfbc3a8be44d81bd8e6" },
+        "card_assignment_history": { "count": 1, "sha256": "e1244200478b2551a77e610f88ca9be2a7835da68a97e4890a7d6138eeae0a17" },
+        "audit_events": { "count": 1, "sha256": "42e4e2b23e0d736140a005dfc58bcaa4700eb8e982ea2a357ca7e91a8382dc98" },
+        "operation_receipts": { "count": 1, "sha256": "f95384b02c8242278142a7c819de12791a7cc11a5248d1ba65a92eb5de755c95" }
+      },
+      "relationshipRows": 2,
+      "relationshipSha256": "aca4122c71133585d0607a4f5e0ba5da4eeb138deb9f0698f38512fd7fc57ba9",
+      "foreignKeyViolationsSource": 0,
+      "foreignKeyViolationsTarget": 0
+    },
+    "smokeDeployment": {
+      "workerVersion": "4746c6e5-38f3-44e6-8db0-f156cacc3550",
+      "trafficPercent": 100,
+      "expectedBindingsVerified": true,
+      "healthResult": "unverified; the local bearer value was unavailable to recover the probe result",
+      "usableServiceReached": false
+    },
+    "cleanup": {
+      "status": "verified-complete",
+      "devFixtureRowCounts": 0,
+      "stagingFixtureRowCounts": 0,
+      "foreignKeyViolationsSource": 0,
+      "foreignKeyViolationsTarget": 0,
+      "ownedR2ObjectsDeleted": 4,
+      "ownedR2ObjectAbsenceVerified": 4,
+      "bucketKept": "nextap-recovery-backup-20261114-7f3a"
+    },
+    "timing": {
+      "incidentDeclared": false,
+      "usableServiceReached": false,
+      "elapsedToUsableServiceSeconds": null,
+      "rtoTargetSeconds": 14400,
+      "assessment": "not measurable; no incident was declared and runtime health is unverified; command durations are not an RTO measurement"
+    },
+    "rpoDemonstrated": false
+  },
+  "currentRecoveryPolicy": {
+    "ownerApprovedRpoSeconds": 86400,
+    "approvalStatus": "approved; current policy decision supersedes the 2026-11-13 and 2026-11-14 evidence snapshots above",
+    "proposedCadence": "at least one successful protected D1 and R2 recovery generation every 24 hours; alert and retry failed or late runs",
+    "recommendedRetentionDays": 35,
+    "retentionApprovalStatus": "recommended, not owner-approved",
+    "proposedStorage": "dedicated private backup bucket with encryption at rest and least-privilege access; bucket nextap-recovery-backup-20261114-7f3a was created privately, but encryption/retention/access-isolation controls and destination approval remain unverified",
+    "proposedIntegrityMetadata": ["export timestamp UTC", "source environment and D1 identity", "application table allowlist", "migration filenames and SHA-256", "artifact byte count and SHA-256", "R2 inventory time, keys, sizes, and content SHA-256", "validation result"],
+    "implementationBlocker": "A private bucket was created and a one-off synthetic recovery point passed integrity checks, but no approved backup workflow, scheduler, retention policy, or credential isolation is configured.",
+    "automationConfigured": false,
+    "protectedBackupDestinationConfigured": false,
+    "rpoDemonstrated": false,
+    "syntheticApplicationD1R2RestorePassed": true,
+    "runtimeHealthVerified": false,
+    "representativeD1R2RestorePassed": false,
+    "incidentToUsableServiceSeconds": null,
+    "assessment": "A one-off synthetic application-shaped D1/R2 restore passed row, relationship, manifest, and media integrity checks, and its fixture was fully cleaned. The staging Worker version and bindings were confirmed, but runtime health was not recoverable; no incident-to-usable-service timing exists. The approved RPO/RTO remain unproven, and no production resource was accessed."
+  },
+  "limitations": [
+    "D1 region differs between development and staging and has not been approved for parity.",
+    "The application-shaped fixture was cleaned from both D1 databases and the private bucket; no recurring backup schedule or runtime health result is available.",
+    "No cross-environment credential isolation was tested; the current CLI credential is account-scoped.",
+    "The synthetic non-empty SQL rehearsal proves SQL schema and row restoration only; it is not the Phase 1 application-data restore acceptance gate.",
+    "No production resource or configuration was created or changed."
+  ],
+  "references": {
+    "runbook": "infra/cloudflare/PHASE_1_ENVIRONMENTS.md",
+    "parityInventory": "docs/research/PHASE_1_LEGACY_PARITY_INVENTORY.md",
+    "targetGuard": "scripts/cloudflare/phase1-target-check.mjs",
+    "guardTests": "tests/unit/phase1-target-check.test.ts",
+    "d1BackupCommand": "scripts/cloudflare/phase1-d1-workflow.mjs",
+    "cloudflareD1TimeTravel": "https://developers.cloudflare.com/d1/reference/time-travel/",
+    "cloudflareScheduledD1BackupExample": "https://developers.cloudflare.com/workflows/examples/backup-d1/",
+    "cloudflareR2S3ApiCompatibility": "https://developers.cloudflare.com/r2/api/s3/api/"
+  }
+}

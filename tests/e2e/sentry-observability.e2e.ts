@@ -4,7 +4,7 @@ import { expect } from "e2e";
 
 const diagnosticsEnabled = process.env.SENTRY_TEST_ERRORS_ENABLED === "1";
 
-test("controlled Sentry client and server checks stay isolated to the diagnostics route", { skip: !diagnosticsEnabled }, async ({ app, screen }) => {
+test("controlled Sentry client and server checks stay isolated to the diagnostics route", { skip: !diagnosticsEnabled, tags: ["story:OPS-01", "domain:observability", "risk:normal", "env:local", "env:staging", "mutation:write"] }, async ({ app, screen }) => {
   await app.open("/sentry-example-page");
   await expect(screen.getByRole("heading", "Sentry diagnostics")).toBeVisible();
   await screen.getByRole("button", "Send controlled client error").tap();

@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "tracks": ["legacy-baseline", "cloudflare-target", "quality-only"],
+  "rules": [
+    {
+      "id": "legacy-marketing",
+      "track": "legacy-baseline",
+      "paths": ["src/app/page.tsx", "src/app/demo/**", "src/components/ui/brand-logo.tsx"],
+      "stories": ["MKT-01", "MKT-02", "MKT-03", "MKT-04"]
+    },
+    {
+      "id": "legacy-public-profile",
+      "track": "legacy-baseline",
+      "paths": ["src/app/b/**", "src/components/business/**", "src/lib/business/public-publication.ts", "src/lib/business/publication.ts"],
+      "stories": ["PUB-01", "PUB-02", "PUB-03", "PUB-04", "PUB-05", "PUB-06", "PUB-07", "STATE-02", "STATE-04"]
+    },
+    {
+      "id": "legacy-auth",
+      "track": "legacy-baseline",
+      "paths": ["src/app/login/**", "src/app/auth/**", "src/lib/auth/**", "src/lib/supabase/**", "src/middleware.ts"],
+      "stories": ["AUTH-01", "AUTH-02", "AUTH-03", "AUTH-04", "AUTH-05", "STATE-02"]
+    },
+    {
+      "id": "legacy-admin-business",
+      "track": "legacy-baseline",
+      "paths": ["src/app/admin/businesses/**", "src/app/api/admin/businesses/**", "src/lib/business/**", "src/components/admin/**"],
+      "stories": ["ADM-BIZ-01", "ADM-BIZ-02", "ADM-BIZ-03", "ADM-BIZ-04", "ADM-BIZ-05", "ADM-BIZ-06", "ADM-BIZ-07", "ADM-BIZ-08", "ADM-BIZ-09", "ADM-BIZ-10", "ADM-BIZ-11", "STATE-03"]
+    },
+    {
+      "id": "legacy-cards",
+      "track": "legacy-baseline",
+      "paths": ["src/app/c/**", "src/app/admin/cards/**", "src/app/api/admin/cards/**", "src/lib/cards/**"],
+      "stories": ["PUB-05", "ADM-CARD-01", "ADM-CARD-02", "ADM-CARD-03", "ADM-CARD-04", "ADM-CARD-05", "ADM-CARD-06", "STATE-02"]
+    },
+    {
+      "id": "legacy-media",
+      "track": "legacy-baseline",
+      "paths": ["src/app/api/admin/media/**", "src/app/api/media/**", "src/lib/media/**"],
+      "stories": ["PUB-01", "PUB-03", "ADM-BIZ-11", "STATE-02"]
+    },
+    {
+      "id": "cloudflare-public-delivery",
+      "track": "cloudflare-target",
+      "paths": ["workers/public/**", "workers/landing/**", "src/worker/public/**", "infra/cloudflare/public/**"],
+      "stories": ["MIG-01", "MIG-02", "MIG-03", "MIG-04", "MIG-05", "MIG-07"]
+    },
+    {
+      "id": "cloudflare-admin-publishing",
+      "track": "cloudflare-target",
+      "paths": ["workers/admin/**", "src/worker/admin/**", "infra/cloudflare/admin/**", "src/lib/cloudflare/publishing/**"],
+      "stories": ["MIG-06"]
+    },
+    {
+      "id": "cloudflare-media",
+      "track": "cloudflare-target",
+      "paths": ["workers/media/**", "src/worker/media/**", "infra/cloudflare/media/**", "src/lib/cloudflare/media/**"],
+      "stories": ["MIG-03", "MIG-05"]
+    },
+    {
+      "id": "cloudflare-routing-and-deployment",
+      "track": "cloudflare-target",
+      "paths": ["wrangler.toml", "wrangler.*.toml", "cloudflare/**", ".github/workflows/cloudflare-*.yml"],
+      "stories": ["MIG-01", "MIG-02", "MIG-04", "MIG-05", "MIG-06", "MIG-07"]
+    },
+    {
+      "id": "quality-documentation-and-hooks",
+      "track": "quality-only",
+      "paths": ["docs/**", ".codex/**", "AGENTS.md", "CODEBOOK.md", ".github/workflows/**"],
+      "stories": []
+    },
+    {
+      "id": "test-maintenance",
+      "track": "quality-only",
+      "paths": ["tests/**", "scripts/quality/**", "e2e*.config.ts", "package.json", "package-lock.json"],
+      "stories": []
+    }
+  ]
+}
