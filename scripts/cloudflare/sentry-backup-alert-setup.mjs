@@ -68,7 +68,6 @@ function desiredWorkflow(organizationId) {
   return {
     name: WORKFLOW_NAME,
     organizationId: String(organizationId),
-    logicType: "any-short",
     triggers: {
       logicType: "any-short",
       conditions: [{
@@ -104,31 +103,50 @@ function isExpectedMonitor(monitor, slug, name, projectSlug) {
     && monitor.config?.max_runtime === 30;
 }
 
-function isExpectedWorkflow(workflow, expected) {
-  const isFailureCondition = (condition) => condition?.type === "issue_type"
-    && condition.comparison?.value === "monitor_check_in_failure"
-    && condition.comparison?.include === true
-    && condition.conditionResult === true;
-  const hasSingleFailureCondition = (group) => group?.logicType === "any-short"
-    && Array.isArray(group.conditions)
-    && group.conditions.length === 1
-    && isFailureCondition(group.conditions[0]);
-  const actionFilter = Array.isArray(workflow.actionFilters) && workflow.actionFilters.length === 1
-    ? workflow.actionFilters[0]
+function workflowPredicates(workflow, expected, workflowFound) {
+  const triggerGroup = workflow?.triggers;
+  const triggerConditions = triggerGroup?.conditions;
+  const triggerCondition = Array.isArray(triggerConditions) && triggerConditions.length === 1
+    ? triggerConditions[0]
     : null;
+  const triggerComparison = triggerCondition?.comparison;
+  const actionFilters = workflow?.actionFilters;
+  const actionFilter = Array.isArray(actionFilters) && actionFilters.length === 1 ? actionFilters[0] : null;
+  const actionConditions = actionFilter?.conditions;
+  const actionCondition = Array.isArray(actionConditions) && actionConditions.length === 1
+    ? actionConditions[0]
+    : null;
+  const actionComparison = actionCondition?.comparison;
   const actions = actionFilter?.actions;
   const emailAction = Array.isArray(actions) && actions.length === 1 ? actions[0] : null;
 
-  return workflow.name === expected.name
-    && workflow.enabled === true
-    && workflow.logicType === expected.logicType
-    && String(workflow.organizationId) === expected.organizationId
-    && hasSingleFailureCondition(workflow.triggers)
-    && hasSingleFailureCondition(actionFilter)
-    && emailAction?.type === "email"
-    && emailAction.config?.targetType === "issue_owners"
-    && emailAction.config?.targetIdentifier === null
-    && emailAction.data?.fallthroughType === "AllMembers";
+  return {
+    workflowFound,
+    name: workflow?.name === expected.name,
+    enabled: workflow?.enabled === true,
+    organizationId: String(workflow?.organizationId) === expected.organizationId,
+    triggerGroup: Boolean(triggerGroup && typeof triggerGroup === "object" && !Array.isArray(triggerGroup)),
+    triggerLogicType: triggerGroup?.logicType === "any-short",
+    triggerConditionCount: Array.isArray(triggerConditions) && triggerConditions.length === 1,
+    triggerConditionType: triggerCondition?.type === "issue_type",
+    triggerConditionValue: triggerComparison?.value === "monitor_check_in_failure",
+    triggerConditionInclude: triggerComparison?.include === true,
+    triggerConditionResult: triggerCondition?.conditionResult === true,
+    actionFilterCount: Array.isArray(actionFilters) && actionFilters.length === 1,
+    actionFilterLogicType: actionFilter?.logicType === "any-short",
+    actionFilterConditionCount: Array.isArray(actionConditions) && actionConditions.length === 1,
+    actionFilterConditionType: actionCondition?.type === "issue_type",
+    actionFilterConditionValue: actionComparison?.value === "monitor_check_in_failure",
+    actionFilterConditionInclude: actionComparison?.include === true,
+    actionFilterConditionResult: actionCondition?.conditionResult === true,
+    emailActionCount: Array.isArray(actions) && actions.length === 1,
+    emailActionType: emailAction?.type === "email",
+    emailActionStatus: emailAction?.status === "active",
+    emailActionIntegrationId: emailAction?.integrationId === null,
+    emailActionTargetType: emailAction?.config?.targetType === "issue_owners",
+    emailActionTargetIdentifier: emailAction?.config?.targetIdentifier === null,
+    emailActionFallback: emailAction?.data?.fallthroughType === "AllMembers",
+  };
 }
 
 /** @param {{target: "development" | "staging", dsn?: string, token?: string, fetcher?: typeof fetch}} options Configure and verify one scheduled monitor and the organization failure workflow. */
@@ -182,9 +200,11 @@ export async function configureSentryBackupAlerts({ target, dsn, token, fetcher 
     throw new Error(`Sentry monitor ${desired.slug} readback did not confirm the required project, Cron schedule, and UTC timezone.`);
   }
   const verifiedWorkflows = await listAll(fetcher, token, workflowPath);
-  const verifiedWorkflow = verifiedWorkflows.find((workflow) => workflow.name === WORKFLOW_NAME);
-  if (!verifiedWorkflow || !isExpectedWorkflow(verifiedWorkflow, expected)) {
-    throw new Error("Sentry organization workflow readback did not confirm monitor failure detection and issue-owner email with AllMembers fallback.");
+  const namedWorkflow = verifiedWorkflows.find((workflow) => workflow.name === WORKFLOW_NAME);
+  const workflow = namedWorkflow ?? verifiedWorkflows[0];
+  const predicates = workflowPredicates(workflow, expected, Boolean(namedWorkflow));
+  if (Object.values(predicates).some((passed) => !passed)) {
+    throw new Error(`Sentry organization workflow readback predicates: ${JSON.stringify(predicates)}.`);
   }
   return { organization: organization.slug, project: project.slug, monitors: [desired.slug], workflow: WORKFLOW_NAME };
 }

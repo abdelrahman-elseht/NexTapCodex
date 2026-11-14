@@ -10,7 +10,6 @@ const workflow = {
   name: "NexTap Phase 1 backup check-in failures",
   enabled: true,
   organizationId: "123",
-  logicType: "any-short",
   triggers: {
     id: "trigger-1",
     organizationId: "123",
@@ -24,6 +23,8 @@ const workflow = {
     conditions: [{ id: "action-condition-1", type: "issue_type", comparison: { value: "monitor_check_in_failure", include: true }, conditionResult: true }],
     actions: [{
       type: "email",
+      integrationId: null,
+      status: "active",
       config: { targetType: "issue_owners", targetIdentifier: null },
       data: { fallthroughType: "AllMembers" },
     }],
@@ -85,10 +86,11 @@ describe("Sentry backup alert setup", () => {
     expect(monitorBodies.map((body) => body.config.schedule)).toEqual(["15 0 * * *"]);
     expect(monitorBodies.every((body) => body.config.max_runtime === 30)).toBe(true);
     expect(monitorBodies.every((body) => body.project === project.slug && body.config.timezone === "UTC")).toBe(true);
-    expect(fetcher.mock.calls.find(([url, init]) => String(url).endsWith("/workflows/") && init?.method === "POST")?.[1]?.body).toBe(JSON.stringify({
+    const workflowBody = JSON.parse(String(fetcher.mock.calls.find(([url, init]) => String(url).endsWith("/workflows/") && init?.method === "POST")?.[1]?.body));
+    expect(workflowBody).not.toHaveProperty("logicType");
+    expect(workflowBody).toEqual({
       name: workflow.name,
       organizationId: "123",
-      logicType: "any-short",
       triggers: {
         logicType: "any-short",
         conditions: [{ type: "issue_type", comparison: { value: "monitor_check_in_failure", include: true } }],
@@ -103,7 +105,7 @@ describe("Sentry backup alert setup", () => {
         data: { fallthroughType: "AllMembers" },
         config: { targetType: "issue_owners", targetDisplay: null, targetIdentifier: null },
       }] }],
-    }));
+    });
   });
 
   it.each([undefined, "production", ""])("rejects a missing or invalid target (%s) before API access", async (target) => {
@@ -170,13 +172,22 @@ describe("Sentry backup alert setup", () => {
   });
 
   it.each([
+    ["missing enabled", (value: any) => { delete value.enabled; }],
+    ["false enabled", (value: any) => { value.enabled = false; }],
     ["trigger condition", (value: any) => { value.triggers.conditions[0].comparison.value = "other"; }],
+    ["missing trigger group", (value: any) => { delete value.triggers; }],
+    ["wrong trigger logic", (value: any) => { value.triggers.logicType = "all"; }],
+    ["wrong trigger condition result", (value: any) => { value.triggers.conditions[0].conditionResult = false; }],
+    ["wrong workflow organization", (value: any) => { value.organizationId = "other"; }],
     ["missing action filters", (value: any) => { delete value.actionFilters; }],
+    ["wrong action filter logic", (value: any) => { value.actionFilters[0].logicType = "all"; }],
     ["wrong action filter condition", (value: any) => { value.actionFilters[0].conditions[0].comparison.value = "other"; }],
     ["legacy array trigger", (value: any) => { value.triggers = [{ type: "issue", comparison: { field: "issue_type", value: "monitor_check_in_failure", include: true } }]; }],
     ["legacy comparison field", (value: any) => { value.triggers.conditions[0].comparison.field = "issue_type"; delete value.triggers.conditions[0].comparison.value; }],
     ["missing condition result", (value: any) => { delete value.triggers.conditions[0].conditionResult; }],
     ["action recipient", (value: any) => { value.actionFilters[0].actions[0].config.targetType = "managers"; }],
+    ["missing email action status", (value: any) => { delete value.actionFilters[0].actions[0].status; }],
+    ["wrong email action integration", (value: any) => { value.actionFilters[0].actions[0].integrationId = "unexpected"; }],
     ["fallback recipient", (value: any) => { value.actionFilters[0].actions[0].data.fallthroughType = "none"; }],
   ])("rejects a structurally incorrect workflow %s readback", async (_label, mutate) => {
     const monitors: ReturnType<typeof monitor>[] = [];
@@ -192,7 +203,7 @@ describe("Sentry backup alert setup", () => {
       }
       if (url.endsWith("/workflows/") && method === "GET") {
         if (monitorReads < 2) return response([]);
-        const altered = structuredClone(workflow);
+        const altered: any = structuredClone(workflow);
         mutate(altered);
         return response([altered]);
       }
@@ -207,6 +218,51 @@ describe("Sentry backup alert setup", () => {
     });
 
     await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).rejects.toThrow(/workflow readback/);
+  });
+
+  it("reports only boolean workflow predicates when readback contains secret-shaped values", async () => {
+    const secret = "sentry-secret-shaped-value";
+    const monitors: ReturnType<typeof monitor>[] = [];
+    let monitorReads = 0;
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/") && method === "GET") {
+        monitorReads += 1;
+        return response(monitors);
+      }
+      if (url.endsWith("/workflows/") && method === "GET") {
+        if (monitorReads < 2) return response([]);
+        const altered: any = structuredClone(workflow);
+        altered.name = secret;
+        altered.providerPayload = { credential: secret };
+        altered.actionFilters[0].actions[0].config.targetIdentifier = { token: secret };
+        return response([altered]);
+      }
+      if (url.endsWith("/monitors/") && method === "POST") {
+        const body = JSON.parse(String(init?.body));
+        const created = Object.assign(monitor(body.slug, `id-${monitors.length}`), { name: body.name });
+        monitors.push(created);
+        return response(created);
+      }
+      if (url.endsWith("/workflows/") && method === "POST") return response(workflow);
+      throw new Error(`Unexpected mocked request: ${method} ${url}`);
+    });
+
+    let errorMessage = "";
+    try {
+      await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher });
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : "";
+    }
+    expect(errorMessage).toContain('"name":false');
+    expect(errorMessage).toContain('"emailActionTargetIdentifier":false');
+    expect(errorMessage).toContain('"workflowFound":false');
+    expect(errorMessage).not.toContain(secret);
+    expect(errorMessage).not.toContain("providerPayload");
+    expect(errorMessage).not.toContain("credential");
   });
 
   it("rejects a missing workflow readback", async () => {

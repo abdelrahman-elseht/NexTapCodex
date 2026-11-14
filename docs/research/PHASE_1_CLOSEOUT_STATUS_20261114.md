@@ -1,8 +1,12 @@
 # Phase 1 Closeout Status
 
-**As of:** 2026-11-14 (latest authorized backup run `43592843835`)
+**As of:** 2026-11-14 (latest authorized backup run `43597108880`)
 
 **Result:** Phase 1 is **not complete**. No production data, DNS, bindings, configuration, public routing, or cutover was changed.
+
+Latest run `43597108880` used commit `0b66d0156dd51fc81b3ee9acc127d07df1e9c45e`; only the staging gate was approved. Development setup and backup were skipped. Staging setup failed workflow readback with a generic predicate error. Terra confirmed that no specific field was captured, so the failing predicate remains unknown. A local fix now reports a fixed map of sanitized boolean predicates only and has focused test coverage; it has not been exercised against Sentry, so live confirmation remains pending. Staging backup was skipped. No D1/R2 output, artifacts, or successful check-in occurred. Main remains unchanged. No provider calls or retries were made.
+
+Run `43597108880` supersedes earlier “latest run” references below. Those entries are retained as history; current evidence remains that setup failed and no backup or successful check-in occurred.
 
 This report evaluates the ten acceptance criteria in the [Phase 1 execution spec](../specs/NEXTAP_PHASE_1_EXECUTION_SPEC.md). Remaining owner decisions and setup are consolidated in the [Phase 1 owner decision packet](PHASE_1_OWNER_DECISION_PACKET_20261114.md). Local test results and remote Cloudflare observations are identified separately; neither is treated as proof of the other.
 
