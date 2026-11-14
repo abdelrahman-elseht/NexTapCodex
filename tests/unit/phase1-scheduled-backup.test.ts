@@ -56,6 +56,25 @@ describe("scheduled recovery generation", () => {
     }
   });
 
+  it("passes the Sentry DSN and matching monitor metadata to each backup job only", () => {
+    const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
+    const setup = workflow.match(/  sentry-setup:\n([\s\S]*?)(?=\n  development:)/)?.[1];
+    const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
+    const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
+
+    expect(setup).toBeDefined();
+    expect(development).toBeDefined();
+    expect(staging).toBeDefined();
+    expect(setup).not.toContain("SENTRY_DSN:");
+    for (const [job, target] of [[development, "development"], [staging, "staging"]]) {
+      expect(job).toContain("SENTRY_DSN: ${{ secrets.SENTRY_DSN }}");
+      expect(job).toContain(`SENTRY_CRON_MONITOR_SLUG: nextap-phase1-${target}-backup`);
+      expect(job).toContain("GITHUB_RUN_ID: ${{ github.run_id }}");
+      expect(job).toContain("GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}");
+      expect(job).not.toMatch(/NEXT_PUBLIC_\w*DSN/);
+    }
+  });
+
   it("routes scheduled, manual, and candidate push events to the intended targets", () => {
     const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
     const setup = workflow.match(/  sentry-setup:\n([\s\S]*?)(?=\n  development:)/)?.[1];

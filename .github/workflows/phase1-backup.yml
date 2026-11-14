@@ -29,7 +29,6 @@ jobs:
     timeout-minutes: 10
     environment: staging
     env:
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +58,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ID_DEV }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_DEV }}
       AWS_DEFAULT_REGION: auto
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       SENTRY_CRON_MONITOR_SLUG: nextap-phase1-development-backup
       GITHUB_RUN_ID: ${{ github.run_id }}
       GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -85,6 +85,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ID_DEV }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_DEV }}
       AWS_DEFAULT_REGION: auto
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       SENTRY_CRON_MONITOR_SLUG: nextap-phase1-staging-backup
       GITHUB_RUN_ID: ${{ github.run_id }}
       GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
