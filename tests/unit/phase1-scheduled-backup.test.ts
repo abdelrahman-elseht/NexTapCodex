@@ -53,6 +53,22 @@ describe("scheduled recovery generation", () => {
     }
   });
 
+  it("runs only staging on the exact candidate-branch push and preserves schedule/manual routing", () => {
+    const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
+    const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
+    const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
+
+    expect(workflow).toMatch(/push:\n\s+branches:\n\s+- codex\/phase1-backup-staging-test-main/);
+    expect(development).toContain("github.event_name == 'schedule'");
+    expect(development).not.toContain("github.event_name == 'push'");
+    expect(staging).toContain("github.event_name == 'push'");
+    expect(staging).toContain("refs/heads/codex/phase1-backup-staging-test-main");
+    expect(workflow).toContain("inputs.target == 'development'");
+    expect(workflow).toContain("inputs.target == 'staging'");
+    expect(workflow).toContain("github.event_name == 'push' && 'staging'");
+    expect(workflow).toContain("|| 'both'");
+  });
+
   it("hashes exact bytes and rejects production or unknown environments", () => {
     expect(digest(Buffer.from("media payload"))).toBe("8ddc2c10dd88cf805a3dc78ae42e7271b216e5f80a992a59824931f2264270dc");
     expect(makePrefix("development", Date.UTC(2026, 10, 14), "123e4567-e89b-42d3-a456-426614174000"))

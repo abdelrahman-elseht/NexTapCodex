@@ -42,6 +42,45 @@ function response(body: unknown, status = 200) {
 }
 
 describe("Sentry backup alert setup", () => {
+  it("configures and verifies only the selected monitor for a staging test run", async () => {
+    const monitors: ReturnType<typeof monitor>[] = [];
+    let workflows: typeof workflow[] = [];
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/") && method === "GET") return response(monitors);
+      if (url.endsWith("/workflows/") && method === "GET") return response(workflows);
+      if (url.endsWith("/monitors/") && method === "POST") {
+        const body = JSON.parse(String(init?.body));
+        monitors.push(Object.assign(monitor(body.slug, "monitor-staging"), { name: body.name }));
+        return response(monitors.at(-1));
+      }
+      if (url.endsWith("/workflows/") && method === "POST") {
+        workflows = [workflow];
+        return response(workflow);
+      }
+      throw new Error(`Unexpected mocked request: ${method} ${url}`);
+    });
+
+    await expect(configureSentryBackupAlerts({ dsn, token, target: "staging", fetcher })).resolves.toMatchObject({
+      monitors: ["nextap-phase1-staging-backup"],
+    });
+    const monitorBodies = fetcher.mock.calls
+      .filter(([url, init]) => String(url).endsWith("/monitors/") && init?.method === "POST")
+      .map(([, init]) => JSON.parse(String(init?.body)));
+    expect(monitorBodies.map(({ slug }) => slug)).toEqual(["nextap-phase1-staging-backup"]);
+    expect(monitors.map(({ slug }) => slug)).toEqual(["nextap-phase1-staging-backup"]);
+    expect(fetcher.mock.calls.some(([url]) => String(url).includes("nextap-phase1-development-backup"))).toBe(false);
+  });
+
+  it("rejects unknown monitor targets before making provider requests", async () => {
+    const fetcher = vi.fn();
+    await expect(configureSentryBackupAlerts({ dsn, token, target: "production", fetcher })).rejects.toThrow(/target must be development, staging, or both/);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("creates both fixed monitors and the org workflow, then verifies their readback", async () => {
     const monitors: ReturnType<typeof monitor>[] = [];
     let workflows: typeof workflow[] = [];

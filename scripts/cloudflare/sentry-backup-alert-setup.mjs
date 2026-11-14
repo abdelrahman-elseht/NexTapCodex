@@ -133,8 +133,12 @@ function isExpectedWorkflow(workflow, expected) {
 }
 
 /** @param {{dsn?: string, token?: string, fetcher?: typeof fetch}} options Configure and verify both scheduled monitors and the organization failure workflow. */
-export async function configureSentryBackupAlerts({ dsn, token, fetcher = fetch } = {}) {
+export async function configureSentryBackupAlerts({ dsn, token, target = "both", fetcher = fetch } = {}) {
   if (!token) throw new Error("SENTRY_AUTH_TOKEN is required to configure Sentry backup alerts.");
+  if (target !== "both" && target !== "development" && target !== "staging") {
+    throw new Error("Sentry backup target must be development, staging, or both.");
+  }
+  const selectedMonitors = target === "both" ? MONITORS : MONITORS.filter(({ slug }) => slug.endsWith(`-${target}-backup`));
   const { orgId, projectId } = readDsn(dsn);
   const organizations = await listAll(fetcher, token, "/organizations/");
   const organization = organizations.find((item) => String(item.id) === orgId);
@@ -145,7 +149,7 @@ export async function configureSentryBackupAlerts({ dsn, token, fetcher = fetch 
 
   const monitorPath = `/organizations/${encodeURIComponent(organization.slug)}/monitors/`;
   const existingMonitors = await listAll(fetcher, token, monitorPath);
-  for (const desired of MONITORS) {
+  for (const desired of selectedMonitors) {
     const prior = existingMonitors.find((item) => item.slug === desired.slug);
     const body = {
       project: project.slug,
@@ -174,7 +178,7 @@ export async function configureSentryBackupAlerts({ dsn, token, fetcher = fetch 
   }
 
   const verifiedMonitors = await listAll(fetcher, token, monitorPath);
-  for (const desired of MONITORS) {
+  for (const desired of selectedMonitors) {
     const actual = verifiedMonitors.find((item) => item.slug === desired.slug);
     if (!actual || !isExpectedMonitor(actual, desired.slug, desired.name, project.slug)) {
       throw new Error(`Sentry monitor ${desired.slug} readback did not confirm the required project, Cron schedule, and UTC timezone.`);
@@ -185,11 +189,11 @@ export async function configureSentryBackupAlerts({ dsn, token, fetcher = fetch 
   if (!verifiedWorkflow || !isExpectedWorkflow(verifiedWorkflow, expected)) {
     throw new Error("Sentry organization workflow readback did not confirm monitor failure detection and issue-owner email with AllMembers fallback.");
   }
-  return { organization: organization.slug, project: project.slug, monitors: MONITORS.map(({ slug }) => slug), workflow: WORKFLOW_NAME };
+  return { organization: organization.slug, project: project.slug, monitors: selectedMonitors.map(({ slug }) => slug), workflow: WORKFLOW_NAME };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  configureSentryBackupAlerts({ dsn: process.env.SENTRY_DSN, token: process.env.SENTRY_AUTH_TOKEN })
+  configureSentryBackupAlerts({ dsn: process.env.SENTRY_DSN, token: process.env.SENTRY_AUTH_TOKEN, target: process.argv[2] ?? "both" })
     .then(({ organization, project, monitors, workflow }) => {
       process.stdout.write(`Sentry alert configuration verified for ${organization}/${project}: ${monitors.join(", ")} and ${workflow}.\n`);
     })

@@ -1,6 +1,9 @@
 name: Phase 1 non-production backups
 
 on:
+  push:
+    branches:
+      - codex/phase1-backup-staging-test-main
   schedule:
     - cron: "15 0 * * *"
   workflow_dispatch:
@@ -36,11 +39,11 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Configure and verify Sentry backup alerts
-        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs
+        run: node scripts/cloudflare/sentry-backup-alert-setup.mjs "${{ github.event_name == 'push' && 'staging' || github.event_name == 'workflow_dispatch' && inputs.target || 'both' }}"
 
   development:
     needs: sentry-setup
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'development' }}
+    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'development') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The confirmed DEV S3 pair is stored in this protected Environment. Its
@@ -68,7 +71,7 @@ jobs:
 
   staging:
     needs: sentry-setup
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'staging' }}
+    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.target == 'staging') || (github.event_name == 'push' && github.ref == 'refs/heads/codex/phase1-backup-staging-test-main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: staging
