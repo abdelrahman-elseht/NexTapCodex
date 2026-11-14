@@ -357,8 +357,128 @@ describe("Sentry backup alert setup", () => {
 
   it("fails with the exact API status before later setup calls when token scope is insufficient", async () => {
     const fetcher = vi.fn().mockResolvedValue(response({ detail: "redacted" }, 403));
-    await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).rejects.toThrow("HTTP 403; verify SENTRY_AUTH_TOKEN scope and Sentry API access.");
+    await expect(configureSentryBackupAlerts({ target: "development", dsn, token, fetcher })).rejects.toThrow(/HTTP 403.*verify SENTRY_AUTH_TOKEN scope and Sentry API access\./);
     expect(fetcher).toHaveBeenCalledOnce();
     expect(String(fetcher.mock.calls[0]?.[0])).not.toContain("public-key");
+  });
+
+  it.each([
+    ["DSN", `Invalid monitor config: ${dsn}`, [dsn]],
+    ["Bearer token", "Invalid monitor config: Bearer opaque-provider-token", ["opaque-provider-token"]],
+    ["Authorization header", "Invalid monitor config: Authorization: Basic opaque-header-token", ["opaque-header-token"]],
+    ["authorization assignment", "Invalid monitor config: authorization=opaque-equals-token", ["opaque-equals-token"]],
+  ])("redacts %s while retaining the validation diagnostic", async (_shape, detail, secrets) => {
+    const existingMonitor = monitor("nextap-phase1-development-backup", "monitor-dev");
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/") && !init?.method) return response([existingMonitor]);
+      if (url.endsWith("/monitors/monitor-dev/") && init?.method === "PUT") {
+        return response({ detail }, 400);
+      }
+      throw new Error(`Unexpected mocked request: ${init?.method ?? "GET"} ${url}`);
+    });
+
+    let errorMessage = "";
+    try {
+      await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher });
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : "";
+    }
+    expect(errorMessage).toContain("HTTP 400");
+    expect(errorMessage).toContain("Invalid monitor config");
+    for (const secret of secrets) expect(errorMessage).not.toContain(secret);
+    expect(errorMessage).toContain("verify SENTRY_AUTH_TOKEN scope and Sentry API access.");
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
+
+  it("omits generic JSON credential fields, including non-string values, while retaining validation text", async () => {
+    const existingMonitor = monitor("nextap-phase1-development-backup", "monitor-dev");
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/") && !init?.method) return response([existingMonitor]);
+      if (url.endsWith("/monitors/monitor-dev/") && init?.method === "PUT") return response({
+        detail: "Invalid monitor config: schedule is not accepted",
+        token: "json-token",
+        secret: { nested: "json-secret" },
+        dsn: 12345,
+        auth: ["json-auth"],
+      }, 400);
+      throw new Error(`Unexpected mocked request: ${init?.method ?? "GET"} ${url}`);
+    });
+
+    let errorMessage = "";
+    try {
+      await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher });
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : "";
+    }
+    expect(errorMessage).toContain("HTTP 400");
+    expect(errorMessage).toContain("Invalid monitor config: schedule is not accepted");
+    for (const value of ["json-token", "json-secret", "12345", "json-auth"]) expect(errorMessage).not.toContain(value);
+    expect(errorMessage).toContain("verify SENTRY_AUTH_TOKEN scope and Sentry API access.");
+  });
+
+  it("caps provider diagnostics at 2048 characters while retaining the leading validation message", async () => {
+    const existingMonitor = monitor("nextap-phase1-development-backup", "monitor-dev");
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/") && !init?.method) return response([existingMonitor]);
+      if (url.endsWith("/monitors/monitor-dev/") && init?.method === "PUT") {
+        return response({ detail: `Invalid schedule: ${"x".repeat(3000)}` }, 400);
+      }
+      throw new Error(`Unexpected mocked request: ${init?.method ?? "GET"} ${url}`);
+    });
+    let errorMessage = "";
+    try {
+      await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher });
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : "";
+    }
+    const detail = errorMessage.split("; provider response: ")[1]?.split("; verify")[0] ?? "";
+    expect(detail).toMatch(/^Invalid schedule:/);
+    expect(detail.length).toBeLessThanOrEqual(2048);
+  });
+
+  it("reads no more than 8192 response bytes and caps the returned diagnostic at 2048 characters", async () => {
+    const existingMonitor = monitor("nextap-phase1-development-backup", "monitor-dev");
+    const body = `Invalid schedule: ${"x".repeat(20000)}`;
+    const bytes = new TextEncoder().encode(body);
+    let consumed = 0;
+    const streamedResponse = new Response(new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (consumed >= bytes.length) {
+          controller.close();
+          return;
+        }
+        const next = bytes.slice(consumed, consumed + 1024);
+        consumed += next.length;
+        controller.enqueue(next);
+      },
+    }), { status: 400 });
+    const fetcher = vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/organizations/")) return response([org]);
+      if (url.endsWith("/projects/")) return response([project]);
+      if (url.endsWith("/monitors/") && !init?.method) return response([existingMonitor]);
+      if (url.endsWith("/monitors/monitor-dev/") && init?.method === "PUT") return streamedResponse;
+      throw new Error(`Unexpected mocked request: ${init?.method ?? "GET"} ${url}`);
+    });
+    let errorMessage = "";
+    try {
+      await configureSentryBackupAlerts({ target: "development", dsn, token, fetcher });
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : "";
+    }
+    const detail = errorMessage.split("; provider response: ")[1]?.split("; verify")[0] ?? "";
+    expect(detail).toMatch(/^Invalid schedule:/);
+    expect(detail.length).toBeLessThanOrEqual(2048);
+    expect(consumed).toBeLessThanOrEqual(8192 + 1024);
+    expect(consumed).toBeGreaterThan(0);
   });
 });

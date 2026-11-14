@@ -8,8 +8,72 @@ const MONITORS = [
 ];
 const WORKFLOW_NAME = "NexTap Phase 1 backup check-in failures";
 
-function apiError(label, response) {
-  return new Error(`Sentry ${label} failed with HTTP ${response.status}; verify SENTRY_AUTH_TOKEN scope and Sentry API access.`);
+const SENSITIVE_KEY = /(?:token|secret|dsn|auth|credential|password|api[_-]?key)/i;
+
+function redactText(value, token) {
+  return value
+    .replaceAll(token, "[redacted]")
+    .replace(/https:\/\/[^\s/@]+@[^\s/]+\/[A-Za-z0-9_-]+/gi, "[redacted DSN]")
+    .replace(/Bearer\s+[^\s,;"']+/gi, "Bearer [redacted]")
+    .replace(/(\bauthorization\s*[:=]\s*)[^,;\n]+/gi, "$1[redacted]")
+    .replace(/(["']?(?:token|secret|dsn|auth(?:orization|entication)?|credential|password|api[_-]?key)["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'[^']*'|\{[^}]*\}|\[[^\]]*\]|[^\s,;]+)/gi, "$1[redacted]");
+}
+
+function safeProviderMessage(payload, token) {
+  if (!payload || typeof payload !== "object") return "";
+  const values = [];
+  const visit = (value, key = "") => {
+    if (SENSITIVE_KEY.test(key)) return;
+    if (typeof value === "string") values.push(redactText(value, token));
+    else if (Array.isArray(value)) value.forEach((item) => visit(item, key));
+    else if (value && typeof value === "object") {
+      for (const [childKey, child] of Object.entries(value)) visit(child, childKey);
+    }
+  };
+  for (const key of ["detail", "message", "error", "title", "errors"]) {
+    if (Object.hasOwn(payload, key)) visit(payload[key], key);
+  }
+  return values.filter(Boolean).join("; ").slice(0, 2048).trim();
+}
+
+async function providerErrorDetail(response, token) {
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks = [];
+  let length = 0;
+  try {
+    while (length < 8192) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = value.subarray(0, 8192 - length);
+      chunks.push(chunk);
+      length += chunk.length;
+      if (chunk.length < value.length) break;
+    }
+    if (length === 8192) await reader.cancel();
+  } catch {
+    return "";
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.length;
+  }
+  const raw = new TextDecoder().decode(bytes);
+  try {
+    return safeProviderMessage(JSON.parse(raw), token);
+  } catch {
+    return redactText(raw, token).slice(0, 2048).trim();
+  }
+}
+
+async function apiError(label, response, token) {
+  const detail = await providerErrorDetail(response, token);
+  const suffix = detail ? `; provider response: ${detail}` : "";
+  return new Error(`Sentry ${label} failed with HTTP ${response.status}${suffix}; verify SENTRY_AUTH_TOKEN scope and Sentry API access.`);
 }
 
 async function request(fetcher, token, path, options = {}) {
@@ -27,7 +91,7 @@ async function request(fetcher, token, path, options = {}) {
   } catch {
     throw new Error(`Sentry API request failed for ${path}; verify network access and SENTRY_AUTH_TOKEN.`);
   }
-  if (!response.ok) throw apiError(path, response);
+  if (!response.ok) throw await apiError(path, response, token);
   if (response.status === 204) return null;
   try {
     return await response.json();
