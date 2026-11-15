@@ -80,11 +80,26 @@ export function sentryIngestUrl(dsn, monitorSlug) {
   return `${parsed.protocol}//${parsed.host}/api/${encodeURIComponent(projectId)}/cron/${encodeURIComponent(monitorSlug)}/${encodeURIComponent(parsed.username)}/`;
 }
 
-function run(command, args, { quiet = false } = {}) {
+export function sanitizedAwsErrorDetails(stderr) {
+  const output = typeof stderr === "string" ? stderr : "";
+  const code = output.match(/An error occurred\s*\(([A-Za-z0-9_.-]{1,80})\)/i)?.[1]
+    ?? output.match(/(?:^|[\s,{])(?:"?Code"?)\s*[:=]\s*"?([A-Za-z0-9_.-]{1,80})"?/i)?.[1];
+  const status = output.match(/(?:HTTP\s*(?:Status\s*)?(?:Code)?|HTTPStatusCode)\s*[:=]\s*(\d{3})\b/i)?.[1];
+  const requestId = output.match(/(?:x-amz-request-id|request\s*id|requestid)\s*[:=]\s*([A-Za-z0-9-]{1,128})\b/i)?.[1];
+  const details = [
+    code ? `Code=${code}` : null,
+    status ? `HTTPStatus=${status}` : null,
+    requestId ? `RequestId=${requestId}` : null,
+  ].filter(Boolean);
+  return details.length ? `AWS error details: ${details.join(", ")}.` : "AWS error details unavailable.";
+}
+
+function run(command, args, { quiet = false, sanitizeAws = false } = {}) {
   const result = spawnSync(command, args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   if (result.error || result.status !== 0) {
     if (!quiet && result.stderr) process.stderr.write(result.stderr);
-    throw new Error(`${command} failed (${args.slice(0, 2).join(" ")}); sensitive command output was suppressed.`);
+    const diagnostic = sanitizeAws ? ` ${sanitizedAwsErrorDetails(result.stderr)}` : "";
+    throw new Error(`${command} failed (${args.slice(0, 2).join(" ")}); sensitive command output was suppressed.${diagnostic}`);
   }
   return result.stdout;
 }
@@ -152,7 +167,7 @@ export async function runMonitoredBackup(environment, options = {}) {
 }
 
 function runAws(args, quiet = false) {
-  return run("aws", [...args, "--endpoint-url", `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`, "--region", "auto", "--no-cli-pager"], { quiet });
+  return run("aws", [...args, "--endpoint-url", `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`, "--region", "auto", "--no-cli-pager"], { quiet, sanitizeAws: true });
 }
 
 function runWrangler(configPath, args, quiet = false) {
