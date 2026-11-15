@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { assertObjectReadback, byteLength, digest, makePrefix, objectMetadataArgs, requireNonProductionEnvironment, runMonitoredBackup, sentryIngestUrl, TABLES, verifyObjectReadback } from "../../scripts/cloudflare/phase1-scheduled-backup.mjs";
+import { assertObjectReadback, byteLength, digest, makePrefix, objectMetadataArgs, requireNonProductionEnvironment, runMonitoredBackup, sanitizedAwsErrorDetails, sentryIngestUrl, TABLES, verifyObjectReadback } from "../../scripts/cloudflare/phase1-scheduled-backup.mjs";
 
 describe("scheduled recovery generation", () => {
   it("keeps both fixed non-production jobs behind the staging Environment with the authorized DEV pair", () => {
@@ -84,6 +84,28 @@ describe("scheduled recovery generation", () => {
     const unicodeSql = "INSERT INTO pages VALUES ('café 🧭');";
     expect(byteLength(unicodeSql)).toBe(Buffer.byteLength(unicodeSql, "utf8"));
     expect(byteLength(unicodeSql)).not.toBe(unicodeSql.length);
+  });
+
+  it("reports only allowlisted AWS error metadata and suppresses sensitive stderr", () => {
+    const stderr = [
+      "An error occurred (AccessDenied) when calling the ListObjectsV2 operation: Access denied for bucket private-backup-bucket",
+      "HTTP status code: 403",
+      "Request ID: req-abc-123",
+      "AWS_ACCESS_KEY_ID=AKIAEXAMPLESECRET",
+      "endpoint=https://1234567890abcdef.r2.cloudflarestorage.com",
+      "object=scheduled/staging/customer-private/manifest.json",
+    ].join("\n");
+
+    const details = sanitizedAwsErrorDetails(stderr);
+    expect(details).toBe("AWS error details: Code=AccessDenied, HTTPStatus=403, RequestId=req-abc-123.");
+    for (const secret of ["private-backup-bucket", "AKIAEXAMPLESECRET", "1234567890abcdef", "customer-private", "manifest.json"]) {
+      expect(details).not.toContain(secret);
+    }
+  });
+
+  it("uses a fixed fallback when AWS stderr has no safe structured metadata", () => {
+    expect(sanitizedAwsErrorDetails("Request failed for https://private.example with secret-token-value"))
+      .toBe("AWS error details unavailable.");
   });
 
   it("preserves and verifies source object headers and custom metadata with body integrity", () => {
