@@ -133,6 +133,15 @@ function createScratchDatabase(name) {
   return id;
 }
 
+function deleteScratchDatabase(name, id, configPath, execute = run) {
+  if (name !== createScratchName() || !UUID.test(id ?? "") || !configPath || !existsSync(configPath)) fail();
+  stageId = "scratch_delete";
+  execute("wrangler", ["d1", "delete", name, "--config", configPath, "--skip-confirmation"]);
+  const databases = JSON.parse(execute("wrangler", ["d1", "list", "--json", "--config", configPath]));
+  if (!Array.isArray(databases) || databases.some((database) => database.name === name
+    || [database.uuid, database.database_id, database.id].includes(id))) fail();
+}
+
 function countQuery() {
   const columns = TABLES.map((table) => `(SELECT COUNT(*) FROM "${table}") AS "${table}"`);
   return `SELECT ${columns.join(", ")};`;
@@ -210,12 +219,14 @@ async function main() {
     const countRows = readRows(run("wrangler", ["d1", "execute", scratchName, "--remote", ...configArgs, "--command", countQuery(), "--json"]));
     if (countRows.length !== 1 || !TABLES.some((table) => Number(countRows[0][table]) > 0)) fail();
     const counts = Object.fromEntries(TABLES.map((table) => [table, Number(countRows[0][table])]));
+    deleteScratchDatabase(scratchName, scratchId, configSnapshot);
     process.stdout.write(`${JSON.stringify({
       status: "restored",
       environment: "staging",
       backupPrefix: PREFIX,
       scratchD1: scratchName,
       scratchD1Id: scratchId,
+      scratchD1Deleted: true,
       migrations: manifest.migrations.length,
       tableCounts: counts,
       foreignKeyViolations: 0,
@@ -234,4 +245,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
 }
 
-export { validateGeneration, validateSqlArtifact };
+export { createScratchName, deleteScratchDatabase, validateGeneration, validateSqlArtifact };

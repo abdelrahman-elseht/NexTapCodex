@@ -5,6 +5,14 @@ on:
     - cron: "15 0 * * *"
   workflow_dispatch:
     inputs:
+      operation:
+        description: Recovery operation
+        required: true
+        type: choice
+        options:
+          - backup
+          - restore
+        default: backup
       target:
         description: Non-production backup target
         required: true
@@ -21,8 +29,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-inputs:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restrict restore rehearsals to staging
+        env:
+          OPERATION: ${{ inputs.operation }}
+          TARGET: ${{ inputs.target }}
+        run: |
+          if [[ "$OPERATION" == "restore" && "$TARGET" != "staging" ]]; then
+            echo "Restore rehearsals are restricted to staging."
+            exit 1
+          fi
+
   development:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'development' }}
+    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.operation == 'backup' && inputs.target == 'development') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The confirmed DEV S3 pair is stored in this protected Environment. Its
@@ -69,4 +91,8 @@ jobs:
       - run: npm ci
       - run: npm install --global wrangler@4.161.0
       - name: Generate verified staging recovery point
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.operation == 'backup' }}
         run: node scripts/cloudflare/phase1-scheduled-backup.mjs staging
+      - name: Restore pinned staging recovery point to a disposable D1
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'restore' }}
+        run: node scripts/cloudflare/phase2-recovery-restore-rehearsal.mjs

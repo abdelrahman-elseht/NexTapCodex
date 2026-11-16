@@ -3,6 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 import { assertObjectReadback, byteLength, digest, makePrefix, objectMetadataArgs, requireNonProductionEnvironment, runMonitoredBackup, sanitizedAwsErrorDetails, sentryIngestUrl, TABLES, verifyObjectReadback } from "../../scripts/cloudflare/phase1-scheduled-backup.mjs";
 
 describe("scheduled recovery generation", () => {
+  it("keeps backup as the dispatch default and restricts restore to staging", () => {
+    const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
+    const staging = workflow.match(/  staging:\n([\s\S]*)$/)?.[1];
+
+    expect(workflow).toMatch(/operation:[\s\S]*?default: backup/);
+    expect(workflow).toContain("inputs.operation == 'backup' && inputs.target == 'development'");
+    expect(staging).toContain("inputs.target == 'staging'");
+    expect(staging).toContain("inputs.operation == 'restore'");
+    expect(workflow).toContain('"$TARGET" != "staging"');
+    expect(workflow).toContain("phase2-recovery-restore-rehearsal.mjs");
+    expect(workflow).toContain("phase1-scheduled-backup.mjs staging");
+  });
+
   it("keeps both fixed non-production jobs behind the staging Environment with the authorized DEV pair", () => {
     const workflow = readFileSync(new URL("../../.github/workflows/phase1-backup.yml", import.meta.url), "utf8");
     const development = workflow.match(/  development:\n([\s\S]*?)(?=\n  staging:)/)?.[1];
@@ -28,7 +41,7 @@ describe("scheduled recovery generation", () => {
     const developmentGuard = development?.match(/^    if: (.+)$/m)?.[1];
     const stagingGuard = staging?.match(/^    if: (.+)$/m)?.[1];
 
-    expect(developmentGuard).toBe("${{ github.event_name != 'workflow_dispatch' || inputs.target == 'development' }}");
+    expect(developmentGuard).toBe("${{ github.event_name != 'workflow_dispatch' || (inputs.operation == 'backup' && inputs.target == 'development') }}");
     expect(stagingGuard).toBe("${{ github.event_name != 'workflow_dispatch' || inputs.target == 'staging' }}");
 
     const runs = (guard: string, event: string, selected: string, target: string) =>
