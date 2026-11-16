@@ -125,12 +125,36 @@ function createScratchName() {
   return `nextap-p2-recovery-${runId}-${attempt}`;
 }
 
-function createScratchDatabase(name) {
+function listDatabases(execute) {
+  let databases;
+  try {
+    databases = JSON.parse(execute("wrangler", ["d1", "list", "--json"]));
+  } catch { fail(); }
+  if (!Array.isArray(databases) || databases.some((database) => !database || typeof database !== "object"
+    || Array.isArray(database) || typeof database.name !== "string")) fail();
+  return databases;
+}
+
+function databaseUuid(database) {
+  const ids = [database.uuid, database.database_id, database.id]
+    .filter((id) => id !== undefined && id !== null && id !== "");
+  if (ids.length === 0 || ids.some((id) => typeof id !== "string" || !UUID.test(id))
+    || new Set(ids).size !== 1) fail();
+  return ids[0];
+}
+
+function createScratchDatabase(name, execute = run) {
   stageId = "scratch_create";
-  const output = run("wrangler", ["d1", "create", name, "--location", "eeur"]);
-  const id = output.match(/database_id\s*=\s*["']([0-9a-f-]{36})["']/i)?.[1];
-  if (!id || !UUID.test(id)) fail();
-  return id;
+  if (name !== createScratchName()) fail();
+  if (listDatabases(execute).some((database) => database.name === name)) fail();
+  try {
+    execute("wrangler", ["d1", "create", name, "--location", "eeur"]);
+  } catch {
+    // Resolve ambiguous create responses from Cloudflare's inventory below.
+  }
+  const matches = listDatabases(execute).filter((database) => database.name === name);
+  if (matches.length !== 1) fail();
+  return databaseUuid(matches[0]);
 }
 
 function deleteScratchDatabase(name, id, configPath, execute = run) {
@@ -245,4 +269,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
 }
 
-export { createScratchName, deleteScratchDatabase, validateGeneration, validateSqlArtifact };
+export { createScratchDatabase, createScratchName, deleteScratchDatabase, validateGeneration, validateSqlArtifact };

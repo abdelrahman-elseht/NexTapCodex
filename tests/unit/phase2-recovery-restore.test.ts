@@ -2,13 +2,21 @@ import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it, vi } from "vitest";
-import { createScratchName, deleteScratchDatabase, validateGeneration, validateSqlArtifact } from "../../scripts/cloudflare/phase2-recovery-restore-rehearsal.mjs";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createScratchDatabase, createScratchName, deleteScratchDatabase, validateGeneration, validateSqlArtifact } from "../../scripts/cloudflare/phase2-recovery-restore-rehearsal.mjs";
 
 const prefix = "scheduled/staging/2026-11-15/20261115T194450Z-fcc5661b-5f81-44cf-944a-459db25734b8";
 const tables = ["businesses", "business_pages"];
 const source = { name: "nextap-staging-core", id: "98f7be19-5ab8-47c3-9e36-f7df99d83089" };
 const sha = (bytes: Buffer | string) => createHash("sha256").update(bytes).digest("hex");
+
+function runName() {
+  vi.stubEnv("GITHUB_RUN_ID", "43753894745");
+  vi.stubEnv("GITHUB_RUN_ATTEMPT", "2");
+  return createScratchName();
+}
+
+afterEach(() => vi.unstubAllEnvs());
 
 function fixture() {
   const sql = Buffer.from("INSERT INTO businesses (id) VALUES ('synthetic');\n");
@@ -42,6 +50,62 @@ describe("Phase 2 recovery rehearsal validation", () => {
     const data = fixture();
     expect(() => validateSqlArtifact(data.manifest, Buffer.from("different"))).toThrow();
     expect(() => validateSqlArtifact(data.manifest, data.sql)).not.toThrow();
+  });
+
+  it("resolves a successfully created scratch D1 from the JSON inventory", () => {
+    const name = runName();
+    const id = "123e4567-e89b-42d3-a456-426614174000";
+    const execute = vi.fn()
+      .mockReturnValueOnce("[]")
+      .mockReturnValueOnce(`database_id = "${id}"`)
+      .mockReturnValueOnce(JSON.stringify([{ name, uuid: id }]));
+
+    expect(createScratchDatabase(name, execute)).toBe(id);
+    expect(execute).toHaveBeenNthCalledWith(1, "wrangler", ["d1", "list", "--json"]);
+    expect(execute).toHaveBeenNthCalledWith(2, "wrangler", ["d1", "create", name, "--location", "eeur"]);
+    expect(execute).toHaveBeenNthCalledWith(3, "wrangler", ["d1", "list", "--json"]);
+  });
+
+  it("resolves an ambiguous create failure when the exact D1 appears in the inventory", () => {
+    const name = runName();
+    const id = "123e4567-e89b-42d3-a456-426614174000";
+    const execute = vi.fn()
+      .mockReturnValueOnce("[]")
+      .mockImplementationOnce(() => { throw new Error("create response unavailable"); })
+      .mockReturnValueOnce(JSON.stringify([{ name, database_id: id }]));
+
+    expect(createScratchDatabase(name, execute)).toBe(id);
+    expect(execute).toHaveBeenCalledTimes(3);
+  });
+
+  it("fails when create returns without an exact inventory match", () => {
+    const name = runName();
+    const execute = vi.fn().mockReturnValueOnce("[]").mockReturnValueOnce("").mockReturnValueOnce("[]");
+
+    expect(() => createScratchDatabase(name, execute)).toThrow();
+    expect(execute).toHaveBeenCalledTimes(3);
+  });
+
+  it.each([
+    ["duplicate exact names", (name: string) => JSON.stringify([
+      { name, uuid: "123e4567-e89b-42d3-a456-426614174000" },
+      { name, uuid: "123e4567-e89b-42d3-a456-426614174001" },
+    ])],
+    ["a malformed UUID", (name: string) => JSON.stringify([{ name, uuid: "not-a-uuid" }])],
+  ])("fails safely on %s", (_label, inventory) => {
+    const name = runName();
+    const execute = vi.fn().mockReturnValueOnce("[]").mockReturnValueOnce("").mockReturnValueOnce(inventory(name));
+
+    expect(() => createScratchDatabase(name, execute)).toThrow();
+    expect(execute).toHaveBeenCalledTimes(3);
+  });
+
+  it("rejects a pre-existing exact scratch name without calling create", () => {
+    const name = runName();
+    const execute = vi.fn().mockReturnValueOnce(JSON.stringify([{ name, uuid: "123e4567-e89b-42d3-a456-426614174000" }]));
+
+    expect(() => createScratchDatabase(name, execute)).toThrow();
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
   it("deletes only the scratch D1 created for this workflow run and attempt", () => {
